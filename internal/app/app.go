@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/config"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/transport/rest"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
@@ -10,21 +11,14 @@ import (
 	"time"
 )
 
-type InitParams struct {
-	Addr string
-	Mode config.ServerMode
-}
-
 // todo: сделать RunParams и как-то логически разделить его с InitParams
 
-func Init(logger *log.Logger, params InitParams) *http.Server {
+func Init(logger *log.Logger, params config.InitParams) *http.Server {
 	// todo: ко 2 рк надо будет сделать более продвинутый инит
 
+	// REST API
 	router := mux.NewRouter()
-	// todo: сделать нормальный роутер :)
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
+	rest.RegisterRoutes(router)
 
 	return &http.Server{
 		Addr:         params.Addr,
@@ -36,8 +30,8 @@ func Init(logger *log.Logger, params InitParams) *http.Server {
 	}
 }
 
-func Run(server *http.Server, params InitParams) error {
-	if params.Mode != config.DeployMode {
+func Run(server *http.Server, params config.InitParams) error {
+	if params.Mode == config.DevMode {
 		return server.ListenAndServe()
 	} else {
 		// todo

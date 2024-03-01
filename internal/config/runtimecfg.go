@@ -4,8 +4,13 @@ type ServerMode int
 
 const (
 	DeployMode = iota
-	DevMode
 	TestMode
+	DevMode
 )
+
+type InitParams struct {
+	Addr string
+	Mode ServerMode
+}
 
 // todo переименовать файл?
