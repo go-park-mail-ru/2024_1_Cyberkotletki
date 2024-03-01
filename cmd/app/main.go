@@ -20,9 +20,9 @@ var (
 func main() {
 	flag.StringVar(&listenAddress, "listen-address", "0.0.0.0", "server listen address")
 	flag.StringVar(&listenPort, "listen-port", ":8000", "server listen port")
-	flag.IntVar((*int)(&serverMode), "server-mode", 2, "0 = deploy\n1 = dev\n2 = test")
+	flag.IntVar((*int)(&serverMode), "server-mode", 2, "0 = deploy\n1 = test\n2 = dev")
 	flag.Parse()
-	params := app.InitParams{
+	params := config.InitParams{
 		Addr: listenAddress + listenPort,
 		Mode: serverMode,
 	}
