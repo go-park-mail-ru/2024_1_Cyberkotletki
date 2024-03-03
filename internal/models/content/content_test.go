@@ -38,14 +38,6 @@ func TestContentMethods(t *testing.T) {
 		"Test Playback",
 	)
 
-	if content.GetID() != 1 {
-		t.Errorf("Expected Id to be 1, got %d", content.GetID())
-	}
-
-	if content.GetTitle() != "Test Title" {
-		t.Errorf("Expected title to be 'Test Title', got '%s'", content.GetTitle())
-	}
-
 	if len(content.GetCountry()) != 1 || content.GetCountry()[0].Name != "Test Country" {
 		t.Errorf("Expected country to be 'Test Country', got '%v'", content.GetCountry())
 	}

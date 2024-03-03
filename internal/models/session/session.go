@@ -1,4 +1,4 @@
-package models
+package session
 
 // ключ - айди сессии
 // Значение - id пользователя

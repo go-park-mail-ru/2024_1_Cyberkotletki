@@ -150,7 +150,7 @@ func (s *Series) HasSeason(season Season) bool {
 func (s *Season) TotalDuration() int {
 	total := 0
 	for _, e := range s.Episodes {
-		total += e.GetDuration()
+		total += e.Duration
 	}
 	return total
 }
@@ -163,7 +163,7 @@ func (s *Series) AverageRating() float64 {
 
 	total := 0.0
 	for _, season := range s.Seasons {
-		total += season.Content.GetRating()
+		total += season.Content.Rating
 	}
 	return total / float64(len(s.Seasons))
 }
