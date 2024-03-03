@@ -40,15 +40,15 @@ func (f *Film) GetDuration() int {
 func (f *Film) CalculateProfit() int {
 	totalBoxOffice := 0
 	for _, boxOffice := range f.Content.GetBoxOffices() {
-		totalBoxOffice += boxOffice.GetRevenue()
+		totalBoxOffice += boxOffice.Revenue
 	}
-	return totalBoxOffice - f.Content.GetBudget() - f.Content.GetMarketing()
+	return totalBoxOffice - f.Content.Budget - f.Content.Marketing
 }
 
 // ROI (Return on Investment)
 func (f *Film) CalculateROI() float64 {
 	profit := float64(f.CalculateProfit())
-	investment := float64(f.Content.GetBudget() + f.Content.GetMarketing())
+	investment := float64(f.Content.Budget + f.Content.Marketing)
 	if investment == 0 {
 		return 0
 	}
@@ -58,5 +58,5 @@ func (f *Film) CalculateROI() float64 {
 // в этом году премьера или нет
 func (f *Film) IsPremiereThisYear() bool {
 	currentYear := time.Now().Year()
-	return f.Content.GetPremiere().Year() == currentYear
+	return f.Content.Premiere.Year() == currentYear
 }

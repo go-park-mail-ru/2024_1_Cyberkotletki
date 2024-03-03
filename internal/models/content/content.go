@@ -14,7 +14,8 @@ TODO: тесты
 type Content struct {
 	Id               int                      `json:"Id"`               // Уникальный идентификатор
 	Title            string                   `json:"Title"`            // Название
-	Country          []small_models.Country   `json:"Country"`          // Страны, где был произведен контент
+	OriginalTitle    string                   `json:"original_title"`   // Название
+	Country          []small_models.Country   `json:"country"`          // Страны, где был произведен контент
 	Genres           []small_models.Genre     `json:"Genres"`           // Жанры
 	Directors        []person.Person          `json:"Directors"`        // Режиссеры
 	Writers          []person.Person          `json:"Writers"`          // Сценаристы
@@ -82,186 +83,102 @@ func (c *Content) NewContentFull(id int, title string, country []small_models.Co
 
 // Все геттеры для структуры Content
 
-func (c *Content) GetID() int {
-	if c == nil {
-		return 0
-	}
-	return c.Id
-}
-
-func (c *Content) GetTitle() string {
-	if c == nil {
-		return ""
-	}
-	return c.Title
-}
-
 func (c *Content) GetCountry() []small_models.Country {
 	if c == nil {
-		return nil
+		return make([]small_models.Country, 0)
 	}
 	return c.Country
 }
 
 func (c *Content) GetAwards() []small_models.Award {
 	if c == nil {
-		return nil
+		return make([]small_models.Award, 0)
 	}
 	return c.Awards
 }
 
 func (c *Content) GetGenres() []small_models.Genre {
 	if c == nil {
-		return nil
+		return make([]small_models.Genre, 0)
 	}
 	return c.Genres
 }
 
 func (c *Content) GetDirectors() []person.Person {
 	if c == nil {
-		return nil
+		return make([]person.Person, 0)
 	}
 	return c.Directors
 }
 
 func (c *Content) GetWriters() []person.Person {
 	if c == nil {
-		return nil
+		return make([]person.Person, 0)
 	}
 	return c.Writers
 }
 
 func (c *Content) GetProducers() []person.Person {
 	if c == nil {
-		return nil
+		return make([]person.Person, 0)
 	}
 	return c.Producers
 }
 
 func (c *Content) GetCinematographers() []person.Person {
 	if c == nil {
-		return nil
+		return make([]person.Person, 0)
 	}
 	return c.Cinematographers
 }
 
-func (c *Content) GetSlogan() string {
-	if c == nil {
-		return ""
-	}
-	return c.Slogan
-}
-
 func (c *Content) GetComposers() []person.Person {
 	if c == nil {
-		return nil
+		return make([]person.Person, 0)
 	}
 	return c.Composers
 }
 
 func (c *Content) GetArtists() []person.Person {
 	if c == nil {
-		return nil
+		return make([]person.Person, 0)
 	}
 	return c.Artists
 }
 
 func (c *Content) GetEditors() []person.Person {
 	if c == nil {
-		return nil
+		return make([]person.Person, 0)
 	}
 	return c.Editors
 }
 
-func (c *Content) GetBudget() int {
-	if c == nil {
-		return 0
-	}
-	return c.Budget
-}
-
-func (c *Content) GetMarketing() int {
-	if c == nil {
-		return 0
-	}
-	return c.Marketing
-}
-
 func (c *Content) GetBoxOffices() []small_models.BoxOffice {
 	if c == nil {
-		return nil
+		return make([]small_models.BoxOffice, 0)
 	}
 	return c.BoxOffices
 }
 
 func (c *Content) GetAudiences() []small_models.Audience {
 	if c == nil {
-		return nil
+		return make([]small_models.Audience, 0)
 	}
 	return c.Audiences
 }
 
-func (c *Content) GetPremiere() time.Time {
-	if c == nil {
-		return time.Time{}
-	}
-	return c.Premiere
-}
-
-func (c *Content) GetRelease() time.Time {
-	if c == nil {
-		return time.Time{}
-	}
-	return c.Release
-}
-
-func (c *Content) GetAgeRestriction() int {
-	if c == nil {
-		return 0
-	}
-	return c.AgeRestriction
-}
-
-func (c *Content) GetRating() float64 {
-	if c == nil {
-		return 0.0
-	}
-	return c.Rating
-}
-
 func (c *Content) GetActors() []person.Person {
 	if c == nil {
-		return nil
+		return make([]person.Person, 0)
 	}
 	return c.Actors
 }
 
 func (c *Content) GetDubbing() []person.Person {
 	if c == nil {
-		return nil
+		return make([]person.Person, 0)
 	}
 	return c.Dubbing
-}
-
-func (c *Content) GetDescription() string {
-	if c == nil {
-		return ""
-	}
-	return c.Description
-}
-
-func (c *Content) GetPoster() string {
-	if c == nil {
-		return ""
-	}
-	return c.Poster
-}
-
-func (c *Content) GetPlayback() string {
-	if c == nil {
-		return ""
-	}
-	return c.Playback
 }
 
 // Методы для добавления и удаления элементов из слайсов

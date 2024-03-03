@@ -15,14 +15,14 @@ type Person struct {
 	LastName    string                    `json:"last_name"`
 	BirthDate   time.Time                 `json:"birth_date"`
 	Age         int                       `json:"age"`
-	DeathDate   *time.Time                `json:"death_date,omitempty"`
+	DeathDate   time.Time                 `json:"death_date,omitempty"`
 	StartCareer time.Time                 `json:"start_career"`
-	EndCareer   *time.Time                `json:"end_career,omitempty"`
+	EndCareer   time.Time                 `json:"end_career,omitempty"`
 	Photo       string                    `json:"photo"`
 	BirthPlace  small_models.PlaceOfBirth `json:"birth_place"`
 	Genres      []small_models.Genre      `json:"genres"`
 	Career      []string                  `json:"career"`
-	Height      *int                      `json:"height,omitempty"`
+	Height      int                       `json:"height,omitempty"`
 	// Жена/муж
 	Spouse   string               `json:"spouse,omitempty"`
 	Children []string             `json:"children,omitempty"`
@@ -53,8 +53,8 @@ func (p *Person) NewPersonOmitempty(id int, firstName string, lastName string, b
 }
 
 // создает новый объект Person со всеми данными
-func (p *Person) NewPersonFull(id int, firstName string, lastName string, birthDate time.Time, age int, deathDate *time.Time, startCareer time.Time, endCareer *time.Time, photo string,
-	birthPlace small_models.PlaceOfBirth, genres []small_models.Genre, career []string, height *int, spouse string, children []string, awards []small_models.Award) *Person {
+func (p *Person) NewPersonFull(id int, firstName string, lastName string, birthDate time.Time, age int, deathDate time.Time, startCareer time.Time, endCareer time.Time, photo string,
+	birthPlace small_models.PlaceOfBirth, genres []small_models.Genre, career []string, height int, spouse string, children []string, awards []small_models.Award) *Person {
 	return &Person{
 		Id:          id,
 		FirstName:   firstName,
@@ -77,109 +77,32 @@ func (p *Person) NewPersonFull(id int, firstName string, lastName string, birthD
 
 // геттеры
 
-func (p *Person) GetID() int {
-	if p == nil {
-		return 0
-	}
-	return p.Id
-}
-
-func (p *Person) GetFirstName() string {
-	if p == nil {
-		return ""
-	}
-	return p.FirstName
-}
-
-func (p *Person) GetLastName() string {
-	if p == nil {
-		return ""
-	}
-	return p.LastName
-}
-
-func (p *Person) GetBirthDate() time.Time {
-	if p == nil {
-		return time.Time{}
-	}
-	return p.BirthDate
-}
-
-func (p *Person) GetAge() int {
-	if p == nil {
-		return 0
-	}
-	return p.Age
-}
-
-func (p *Person) GetDeathDate() *time.Time {
-	if p == nil {
-		return nil
-	}
-	return p.DeathDate
-}
-
-func (p *Person) GetStartCareer() time.Time {
-	if p == nil {
-		return time.Time{}
-	}
-	return p.StartCareer
-}
-
-func (p *Person) GetEndCareer() *time.Time {
-	if p == nil {
-		return nil
-	}
-	return p.EndCareer
-}
-
-func (p *Person) GetPhoto() string {
-	if p == nil {
-		return ""
-	}
-	return p.Photo
-}
-
-func (p *Person) GetBirthPlace() small_models.PlaceOfBirth {
-	if p == nil {
-		return small_models.PlaceOfBirth{}
-	}
-	return p.BirthPlace
-}
-
-func (p *Person) GetGenres() []small_models.Genre {
-	if p == nil {
-		return nil
+func (p Person) GetGenres() []small_models.Genre {
+	if p.Genres == nil {
+		return make([]small_models.Genre, 0)
 	}
 	return p.Genres
 }
 
-func (p *Person) GetCareer() []string {
-	if p == nil {
-		return nil
+func (p Person) GetCareer() []string {
+	if p.Career == nil {
+		return make([]string, 0)
 	}
 	return p.Career
 }
 
-func (p *Person) GetHeight() *int {
-	if p == nil {
-		return nil
-	}
-	return p.Height
-}
-
-func (p *Person) GetSpouse() string {
-	if p == nil {
-		return ""
-	}
-	return p.Spouse
-}
-
-func (p *Person) GetChildren() []string {
-	if p == nil {
-		return nil
+func (p Person) Getstring() []string {
+	if p.Children == nil {
+		return make([]string, 0)
 	}
 	return p.Children
+}
+
+func (p Person) GetAwards() []small_models.Award {
+	if p.Genres == nil {
+		return make([]small_models.Award, 0)
+	}
+	return p.Awards
 }
 
 // добавление, удаление и проверка наличия элемента в слайсах
@@ -281,12 +204,12 @@ func (p *Person) NumberOfChildren() int {
 
 // жив или нет
 func (p *Person) IsAlive() bool {
-	return p.DeathDate == nil
+	return !p.DeathDate.IsZero()
 }
 
 // на пенсии или нет
 func (p *Person) IsRetired() bool {
-	return p.EndCareer != nil
+	return p.EndCareer.IsZero()
 }
 
 // в браке или нет
@@ -294,7 +217,6 @@ func (p *Person) IsMarried() bool {
 	return p.Spouse != ""
 }
 
-// сравнивает персон по имени и дате рождения. Если они совпадают, то возвращается true
 func (p *Person) Equals(other *Person) bool {
 	return p.Id == other.Id
 }

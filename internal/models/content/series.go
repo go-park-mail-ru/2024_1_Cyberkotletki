@@ -71,98 +71,18 @@ func (s *Series) NewSeriesFull(id int, title string, yearStart int, yearEnd int,
 }
 
 // геттеры
-
-func (e *Episode) GetID() int {
-	if e == nil {
-		return 0
+func (p Season) GetEpisodes() []Episode {
+	if p.Episodes == nil {
+		return make([]Episode, 0)
 	}
-	return e.Id
+	return p.Episodes
 }
 
-func (e *Episode) GetEpisodeNumber() int {
-	if e == nil {
-		return 0
+func (p Series) Get() []Season {
+	if p.Seasons == nil {
+		return make([]Season, 0)
 	}
-	return e.EpisodeNumber
-}
-
-func (e *Episode) GetDuration() int {
-	if e == nil {
-		return 0
-	}
-	return e.Duration
-}
-
-func (e *Episode) GetDescription() string {
-	if e == nil {
-		return ""
-	}
-	return e.Description
-}
-
-// Season
-func (s *Season) GetContent() Content {
-	if s == nil {
-		return Content{}
-	}
-	return s.Content
-}
-
-func (s *Season) GetYearStart() int {
-	if s == nil {
-		return 0
-	}
-	return s.YearStart
-}
-
-func (s *Season) GetYearEnd() int {
-	if s == nil {
-		return 0
-	}
-	return s.YearEnd
-}
-
-func (s *Season) GetEpisodes() []Episode {
-	if s == nil {
-		return nil
-	}
-	return s.Episodes
-}
-
-// Series
-func (s *Series) GetID() int {
-	if s == nil {
-		return 0
-	}
-	return s.Id
-}
-
-func (s *Series) GetTitle() string {
-	if s == nil {
-		return ""
-	}
-	return s.Title
-}
-
-func (s *Series) GetYearStart() int {
-	if s == nil {
-		return 0
-	}
-	return s.YearStart
-}
-
-func (s *Series) GetYearEnd() int {
-	if s == nil {
-		return 0
-	}
-	return s.YearEnd
-}
-
-func (s *Series) GetSeasons() []Season {
-	if s == nil {
-		return nil
-	}
-	return s.Seasons
+	return p.Seasons
 }
 
 // проверка равенства

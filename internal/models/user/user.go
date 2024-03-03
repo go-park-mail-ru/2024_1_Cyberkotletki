@@ -29,13 +29,18 @@ type User struct {
 	RegistrationDate time.Time        `json:"registration_date"` // Дата регистрации пользователя
 }
 
-// SetPassword хеширует пароль и сохраняет его в поле PasswordHash.
-func (u *User) SetPassword(password string) error {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	if err != nil {
+func (u *User) ValidatePassword(password string) error {
+	if (len(password) < 8) || (len(password) > 128) {
+		err := errors.New(" invalid Password format ")
 		return err
 	}
-	u.PasswordHash = string(hash)
+	return nil
+}
+
+func (u *User) ValidateEmail(password string) error {
+	if _, err := mail.ParseAddress(u.Email); err != nil {
+		return errors.New("invalid Email format")
+	}
 	return nil
 }
 
@@ -48,13 +53,13 @@ func (u *User) CheckPassword(password string) bool {
 // Validate проверяет, что все обязательные поля User заполнены и что электронная почта имеет правильный формат.
 func (u *User) Validate() error {
 	if u.Id <= 0 {
-		return errors.New("Id is required")
+		return errors.New("id is required")
 	}
 	if strings.TrimSpace(u.Name) == "" {
-		return errors.New("Name is required")
+		return errors.New("name is required")
 	}
 	if strings.TrimSpace(u.Email) == "" {
-		return errors.New("Email is required")
+		return errors.New("email is required")
 	}
 	if _, err := mail.ParseAddress(u.Email); err != nil {
 		return errors.New("invalid Email format")
@@ -65,11 +70,11 @@ func (u *User) Validate() error {
 	return nil
 }
 
-func (u *User) NewUserEmpty() *User {
-	return &User{}
+func NewUserEmpty() *User {
+	return new(User)
 }
 
-func (u *User) NewUserFull(id int, name string, email string, passwordHash string, birthDate time.Time, savedFilms []content.Film,
+func NewUserFull(id int, name string, email string, passwordHash string, birthDate time.Time, savedFilms []content.Film,
 	savedSeries []content.Series, savedPersons []person.Person, friends []User, expectedFilms []content.Film,
 	registrationDate time.Time) *User {
 	return &User{
@@ -87,81 +92,39 @@ func (u *User) NewUserFull(id int, name string, email string, passwordHash strin
 	}
 }
 
-func (u *User) GetID() int {
-	if u == nil {
-		return 0
-	}
-	return u.Id
-}
-
-func (u *User) GetName() string {
-	if u == nil {
-		return ""
-	}
-	return u.Name
-}
-
-func (u *User) GetEmail() string {
-	if u == nil {
-		return ""
-	}
-	return u.Email
-}
-
-func (u *User) GetPasswordHash() string {
-	if u == nil {
-		return ""
-	}
-	return u.PasswordHash
-}
-
-func (u *User) GetBirthDate() time.Time {
-	if u == nil {
-		return time.Time{}
-	}
-	return u.BirthDate
-}
-
-func (u *User) GetSavedFilms() []content.Film {
-	if u == nil {
-		return nil
+func (u User) GetSavedFilms() []content.Film {
+	if u.SavedFilms == nil {
+		return make([]content.Film, 0)
 	}
 	return u.SavedFilms
 }
 
-func (u *User) GetSavedSeries() []content.Series {
-	if u == nil {
-		return nil
+func (u User) GetSavedSeries() []content.Series {
+	if u.SavedFilms == nil {
+		return make([]content.Series, 0)
 	}
 	return u.SavedSeries
 }
 
-func (u *User) GetSavedPersons() []person.Person {
-	if u == nil {
-		return nil
+func (u User) GetSavedPersons() []person.Person {
+	if u.SavedFilms == nil {
+		return make([]person.Person, 0)
 	}
 	return u.SavedPersons
 }
 
-func (u *User) GetFriends() []User {
-	if u == nil {
-		return nil
+func (u User) GetFriends() []User {
+	if u.SavedFilms == nil {
+		return make([]User, 0)
 	}
 	return u.Friends
 }
 
-func (u *User) GetExpectedFilms() []content.Film {
-	if u == nil {
-		return nil
+func (u User) GetExpectedFilms() []content.Film {
+	if u.SavedFilms == nil {
+		return make([]content.Film, 0)
 	}
 	return u.ExpectedFilms
-}
-
-func (u *User) GetRegistrationDate() time.Time {
-	if u == nil {
-		return time.Time{}
-	}
-	return u.RegistrationDate
 }
 
 func (u *User) AddSavedFilm(film content.Film) {
