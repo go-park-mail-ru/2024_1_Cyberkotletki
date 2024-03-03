@@ -16,6 +16,7 @@ var (
 	dbMutex sync.Mutex
 )
 
+// Инициализирует небольшую таблицу пользователей
 func InitUsersDB() map[int]user.User {
 	dbMutex.Lock()
 	defer dbMutex.Unlock()
@@ -66,6 +67,7 @@ func InitUsersDB() map[int]user.User {
 	return UsersDB
 }
 
+// Инициализирует небольшую таблицу фильмов
 func InitFilmsDB() map[int]content.Film {
 	dbMutex.Lock()
 	defer dbMutex.Unlock()
