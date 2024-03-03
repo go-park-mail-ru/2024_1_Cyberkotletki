@@ -1,203 +1,243 @@
 package small_models
 
+/*
+TODO: тесты
+*/
+
 // PlaceOfBirth представляет место рождения.
 type PlaceOfBirth struct {
-	city    string  `json:"city"`    // Город рождения
-	region  string  `json:"region"`  // Регион рождения
-	country Country `json:"country"` // Страна рождения
+	Id      int     `json:"Id"`      // Уникальный идентификатор
+	City    string  `json:"City"`    // Город рождения
+	Region  string  `json:"Region"`  // Регион рождения
+	Country Country `json:"Country"` // Страна рождения
 }
 
 // Nomination представляет номинацию на премию.
 type Nomination struct {
-	title string `json:"title"` // Название номинации
-	movie string `json:"movie"` // Фильм, за который дана номинация
+	Id    int    `json:"Id"`    // Уникальный идентификатор
+	Title string `json:"Title"` // Название номинации
+	Movie string `json:"Movie"` // Фильм, за который дана номинация
 }
 
 // Award представляет премию.
 type Award struct {
-	year       int          `json:"year"`       // Год премии
-	awardType  string       `json:"type"`       // Тип премии
-	nomination []Nomination `json:"nomination"` // Номинация
+	Id         int          `json:"Id"`         // Уникальный идентификатор
+	Year       int          `json:"Year"`       // Год премии
+	AwardType  string       `json:"type"`       // Тип премии
+	Nomination []Nomination `json:"Nomination"` // Номинация
 }
 
 // Country представляет страну.
 type Country struct {
-	name string `json:"name"` // Название страны
+	Id   int    `json:"Id"`
+	Name string `json:"Name"` // Название страны
 }
 
 // Genre представляет жанр.
 type Genre struct {
-	name string `json:"name"` // Название жанра
+	Id   int    `json:"Id"`
+	Name string `json:"Name"` // Название жанра
 }
 
 // BoxOffice представляет кассовые сборы.
 type BoxOffice struct {
-	country Country `json:"country"` // Страна, в которой были сборы
-	revenue int     `json:"revenue"` // Сумма сборов
+	Id      int     `json:"Id"`      // Уникальный идентификатор
+	Country Country `json:"Country"` // Страна, в которой были сборы
+	Revenue int     `json:"Revenue"` // Сумма сборов
 }
 
 // Audience представляет аудиторию.
 type Audience struct {
-	country   Country `json:"country"`    // Страна аудитории
-	audienceT float64 `json:"audience_m"` // Размер аудитории в тысячах
+	Id        int     `json:"Id"`         // Уникальный идентификатор
+	Country   Country `json:"Country"`    // Страна аудитории
+	AudienceT float64 `json:"audience_m"` // Размер аудитории в тысячах
 }
 
 func (p *PlaceOfBirth) Equals(other *PlaceOfBirth) bool {
-	return p.city == other.city && p.region == other.region && p.country.Equals(&other.country)
+	return p.Id == other.Id
 }
 
 func (n *Nomination) Equals(other *Nomination) bool {
-	return n.title == other.title && n.movie == other.movie
+	return n.Id == other.Id
 }
 
 func (a *Award) Equals(other *Award) bool {
-	return a.year == other.year && a.awardType == other.awardType
+	return a.Id == other.Id
 }
 
 func (c *Country) Equals(other *Country) bool {
-	return c.name == other.name
+	return c.Id == other.Id
 }
 
 func (g *Genre) Equals(other *Genre) bool {
-	return g.name == other.name
+	return g.Id == other.Id
 }
 
 func (b *BoxOffice) Equals(other *BoxOffice) bool {
-	return b.revenue == other.revenue && b.country.Equals(&other.country)
+	return b.Id == other.Id
 }
 
 func (a *Audience) Equals(other *Audience) bool {
-	return a.audienceT == other.audienceT && a.country.Equals(&other.country)
+	return a.Id == other.Id
 }
 
-// Геттеры и сеттеры для PlaceOfBirth
+func (c *PlaceOfBirth) GetID() int {
+	if c == nil {
+		return 0
+	}
+	return c.Id
+}
 
+func (c *Nomination) GetID() int {
+	if c == nil {
+		return 0
+	}
+	return c.Id
+}
+
+func (c *Award) GetID() int {
+	if c == nil {
+		return 0
+	}
+	return c.Id
+}
+
+func (c *BoxOffice) GetID() int {
+	if c == nil {
+		return 0
+	}
+	return c.Id
+}
+
+func (c *Audience) GetID() int {
+	if c == nil {
+		return 0
+	}
+	return c.Id
+}
+
+// Геттеры для PlaceOfBirth
 func (p *PlaceOfBirth) GetCity() string {
-	return p.city
-}
-
-func (p *PlaceOfBirth) SetCity(city string) {
-	p.city = city
+	if p == nil {
+		return ""
+	}
+	return p.City
 }
 
 func (p *PlaceOfBirth) GetRegion() string {
-	return p.region
-}
-
-func (p *PlaceOfBirth) SetRegion(region string) {
-	p.region = region
+	if p == nil {
+		return ""
+	}
+	return p.Region
 }
 
 func (p *PlaceOfBirth) GetCountry() Country {
-	return p.country
+	if p == nil {
+		return Country{}
+	}
+	return p.Country
 }
 
-func (p *PlaceOfBirth) SetCountry(country Country) {
-	p.country = country
-}
-
-// Геттеры и сеттеры для Nomination
-
+// Геттеры для Nomination
 func (n *Nomination) GetTitle() string {
-	return n.title
-}
-
-func (n *Nomination) SetTitle(title string) {
-	n.title = title
+	if n == nil {
+		return ""
+	}
+	return n.Title
 }
 
 func (n *Nomination) GetMovie() string {
-	return n.movie
+	if n == nil {
+		return ""
+	}
+	return n.Movie
 }
 
-func (n *Nomination) SetMovie(movie string) {
-	n.movie = movie
-}
-
-// Геттеры и сеттеры для  Award
-
+// Геттеры для Award
 func (a *Award) GetYear() int {
-	return a.year
-}
-
-func (a *Award) SetYear(year int) {
-	a.year = year
+	if a == nil {
+		return 0
+	}
+	return a.Year
 }
 
 func (a *Award) GetType() string {
-	return a.awardType
+	if a == nil {
+		return ""
+	}
+	return a.AwardType
 }
 
-func (a *Award) SetType(awardType string) {
-	a.awardType = awardType
-}
-
-// Геттеры и сеттеры для  Country
-
+// Геттеры для Country
 func (c *Country) GetName() string {
-	return c.name
+	if c == nil {
+		return ""
+	}
+	return c.Name
 }
 
-func (c *Country) SetName(name string) {
-	c.name = name
+func (c *Country) GetID() int {
+	if c == nil {
+		return 0
+	}
+	return c.Id
 }
 
-// Геттеры и сеттеры для Genre
-
+// Геттеры для Genre
 func (g *Genre) GetName() string {
-	return g.name
+	if g == nil {
+		return ""
+	}
+	return g.Name
 }
 
-func (g *Genre) SetName(name string) {
-	g.name = name
+func (g *Genre) GetID() int {
+	if g == nil {
+		return 0
+	}
+	return g.Id
 }
 
-// Геттеры и сеттеры для BoxOffice
-
+// Геттеры для BoxOffice
 func (b *BoxOffice) GetCountry() Country {
-	return b.country
-}
-
-func (b *BoxOffice) SetCountry(country Country) {
-	b.country = country
+	if b == nil {
+		return Country{}
+	}
+	return b.Country
 }
 
 func (b *BoxOffice) GetRevenue() int {
-	return b.revenue
+	if b == nil {
+		return 0
+	}
+	return b.Revenue
 }
 
-func (b *BoxOffice) SetRevenue(revenue int) {
-	b.revenue = revenue
-}
-
-// Геттеры и сеттеры для  Audience
-
+// Геттеры для Audience
 func (a *Audience) GetCountry() Country {
-	return a.country
+	if a == nil {
+		return Country{}
+	}
+	return a.Country
 }
 
-func (a *Audience) SetCountry(country Country) {
-	a.country = country
-}
-
-func (a *Audience) GetAudienceM() float64 {
-	return a.audienceT
-}
-
-func (a *Audience) SetAudienceM(audienceT float64) {
-	a.audienceT = audienceT
+func (a *Audience) GetAudienceT() float64 {
+	if a == nil {
+		return 0.0
+	}
+	return a.AudienceT
 }
 
 // Методы для добавления и удаления элементов из слайсов
 
 func (a *Award) AddNomination(nomination Nomination) {
-	a.nomination = append(a.nomination, nomination)
+	a.Nomination = append(a.Nomination, nomination)
 }
 
 func (a *Award) RemoveNomination(nomination Nomination) {
-	for i, n := range a.nomination {
+	for i, n := range a.Nomination {
 		if n.Equals(&nomination) {
-			a.nomination = append(a.nomination[:i], a.nomination[i+1:]...)
+			a.Nomination = append(a.Nomination[:i], a.Nomination[i+1:]...)
 			break
 		}
 	}
@@ -205,79 +245,81 @@ func (a *Award) RemoveNomination(nomination Nomination) {
 
 // Конструкторы
 
-func NewPlaceOfBirthEmpty() *PlaceOfBirth {
+func (a *PlaceOfBirth) NewPlaceOfBirthEmpty() *PlaceOfBirth {
 	return &PlaceOfBirth{}
 }
 
-func NewPlaceOfBirthFull(city, region string, country Country) *PlaceOfBirth {
+func (a *PlaceOfBirth) NewPlaceOfBirthFull(city, region string, country Country) *PlaceOfBirth {
 	return &PlaceOfBirth{
-		city:    city,
-		region:  region,
-		country: country,
+		City:    city,
+		Region:  region,
+		Country: country,
 	}
 }
 
-func NewNominationEmpty() *Nomination {
+func (a *Nomination) NewNominationEmpty() *Nomination {
 	return &Nomination{}
 }
 
-func NewNominationFull(title, movie string) *Nomination {
+func (a *Nomination) NewNominationFull(title, movie string) *Nomination {
 	return &Nomination{
-		title: title,
-		movie: movie,
+		Title: title,
+		Movie: movie,
 	}
 }
 
-func NewAwardEmpty() *Award {
+func (a *Award) NewAwardEmpty() *Award {
 	return &Award{}
 }
 
-func NewAwardFull(year int, awardType string, nomination []Nomination) *Award {
+func (a *Award) NewAwardFull(year int, awardType string, nomination []Nomination) *Award {
 	return &Award{
-		year:       year,
-		awardType:  awardType,
-		nomination: nomination,
+		Year:       year,
+		AwardType:  awardType,
+		Nomination: nomination,
 	}
 }
 
-func NewCountryEmpty() *Country {
+func (a *Country) NewCountryEmpty() *Country {
 	return &Country{}
 }
 
-func NewCountryFull(name string) *Country {
+func (a *Country) NewCountryFull(name string, id int) *Country {
 	return &Country{
-		name: name,
+		Id:   id,
+		Name: name,
 	}
 }
 
-func NewGenreEmpty() *Genre {
+func (a *Genre) NewGenreEmpty() *Genre {
 	return &Genre{}
 }
 
-func NewGenreFull(name string) *Genre {
+func (a *Genre) NewGenreFull(name string, id int) *Genre {
 	return &Genre{
-		name: name,
+		Id:   id,
+		Name: name,
 	}
 }
 
-func NewBoxOfficeEmpty() *BoxOffice {
+func (a *BoxOffice) NewBoxOfficeEmpty() *BoxOffice {
 	return &BoxOffice{}
 }
 
-func NewBoxOfficeFull(country Country, revenue int) *BoxOffice {
+func (a *BoxOffice) NewBoxOfficeFull(country Country, revenue int) *BoxOffice {
 	return &BoxOffice{
-		country: country,
-		revenue: revenue,
+		Country: country,
+		Revenue: revenue,
 	}
 }
 
-func NewAudienceEmpty() *Audience {
+func (a *Audience) NewAudienceEmpty() *Audience {
 	return &Audience{}
 }
 
-func NewAudienceFull(country Country, audienceT float64) *Audience {
+func (a *Audience) NewAudienceFull(country Country, audienceT float64) *Audience {
 	return &Audience{
-		country:   country,
-		audienceT: audienceT,
+		Country:   country,
+		AudienceT: audienceT,
 	}
 }

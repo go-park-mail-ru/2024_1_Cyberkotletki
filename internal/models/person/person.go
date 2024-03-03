@@ -5,8 +5,12 @@ import (
 	"time"
 )
 
+/*
+TODO: тесты
+*/
+
 type Person struct {
-	ID          int                       `json:"id"`
+	Id          int                       `json:"id"`
 	FirstName   string                    `json:"first_name"`
 	LastName    string                    `json:"last_name"`
 	BirthDate   time.Time                 `json:"birth_date"`
@@ -20,22 +24,22 @@ type Person struct {
 	Career      []string                  `json:"career"`
 	Height      *int                      `json:"height,omitempty"`
 	// Жена/муж
-	Spouse   *Person              `json:"spouse,omitempty"`
-	Children []*Person            `json:"children,omitempty"`
+	Spouse   string               `json:"spouse,omitempty"`
+	Children []string             `json:"children,omitempty"`
 	Awards   []small_models.Award `json:"awards,omitempty"`
 }
 
 // конструкторы
 // создает пустую структуру
-func NewPersonEmpty() *Person {
+func (p *Person) NewPersonEmpty() *Person {
 	return &Person{}
 }
 
 // создает структуру со всеми полями, кроме отмеченных как omitempty, те заполняет только обязательные к заполнению поля
-func NewPersonOmitempty(id int, firstName string, lastName string, birthDate time.Time, age int, startCareer time.Time, photo string, birthPlace small_models.PlaceOfBirth,
+func (p *Person) NewPersonOmitempty(id int, firstName string, lastName string, birthDate time.Time, age int, startCareer time.Time, photo string, birthPlace small_models.PlaceOfBirth,
 	genres []small_models.Genre, career []string) *Person {
 	return &Person{
-		ID:          id,
+		Id:          id,
 		FirstName:   firstName,
 		LastName:    lastName,
 		BirthDate:   birthDate,
@@ -49,10 +53,10 @@ func NewPersonOmitempty(id int, firstName string, lastName string, birthDate tim
 }
 
 // создает новый объект Person со всеми данными
-func NewPersonFull(id int, firstName string, lastName string, birthDate time.Time, age int, deathDate *time.Time, startCareer time.Time, endCareer *time.Time, photo string,
-	birthPlace small_models.PlaceOfBirth, genres []small_models.Genre, career []string, height *int, spouse *Person, children []*Person, awards []small_models.Award) *Person {
+func (p *Person) NewPersonFull(id int, firstName string, lastName string, birthDate time.Time, age int, deathDate *time.Time, startCareer time.Time, endCareer *time.Time, photo string,
+	birthPlace small_models.PlaceOfBirth, genres []small_models.Genre, career []string, height *int, spouse string, children []string, awards []small_models.Award) *Person {
 	return &Person{
-		ID:          id,
+		Id:          id,
 		FirstName:   firstName,
 		LastName:    lastName,
 		BirthDate:   birthDate,
@@ -71,124 +75,110 @@ func NewPersonFull(id int, firstName string, lastName string, birthDate time.Tim
 	}
 }
 
-//сеттеры
-
-func (p *Person) SetID(id int) {
-	p.ID = id
-}
-
-func (p *Person) SetName(firstName, lastName string) {
-	p.FirstName = firstName
-	p.LastName = lastName
-}
-
-func (p *Person) SetBirthDate(birthDate time.Time) {
-	p.BirthDate = birthDate
-}
-
-func (p *Person) SetAge(age int) {
-	p.Age = age
-}
-
-func (p *Person) SetDeathDate(deathDate *time.Time) {
-	p.DeathDate = deathDate
-}
-
-func (p *Person) SetStartCareer(startCareer time.Time) {
-	p.StartCareer = startCareer
-}
-
-func (p *Person) SetEndCareer(endCareer *time.Time) {
-	p.EndCareer = endCareer
-}
-
-func (p *Person) SetPhoto(photo string) {
-	p.Photo = photo
-}
-
-func (p *Person) SetBirthPlace(birthPlace small_models.PlaceOfBirth) {
-	p.BirthPlace = birthPlace
-}
-
-func (p *Person) SetGenres(genres []small_models.Genre) {
-	p.Genres = genres
-}
-
-func (p *Person) SetCareer(career []string) {
-	p.Career = career
-}
-
-func (p *Person) SetHeight(height *int) {
-	p.Height = height
-}
-
-func (p *Person) SetSpouse(spouse *Person) {
-	p.Spouse = spouse
-}
-
-func (p *Person) SetChildren(children []*Person) {
-	p.Children = children
-}
-
 // геттеры
 
 func (p *Person) GetID() int {
-	return p.ID
+	if p == nil {
+		return 0
+	}
+	return p.Id
 }
 
 func (p *Person) GetFirstName() string {
+	if p == nil {
+		return ""
+	}
 	return p.FirstName
 }
 
 func (p *Person) GetLastName() string {
+	if p == nil {
+		return ""
+	}
 	return p.LastName
 }
 
 func (p *Person) GetBirthDate() time.Time {
+	if p == nil {
+		return time.Time{}
+	}
 	return p.BirthDate
 }
 
 func (p *Person) GetAge() int {
+	if p == nil {
+		return 0
+	}
 	return p.Age
 }
 
 func (p *Person) GetDeathDate() *time.Time {
+	if p == nil {
+		return nil
+	}
 	return p.DeathDate
 }
 
 func (p *Person) GetStartCareer() time.Time {
+	if p == nil {
+		return time.Time{}
+	}
 	return p.StartCareer
 }
 
 func (p *Person) GetEndCareer() *time.Time {
+	if p == nil {
+		return nil
+	}
 	return p.EndCareer
 }
 
 func (p *Person) GetPhoto() string {
+	if p == nil {
+		return ""
+	}
 	return p.Photo
 }
 
 func (p *Person) GetBirthPlace() small_models.PlaceOfBirth {
+	if p == nil {
+		return small_models.PlaceOfBirth{}
+	}
 	return p.BirthPlace
 }
 
 func (p *Person) GetGenres() []small_models.Genre {
+	if p == nil {
+		return nil
+	}
 	return p.Genres
 }
 
 func (p *Person) GetCareer() []string {
+	if p == nil {
+		return nil
+	}
 	return p.Career
 }
 
 func (p *Person) GetHeight() *int {
+	if p == nil {
+		return nil
+	}
 	return p.Height
 }
 
-func (p *Person) GetSpouse() *Person {
+func (p *Person) GetSpouse() string {
+	if p == nil {
+		return ""
+	}
 	return p.Spouse
 }
 
-func (p *Person) GetChildren() []*Person {
+func (p *Person) GetChildren() []string {
+	if p == nil {
+		return nil
+	}
 	return p.Children
 }
 
@@ -238,11 +228,11 @@ func (p *Person) HasCareer(career string) bool {
 	return false
 }
 
-func (p *Person) AddChild(child *Person) {
+func (p *Person) AddChild(child string) {
 	p.Children = append(p.Children, child)
 }
 
-func (p *Person) RemoveChild(child *Person) {
+func (p *Person) RemoveChild(child string) {
 	for i, ch := range p.Children {
 		if ch == child {
 			p.Children = append(p.Children[:i], p.Children[i+1:]...)
@@ -251,7 +241,7 @@ func (p *Person) RemoveChild(child *Person) {
 	}
 }
 
-func (p *Person) HasChild(child *Person) bool {
+func (p *Person) HasChild(child string) bool {
 	for _, ch := range p.Children {
 		if ch == child {
 			return true
@@ -301,12 +291,10 @@ func (p *Person) IsRetired() bool {
 
 // в браке или нет
 func (p *Person) IsMarried() bool {
-	return p.Spouse != nil
+	return p.Spouse != ""
 }
 
 // сравнивает персон по имени и дате рождения. Если они совпадают, то возвращается true
 func (p *Person) Equals(other *Person) bool {
-	return p.FirstName == other.FirstName &&
-		p.LastName == other.LastName &&
-		p.BirthDate.Equal(other.BirthDate)
+	return p.Id == other.Id
 }

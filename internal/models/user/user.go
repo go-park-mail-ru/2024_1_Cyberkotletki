@@ -12,243 +12,218 @@ import (
 
 /*
 TODO:
-private
-getter
-setter
-create ( empty, omitempty, full)
-adder
-remover
-interface
-
-Todo:
-- пароли
-- валидация
-- регистрация
-- добавление друга
-- др друга
-- фильмы друга
+тесты
 */
 
 type User struct {
-	id               int              `json:"id"`                // Уникальный идентификатор
-	name             string           `json:"name"`              // Имя пользователя
-	email            string           `json:"email"`             // Электронная почта
-	passwordHash     string           `json:"password_hash"`     // Хэш пароля пользователя
-	birthDate        time.Time        `json:"birth_date"`        // День рождения
-	savedFilms       []content.Film   `json:"saved_films"`       // Сохраненные фильмы
-	savedSeries      []content.Series `json:"saved_series"`      // Сохраненные сериалы
-	savedPersons     []person.Person  `json:"saved_persons"`     // Сохраненные персоны
-	friends          []User           `json:"friends"`           // Друзья
-	expectedFilms    []content.Film   `json:"expected_films"`    // Ожидаемые фильмы
-	registrationDate time.Time        `json:"registration_date"` // Дата регистрации пользователя
+	Id               int              `json:"Id"`                // Уникальный идентификатор
+	Name             string           `json:"Name"`              // Имя пользователя
+	Email            string           `json:"Email"`             // Электронная почта
+	PasswordHash     string           `json:"password_hash"`     // Хэш пароля пользователя
+	BirthDate        time.Time        `json:"birth_date"`        // День рождения
+	SavedFilms       []content.Film   `json:"saved_films"`       // Сохраненные фильмы
+	SavedSeries      []content.Series `json:"saved_series"`      // Сохраненные сериалы
+	SavedPersons     []person.Person  `json:"saved_persons"`     // Сохраненные персоны
+	Friends          []User           `json:"Friends"`           // Друзья
+	ExpectedFilms    []content.Film   `json:"expected_films"`    // Ожидаемые фильмы
+	RegistrationDate time.Time        `json:"registration_date"` // Дата регистрации пользователя
 }
 
-// SetPassword хеширует пароль и сохраняет его в поле passwordHash.
+// SetPassword хеширует пароль и сохраняет его в поле PasswordHash.
 func (u *User) SetPassword(password string) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	if err != nil {
 		return err
 	}
-	u.passwordHash = string(hash)
+	u.PasswordHash = string(hash)
 	return nil
 }
 
 // CheckPassword сравнивает пароль с хешем и возвращает true, если они совпадают.
 func (u *User) CheckPassword(password string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(u.passwordHash), []byte(password))
+	err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password))
 	return err == nil
 }
 
 // Validate проверяет, что все обязательные поля User заполнены и что электронная почта имеет правильный формат.
 func (u *User) Validate() error {
-	if u.id <= 0 {
-		return errors.New("id is required")
+	if u.Id <= 0 {
+		return errors.New("Id is required")
 	}
-	if strings.TrimSpace(u.name) == "" {
-		return errors.New("name is required")
+	if strings.TrimSpace(u.Name) == "" {
+		return errors.New("Name is required")
 	}
-	if strings.TrimSpace(u.email) == "" {
-		return errors.New("email is required")
+	if strings.TrimSpace(u.Email) == "" {
+		return errors.New("Email is required")
 	}
-	if _, err := mail.ParseAddress(u.email); err != nil {
-		return errors.New("invalid email format")
+	if _, err := mail.ParseAddress(u.Email); err != nil {
+		return errors.New("invalid Email format")
 	}
-	if u.registrationDate.IsZero() {
+	if u.RegistrationDate.IsZero() {
 		return errors.New("registration date is required")
 	}
 	return nil
 }
 
-// NewEmptyUser создает новый пустой объект User.
-func NewEmptyUser() *User {
+func (u *User) NewUserEmpty() *User {
 	return &User{}
 }
 
-// NewUser создает новый объект User со всеми данными.
-func NewUser(id int, name string, email string, passwordHash string, birthDate time.Time, savedFilms []content.Film, savedSeries []content.Series, savedPersons []person.Person, friends []User, expectedFilms []content.Film, registrationDate time.Time) *User {
+func (u *User) NewUserFull(id int, name string, email string, passwordHash string, birthDate time.Time, savedFilms []content.Film,
+	savedSeries []content.Series, savedPersons []person.Person, friends []User, expectedFilms []content.Film,
+	registrationDate time.Time) *User {
 	return &User{
-		id:               id,
-		name:             name,
-		email:            email,
-		passwordHash:     passwordHash,
-		birthDate:        birthDate,
-		savedFilms:       savedFilms,
-		savedSeries:      savedSeries,
-		savedPersons:     savedPersons,
-		friends:          friends,
-		expectedFilms:    expectedFilms,
-		registrationDate: registrationDate,
+		Id:               id,
+		Name:             name,
+		Email:            email,
+		PasswordHash:     passwordHash,
+		BirthDate:        birthDate,
+		SavedFilms:       savedFilms,
+		SavedSeries:      savedSeries,
+		SavedPersons:     savedPersons,
+		Friends:          friends,
+		ExpectedFilms:    expectedFilms,
+		RegistrationDate: registrationDate,
 	}
 }
 
 func (u *User) GetID() int {
-	return u.id
+	if u == nil {
+		return 0
+	}
+	return u.Id
 }
 
 func (u *User) GetName() string {
-	return u.name
+	if u == nil {
+		return ""
+	}
+	return u.Name
 }
 
 func (u *User) GetEmail() string {
-	return u.email
+	if u == nil {
+		return ""
+	}
+	return u.Email
 }
 
 func (u *User) GetPasswordHash() string {
-	return u.passwordHash
+	if u == nil {
+		return ""
+	}
+	return u.PasswordHash
 }
 
 func (u *User) GetBirthDate() time.Time {
-	return u.birthDate
+	if u == nil {
+		return time.Time{}
+	}
+	return u.BirthDate
 }
 
 func (u *User) GetSavedFilms() []content.Film {
-	return u.savedFilms
+	if u == nil {
+		return nil
+	}
+	return u.SavedFilms
 }
 
 func (u *User) GetSavedSeries() []content.Series {
-	return u.savedSeries
+	if u == nil {
+		return nil
+	}
+	return u.SavedSeries
 }
 
 func (u *User) GetSavedPersons() []person.Person {
-	return u.savedPersons
+	if u == nil {
+		return nil
+	}
+	return u.SavedPersons
 }
 
 func (u *User) GetFriends() []User {
-	return u.friends
+	if u == nil {
+		return nil
+	}
+	return u.Friends
 }
 
 func (u *User) GetExpectedFilms() []content.Film {
-	return u.expectedFilms
+	if u == nil {
+		return nil
+	}
+	return u.ExpectedFilms
 }
 
 func (u *User) GetRegistrationDate() time.Time {
-	return u.registrationDate
-}
-
-func (u *User) SetID(id int) {
-	u.id = id
-}
-
-func (u *User) SetName(name string) {
-	u.name = name
-}
-
-func (u *User) SetEmail(email string) {
-	u.email = email
-}
-
-func (u *User) SetPasswordHash(passwordHash string) {
-	u.passwordHash = passwordHash
-}
-
-func (u *User) SetBirthDate(birthDate time.Time) {
-	u.birthDate = birthDate
-}
-
-func (u *User) SetSavedFilms(savedFilms []content.Film) {
-	u.savedFilms = savedFilms
-}
-
-func (u *User) SetSavedSeries(savedSeries []content.Series) {
-	u.savedSeries = savedSeries
-}
-
-func (u *User) SetSavedPersons(savedPersons []person.Person) {
-	u.savedPersons = savedPersons
-}
-
-func (u *User) SetFriends(friends []User) {
-	u.friends = friends
-}
-
-func (u *User) SetExpectedFilms(expectedFilms []content.Film) {
-	u.expectedFilms = expectedFilms
-}
-
-func (u *User) SetRegistrationDate(registrationDate time.Time) {
-	u.registrationDate = registrationDate
+	if u == nil {
+		return time.Time{}
+	}
+	return u.RegistrationDate
 }
 
 func (u *User) AddSavedFilm(film content.Film) {
-	u.savedFilms = append(u.savedFilms, film)
+	u.SavedFilms = append(u.SavedFilms, film)
 }
 
 func (u *User) AddSavedSeries(series content.Series) {
-	u.savedSeries = append(u.savedSeries, series)
+	u.SavedSeries = append(u.SavedSeries, series)
 }
 
 func (u *User) AddSavedPerson(person person.Person) {
-	u.savedPersons = append(u.savedPersons, person)
+	u.SavedPersons = append(u.SavedPersons, person)
 }
 
 func (u *User) AddFriend(friend User) {
-	u.friends = append(u.friends, friend)
+	u.Friends = append(u.Friends, friend)
 }
 
 func (u *User) AddExpectedFilm(film content.Film) {
-	u.expectedFilms = append(u.expectedFilms, film)
+	u.ExpectedFilms = append(u.ExpectedFilms, film)
 }
 
 func (u *User) RemoveSavedFilm(film content.Film) {
-	for i, f := range u.savedFilms {
+	for i, f := range u.SavedFilms {
 		if f.Equals(&film) {
-			u.savedFilms = append(u.savedFilms[:i], u.savedFilms[i+1:]...)
+			u.SavedFilms = append(u.SavedFilms[:i], u.SavedFilms[i+1:]...)
 			break
 		}
 	}
 }
 
 func (u *User) RemoveSavedSeries(series content.Series) {
-	for i, s := range u.savedSeries {
+	for i, s := range u.SavedSeries {
 		if s.Equals(&series) {
-			u.savedSeries = append(u.savedSeries[:i], u.savedSeries[i+1:]...)
+			u.SavedSeries = append(u.SavedSeries[:i], u.SavedSeries[i+1:]...)
 			break
 		}
 	}
 }
 
 func (u *User) RemoveSavedPerson(person person.Person) {
-	for i, p := range u.savedPersons {
+	for i, p := range u.SavedPersons {
 		if p.Equals(&person) {
-			u.savedPersons = append(u.savedPersons[:i], u.savedPersons[i+1:]...)
+			u.SavedPersons = append(u.SavedPersons[:i], u.SavedPersons[i+1:]...)
 			break
 		}
 	}
 }
 
 func (u *User) RemoveFriend(friend User) {
-	for i, f := range u.friends {
+	for i, f := range u.Friends {
 		if f.Equals(&friend) {
-			u.friends = append(u.friends[:i], u.friends[i+1:]...)
+			u.Friends = append(u.Friends[:i], u.Friends[i+1:]...)
 			break
 		}
 	}
 }
 
 func (u *User) RemoveExpectedFilm(film content.Film) {
-	for i, f := range u.expectedFilms {
+	for i, f := range u.ExpectedFilms {
 		if f.Equals(&film) {
-			u.expectedFilms = append(u.expectedFilms[:i], u.expectedFilms[i+1:]...)
+			u.ExpectedFilms = append(u.ExpectedFilms[:i], u.ExpectedFilms[i+1:]...)
 			break
 		}
 	}
@@ -256,7 +231,7 @@ func (u *User) RemoveExpectedFilm(film content.Film) {
 
 // сохранен ли фильм пользователем.
 func (u *User) HasSavedFilm(film content.Film) bool {
-	for _, f := range u.savedFilms {
+	for _, f := range u.SavedFilms {
 		if f.Equals(&film) {
 			return true
 		}
@@ -265,7 +240,7 @@ func (u *User) HasSavedFilm(film content.Film) bool {
 }
 
 func (u *User) HasSavedSeries(series content.Series) bool {
-	for _, s := range u.savedSeries {
+	for _, s := range u.SavedSeries {
 		if s.Equals(&series) {
 			return true
 		}
@@ -274,7 +249,7 @@ func (u *User) HasSavedSeries(series content.Series) bool {
 }
 
 func (u *User) HasSavedPerson(person person.Person) bool {
-	for _, p := range u.savedPersons {
+	for _, p := range u.SavedPersons {
 		if p.Equals(&person) {
 			return true
 		}
@@ -284,11 +259,11 @@ func (u *User) HasSavedPerson(person person.Person) bool {
 
 // сравнивает двух пользователей на равенство
 func (u *User) Equals(other *User) bool {
-	return (u.id == other.id) || (u.email == u.email)
+	return (u.Id == other.Id)
 }
 
 func (u *User) HasFriend(friend User) bool {
-	for _, f := range u.friends {
+	for _, f := range u.Friends {
 		if f.Equals(&friend) {
 			return true
 		}
@@ -297,7 +272,7 @@ func (u *User) HasFriend(friend User) bool {
 }
 
 func (u *User) HasExpectedFilm(film content.Film) bool {
-	for _, f := range u.expectedFilms {
+	for _, f := range u.ExpectedFilms {
 		if f.Equals(&film) {
 			return true
 		}
@@ -305,13 +280,11 @@ func (u *User) HasExpectedFilm(film content.Film) bool {
 	return false
 }
 
-// other
-
 // возвращает день рождения друга.
 func (u *User) FriendBirthday(friend *User) (time.Time, error) {
-	for _, f := range u.friends {
-		if f.id == friend.id {
-			return f.birthDate, nil
+	for _, f := range u.Friends {
+		if f.Id == friend.Id {
+			return f.BirthDate, nil
 		}
 	}
 	return time.Time{}, errors.New("friend not found")
@@ -319,9 +292,9 @@ func (u *User) FriendBirthday(friend *User) (time.Time, error) {
 
 // возвращает фильмы, сохраненные другом.
 func (u *User) FriendFilms(friend *User) ([]content.Film, error) {
-	for _, f := range u.friends {
-		if f.id == friend.id {
-			return f.savedFilms, nil
+	for _, f := range u.Friends {
+		if f.Id == friend.Id {
+			return f.SavedFilms, nil
 		}
 	}
 	return nil, errors.New("friend not found")

@@ -7,440 +7,433 @@ import (
 )
 
 /*
-TODO:
-create ( empty, omitempty, full)
-adder
-remover
-haser
-interface
+TODO: тесты
 */
 
 // Content представляет основную структуру для хранения информации о контенте.
 type Content struct {
-	id               int                      `json:"id"`               // Уникальный идентификатор
-	title            string                   `json:"title"`            // Название
-	country          []small_models.Country   `json:"country"`          // Страны, где был произведен контент
-	genres           []small_models.Genre     `json:"genres"`           // Жанры
-	directors        []person.Person          `json:"directors"`        // Режиссеры
-	writers          []person.Person          `json:"writers"`          // Сценаристы
-	producers        []person.Person          `json:"producers"`        // Продюсеры
-	cinematographers []person.Person          `json:"cinematographers"` // Операторы
-	slogan           string                   `json:"slogan"`           // Слоган
-	composers        []person.Person          `json:"composers"`        // Композиторы
-	artists          []person.Person          `json:"artists"`          // Художники
-	editors          []person.Person          `json:"editors"`          // Редакторы
-	budget           int                      `json:"budget"`           // Бюджет
-	marketing        int                      `json:"marketing"`        // Маркетинговые затраты
-	boxOffices       []small_models.BoxOffice `json:"box_offices"`      // Кассовые сборы
-	audiences        []small_models.Audience  `json:"audiences"`        // Аудитория
-	premiere         time.Time                `json:"premiere"`         // Дата премьеры
-	release          time.Time                `json:"release"`          // Дата выпуска
-	ageRestriction   int                      `json:"age_restriction"`  // Возрастное ограничение
-	rating           float64                  `json:"rating"`           // Рейтинг
-	actors           []person.Person          `json:"actors"`           // Актеры
-	dubbing          []person.Person          `json:"dubbing"`          // Дубляж
-	description      string                   `json:"description"`      // Описание
-	poster           string                   `json:"poster"`           // Постер
-	playback         string                   `json:"playback"`         // Воспроизведение на заднем плане небольшоко фрагмента видео
+	Id               int                      `json:"Id"`               // Уникальный идентификатор
+	Title            string                   `json:"Title"`            // Название
+	Country          []small_models.Country   `json:"Country"`          // Страны, где был произведен контент
+	Genres           []small_models.Genre     `json:"Genres"`           // Жанры
+	Directors        []person.Person          `json:"Directors"`        // Режиссеры
+	Writers          []person.Person          `json:"Writers"`          // Сценаристы
+	Producers        []person.Person          `json:"Producers"`        // Продюсеры
+	Cinematographers []person.Person          `json:"Cinematographers"` // Операторы
+	Slogan           string                   `json:"Slogan"`           // Слоган
+	Composers        []person.Person          `json:"Composers"`        // Композиторы
+	Artists          []person.Person          `json:"Artists"`          // Художники
+	Editors          []person.Person          `json:"Editors"`          // Редакторы
+	Budget           int                      `json:"Budget"`           // Бюджет
+	Marketing        int                      `json:"Marketing"`        // Маркетинговые затраты
+	BoxOffices       []small_models.BoxOffice `json:"box_offices"`      // Кассовые сборы
+	Audiences        []small_models.Audience  `json:"Audiences"`        // Аудитория
+	Premiere         time.Time                `json:"Premiere"`         // Дата премьеры
+	Release          time.Time                `json:"Release"`          // Дата выпуска
+	AgeRestriction   int                      `json:"age_restriction"`  // Возрастное ограничение
+	Rating           float64                  `json:"Rating"`           // Рейтинг
+	Actors           []person.Person          `json:"Actors"`           // Актеры
+	Dubbing          []person.Person          `json:"Dubbing"`          // Дубляж
+	Awards           []small_models.Award     `json:"awards,omitempty"` // Награды
+	Description      string                   `json:"Description"`      // Описание
+	Poster           string                   `json:"Poster"`           // Постер
+	Playback         string                   `json:"Playback"`         // Воспроизведение на заднем плане небольшоко фрагмента видео
 }
 
 // создает новый пустой объект Content
-func NewContentEmpty() *Content {
+func (c *Content) NewContentEmpty() *Content {
 	return &Content{}
 }
 
 // создает новый объект Content со всеми данными
-func NewContentFull(id int, title string, country []small_models.Country, genres []small_models.Genre, directors []person.Person, writers []person.Person, producers []person.Person, cinematographers []person.Person, slogan string, composers []person.Person, artists []person.Person, editors []person.Person, budget int, marketing int, boxOffices []small_models.BoxOffice, audiences []small_models.Audience, premiere time.Time, release time.Time, ageRestriction int, rating float64, actors []person.Person, dubbing []person.Person, description string, poster string, playback string) *Content {
+func (c *Content) NewContentFull(id int, title string, country []small_models.Country, genres []small_models.Genre, directors []person.Person,
+	writers []person.Person, producers []person.Person, cinematographers []person.Person, slogan string, composers []person.Person,
+	artists []person.Person, editors []person.Person, budget int, marketing int, boxOffices []small_models.BoxOffice, audiences []small_models.Audience,
+	premiere time.Time, release time.Time, ageRestriction int, rating float64, actors []person.Person, dubbing []person.Person, awards []small_models.Award, description string, poster string, playback string) *Content {
 	return &Content{
-		id:               id,
-		title:            title,
-		country:          country,
-		genres:           genres,
-		directors:        directors,
-		writers:          writers,
-		producers:        producers,
-		cinematographers: cinematographers,
-		slogan:           slogan,
-		composers:        composers,
-		artists:          artists,
-		editors:          editors,
-		budget:           budget,
-		marketing:        marketing,
-		boxOffices:       boxOffices,
-		audiences:        audiences,
-		premiere:         premiere,
-		release:          release,
-		ageRestriction:   ageRestriction,
-		rating:           rating,
-		actors:           actors,
-		dubbing:          dubbing,
-		description:      description,
-		poster:           poster,
-		playback:         playback,
+		Id:               id,
+		Title:            title,
+		Country:          country,
+		Genres:           genres,
+		Directors:        directors,
+		Writers:          writers,
+		Producers:        producers,
+		Cinematographers: cinematographers,
+		Slogan:           slogan,
+		Composers:        composers,
+		Artists:          artists,
+		Editors:          editors,
+		Budget:           budget,
+		Marketing:        marketing,
+		BoxOffices:       boxOffices,
+		Audiences:        audiences,
+		Premiere:         premiere,
+		Release:          release,
+		AgeRestriction:   ageRestriction,
+		Rating:           rating,
+		Actors:           actors,
+		Dubbing:          dubbing,
+		Awards:           awards,
+		Description:      description,
+		Poster:           poster,
+		Playback:         playback,
 	}
 }
 
 // Все геттеры для структуры Content
 
 func (c *Content) GetID() int {
-	return c.id
+	if c == nil {
+		return 0
+	}
+	return c.Id
 }
 
 func (c *Content) GetTitle() string {
-	return c.title
+	if c == nil {
+		return ""
+	}
+	return c.Title
 }
 
 func (c *Content) GetCountry() []small_models.Country {
-	return c.country
+	if c == nil {
+		return nil
+	}
+	return c.Country
+}
+
+func (c *Content) GetAwards() []small_models.Award {
+	if c == nil {
+		return nil
+	}
+	return c.Awards
 }
 
 func (c *Content) GetGenres() []small_models.Genre {
-	return c.genres
+	if c == nil {
+		return nil
+	}
+	return c.Genres
 }
 
 func (c *Content) GetDirectors() []person.Person {
-	return c.directors
+	if c == nil {
+		return nil
+	}
+	return c.Directors
 }
 
 func (c *Content) GetWriters() []person.Person {
-	return c.writers
+	if c == nil {
+		return nil
+	}
+	return c.Writers
 }
 
 func (c *Content) GetProducers() []person.Person {
-	return c.producers
+	if c == nil {
+		return nil
+	}
+	return c.Producers
 }
 
 func (c *Content) GetCinematographers() []person.Person {
-	return c.cinematographers
+	if c == nil {
+		return nil
+	}
+	return c.Cinematographers
 }
 
 func (c *Content) GetSlogan() string {
-	return c.slogan
+	if c == nil {
+		return ""
+	}
+	return c.Slogan
 }
 
 func (c *Content) GetComposers() []person.Person {
-	return c.composers
+	if c == nil {
+		return nil
+	}
+	return c.Composers
 }
 
 func (c *Content) GetArtists() []person.Person {
-	return c.artists
+	if c == nil {
+		return nil
+	}
+	return c.Artists
 }
 
 func (c *Content) GetEditors() []person.Person {
-	return c.editors
+	if c == nil {
+		return nil
+	}
+	return c.Editors
 }
 
 func (c *Content) GetBudget() int {
-	return c.budget
+	if c == nil {
+		return 0
+	}
+	return c.Budget
 }
 
 func (c *Content) GetMarketing() int {
-	return c.marketing
+	if c == nil {
+		return 0
+	}
+	return c.Marketing
 }
 
 func (c *Content) GetBoxOffices() []small_models.BoxOffice {
-	return c.boxOffices
+	if c == nil {
+		return nil
+	}
+	return c.BoxOffices
 }
 
 func (c *Content) GetAudiences() []small_models.Audience {
-	return c.audiences
+	if c == nil {
+		return nil
+	}
+	return c.Audiences
 }
 
 func (c *Content) GetPremiere() time.Time {
-	return c.premiere
+	if c == nil {
+		return time.Time{}
+	}
+	return c.Premiere
 }
 
 func (c *Content) GetRelease() time.Time {
-	return c.release
+	if c == nil {
+		return time.Time{}
+	}
+	return c.Release
 }
 
 func (c *Content) GetAgeRestriction() int {
-	return c.ageRestriction
+	if c == nil {
+		return 0
+	}
+	return c.AgeRestriction
 }
 
 func (c *Content) GetRating() float64 {
-	return c.rating
+	if c == nil {
+		return 0.0
+	}
+	return c.Rating
 }
 
 func (c *Content) GetActors() []person.Person {
-	return c.actors
+	if c == nil {
+		return nil
+	}
+	return c.Actors
 }
 
 func (c *Content) GetDubbing() []person.Person {
-	return c.dubbing
+	if c == nil {
+		return nil
+	}
+	return c.Dubbing
 }
 
 func (c *Content) GetDescription() string {
-	return c.description
+	if c == nil {
+		return ""
+	}
+	return c.Description
 }
 
 func (c *Content) GetPoster() string {
-	return c.poster
+	if c == nil {
+		return ""
+	}
+	return c.Poster
 }
 
 func (c *Content) GetPlayback() string {
-	return c.playback
-}
-
-// Все сеттеры для структуры Content
-
-func (c *Content) SetID(id int) {
-	c.id = id
-}
-
-func (c *Content) SetTitle(title string) {
-	c.title = title
-}
-
-func (c *Content) SetCountry(country []small_models.Country) {
-	c.country = country
-}
-
-func (c *Content) SetGenres(genres []small_models.Genre) {
-	c.genres = genres
-}
-
-func (c *Content) SetDirectors(directors []person.Person) {
-	c.directors = directors
-}
-
-func (c *Content) SetWriters(writers []person.Person) {
-	c.writers = writers
-}
-
-func (c *Content) SetProducers(producers []person.Person) {
-	c.producers = producers
-}
-
-func (c *Content) SetCinematographers(cinematographers []person.Person) {
-	c.cinematographers = cinematographers
-}
-
-func (c *Content) SetSlogan(slogan string) {
-	c.slogan = slogan
-}
-
-func (c *Content) SetComposers(composers []person.Person) {
-	c.composers = composers
-}
-
-func (c *Content) SetArtists(artists []person.Person) {
-	c.artists = artists
-}
-
-func (c *Content) SetEditors(editors []person.Person) {
-	c.editors = editors
-}
-
-func (c *Content) SetBudget(budget int) {
-	c.budget = budget
-}
-
-func (c *Content) SetMarketing(marketing int) {
-	c.marketing = marketing
-}
-
-func (c *Content) SetBoxOffices(boxOffices []small_models.BoxOffice) {
-	c.boxOffices = boxOffices
-}
-
-func (c *Content) SetAudiences(audiences []small_models.Audience) {
-	c.audiences = audiences
-}
-
-func (c *Content) SetPremiere(premiere time.Time) {
-	c.premiere = premiere
-}
-
-func (c *Content) SetRelease(release time.Time) {
-	c.release = release
-}
-
-func (c *Content) SetAgeRestriction(ageRestriction int) {
-	c.ageRestriction = ageRestriction
-}
-
-func (c *Content) SetRating(rating float64) {
-	c.rating = rating
-}
-
-func (c *Content) SetActors(actors []person.Person) {
-	c.actors = actors
-}
-
-func (c *Content) SetDubbing(dubbing []person.Person) {
-	c.dubbing = dubbing
-}
-
-func (c *Content) SetDescription(description string) {
-	c.description = description
-}
-
-func (c *Content) SetPoster(poster string) {
-	c.poster = poster
-}
-
-func (c *Content) SetPlayback(playback string) {
-	c.playback = playback
+	if c == nil {
+		return ""
+	}
+	return c.Playback
 }
 
 // Методы для добавления и удаления элементов из слайсов
 
 func (c *Content) AddCountry(country small_models.Country) {
-	c.country = append(c.country, country)
+	c.Country = append(c.Country, country)
 }
 
 func (c *Content) AddGenre(genre small_models.Genre) {
-	c.genres = append(c.genres, genre)
+	c.Genres = append(c.Genres, genre)
 }
 
 func (c *Content) AddDirector(director person.Person) {
-	c.directors = append(c.directors, director)
+	c.Directors = append(c.Directors, director)
+}
+
+func (c *Content) AddAward(award small_models.Award) {
+	c.Awards = append(c.Awards, award)
 }
 
 func (c *Content) AddWriter(writer person.Person) {
-	c.writers = append(c.writers, writer)
+	c.Writers = append(c.Writers, writer)
 }
 
 func (c *Content) AddProduces(producer person.Person) {
-	c.producers = append(c.producers, producer)
+	c.Producers = append(c.Producers, producer)
 }
 
 func (c *Content) AddCinematographer(cinematographer person.Person) {
-	c.cinematographers = append(c.cinematographers, cinematographer)
+	c.Cinematographers = append(c.Cinematographers, cinematographer)
 }
 
 func (c *Content) AddComposer(composer person.Person) {
-	c.composers = append(c.composers, composer)
+	c.Composers = append(c.Composers, composer)
 }
 
 func (c *Content) AddArtists(artist person.Person) {
-	c.artists = append(c.artists, artist)
+	c.Artists = append(c.Artists, artist)
 }
 
 func (c *Content) AddEditors(editor person.Person) {
-	c.editors = append(c.editors, editor)
+	c.Editors = append(c.Editors, editor)
 }
 
 func (c *Content) AddActors(actor person.Person) {
-	c.actors = append(c.actors, actor)
+	c.Actors = append(c.Actors, actor)
 }
 
 func (c *Content) AddDubbing(dubbing person.Person) {
-	c.dubbing = append(c.dubbing, dubbing)
+	c.Dubbing = append(c.Dubbing, dubbing)
 }
 
 func (c *Content) AddBoxOffices(boxOffice small_models.BoxOffice) {
-	c.boxOffices = append(c.boxOffices, boxOffice)
+	c.BoxOffices = append(c.BoxOffices, boxOffice)
 }
 
 func (c *Content) AddAudiences(audience small_models.Audience) {
-	c.audiences = append(c.audiences, audience)
+	c.Audiences = append(c.Audiences, audience)
 }
 
 func (c *Content) RemoveWriter(writer person.Person) {
-	for i, w := range c.writers {
+	for i, w := range c.Writers {
 		if w.Equals(&writer) {
-			c.writers = append(c.writers[:i], c.writers[i+1:]...)
+			c.Writers = append(c.Writers[:i], c.Writers[i+1:]...)
+			break
+		}
+	}
+}
+
+func (c *Content) RemoveAward(award small_models.Award) {
+	for i, w := range c.Awards {
+		if w.Equals(&award) {
+			c.Awards = append(c.Awards[:i], c.Awards[i+1:]...)
 			break
 		}
 	}
 }
 
 func (c *Content) RemoveProducer(producer person.Person) {
-	for i, p := range c.producers {
+	for i, p := range c.Producers {
 		if p.Equals(&producer) {
-			c.producers = append(c.producers[:i], c.producers[i+1:]...)
+			c.Producers = append(c.Producers[:i], c.Producers[i+1:]...)
 			break
 		}
 	}
 }
 
 func (c *Content) RemoveCinematographer(cinematographer person.Person) {
-	for i, ci := range c.cinematographers {
+	for i, ci := range c.Cinematographers {
 		if ci.Equals(&cinematographer) {
-			c.cinematographers = append(c.cinematographers[:i], c.cinematographers[i+1:]...)
+			c.Cinematographers = append(c.Cinematographers[:i], c.Cinematographers[i+1:]...)
 			break
 		}
 	}
 }
 
 func (c *Content) RemoveComposer(composer person.Person) {
-	for i, co := range c.composers {
+	for i, co := range c.Composers {
 		if co.Equals(&composer) {
-			c.composers = append(c.composers[:i], c.composers[i+1:]...)
+			c.Composers = append(c.Composers[:i], c.Composers[i+1:]...)
 			break
 		}
 	}
 }
 
 func (c *Content) RemoveArtist(artist person.Person) {
-	for i, a := range c.artists {
+	for i, a := range c.Artists {
 		if a.Equals(&artist) {
-			c.artists = append(c.artists[:i], c.artists[i+1:]...)
+			c.Artists = append(c.Artists[:i], c.Artists[i+1:]...)
 			break
 		}
 	}
 }
 
 func (c *Content) RemoveEditor(editor person.Person) {
-	for i, e := range c.editors {
+	for i, e := range c.Editors {
 		if e.Equals(&editor) {
-			c.editors = append(c.editors[:i], c.editors[i+1:]...)
+			c.Editors = append(c.Editors[:i], c.Editors[i+1:]...)
 			break
 		}
 	}
 }
 
 func (c *Content) RemoveActor(actor person.Person) {
-	for i, a := range c.actors {
+	for i, a := range c.Actors {
 		if a.Equals(&actor) {
-			c.actors = append(c.actors[:i], c.actors[i+1:]...)
+			c.Actors = append(c.Actors[:i], c.Actors[i+1:]...)
 			break
 		}
 	}
 }
 
 func (c *Content) RemoveDubbing(dubbing person.Person) {
-	for i, d := range c.dubbing {
+	for i, d := range c.Dubbing {
 		if d.Equals(&dubbing) {
-			c.dubbing = append(c.dubbing[:i], c.dubbing[i+1:]...)
+			c.Dubbing = append(c.Dubbing[:i], c.Dubbing[i+1:]...)
 			break
 		}
 	}
 }
 
 func (c *Content) RemoveCountry(country small_models.Country) {
-	for i, co := range c.country {
+	for i, co := range c.Country {
 		if co.Equals(&country) {
-			c.country = append(c.country[:i], c.country[i+1:]...)
+			c.Country = append(c.Country[:i], c.Country[i+1:]...)
 			break
 		}
 	}
 }
 
 func (c *Content) RemoveGenre(genre small_models.Genre) {
-	for i, g := range c.genres {
+	for i, g := range c.Genres {
 		if g.Equals(&genre) {
-			c.genres = append(c.genres[:i], c.genres[i+1:]...)
+			c.Genres = append(c.Genres[:i], c.Genres[i+1:]...)
 			break
 		}
 	}
 }
 
 func (c *Content) RemoveBoxOffice(boxOffice small_models.BoxOffice) {
-	for i, b := range c.boxOffices {
+	for i, b := range c.BoxOffices {
 		if b.Equals(&boxOffice) {
-			c.boxOffices = append(c.boxOffices[:i], c.boxOffices[i+1:]...)
+			c.BoxOffices = append(c.BoxOffices[:i], c.BoxOffices[i+1:]...)
 			break
 		}
 	}
 }
 
 func (c *Content) RemoveAudience(audience small_models.Audience) {
-	for i, a := range c.audiences {
+	for i, a := range c.Audiences {
 		if a.Equals(&audience) {
-			c.audiences = append(c.audiences[:i], c.audiences[i+1:]...)
+			c.Audiences = append(c.Audiences[:i], c.Audiences[i+1:]...)
 			break
 		}
 	}
@@ -449,7 +442,7 @@ func (c *Content) RemoveAudience(audience small_models.Audience) {
 // функции has, которые проверяют наличие элемеента в слайсе
 
 func (c *Content) HasCountry(country small_models.Country) bool {
-	for _, co := range c.country {
+	for _, co := range c.Country {
 		if co.Equals(&country) {
 			return true
 		}
@@ -457,8 +450,17 @@ func (c *Content) HasCountry(country small_models.Country) bool {
 	return false
 }
 
+func (c *Content) HasAward(award small_models.Award) bool {
+	for _, co := range c.Awards {
+		if co.Equals(&award) {
+			return true
+		}
+	}
+	return false
+}
+
 func (c *Content) HasGenre(genre small_models.Genre) bool {
-	for _, g := range c.genres {
+	for _, g := range c.Genres {
 		if g.Equals(&genre) {
 			return true
 		}
@@ -467,7 +469,7 @@ func (c *Content) HasGenre(genre small_models.Genre) bool {
 }
 
 func (c *Content) HasDirector(director person.Person) bool {
-	for _, d := range c.directors {
+	for _, d := range c.Directors {
 		if d.Equals(&director) {
 			return true
 		}
@@ -476,7 +478,7 @@ func (c *Content) HasDirector(director person.Person) bool {
 }
 
 func (c *Content) HasWriter(writer person.Person) bool {
-	for _, w := range c.writers {
+	for _, w := range c.Writers {
 		if w.Equals(&writer) {
 			return true
 		}
@@ -485,7 +487,7 @@ func (c *Content) HasWriter(writer person.Person) bool {
 }
 
 func (c *Content) HasProducer(producer person.Person) bool {
-	for _, p := range c.producers {
+	for _, p := range c.Producers {
 		if p.Equals(&producer) {
 			return true
 		}
@@ -494,7 +496,7 @@ func (c *Content) HasProducer(producer person.Person) bool {
 }
 
 func (c *Content) HasCinematographer(cinematographer person.Person) bool {
-	for _, ci := range c.cinematographers {
+	for _, ci := range c.Cinematographers {
 		if ci.Equals(&cinematographer) {
 			return true
 		}
@@ -503,7 +505,7 @@ func (c *Content) HasCinematographer(cinematographer person.Person) bool {
 }
 
 func (c *Content) HasComposer(composer person.Person) bool {
-	for _, co := range c.composers {
+	for _, co := range c.Composers {
 		if co.Equals(&composer) {
 			return true
 		}
@@ -512,7 +514,7 @@ func (c *Content) HasComposer(composer person.Person) bool {
 }
 
 func (c *Content) HasArtist(artist person.Person) bool {
-	for _, a := range c.artists {
+	for _, a := range c.Artists {
 		if a.Equals(&artist) {
 			return true
 		}
@@ -521,7 +523,7 @@ func (c *Content) HasArtist(artist person.Person) bool {
 }
 
 func (c *Content) HasEditor(editor person.Person) bool {
-	for _, e := range c.editors {
+	for _, e := range c.Editors {
 		if e.Equals(&editor) {
 			return true
 		}
@@ -530,7 +532,7 @@ func (c *Content) HasEditor(editor person.Person) bool {
 }
 
 func (c *Content) HasActor(actor person.Person) bool {
-	for _, a := range c.actors {
+	for _, a := range c.Actors {
 		if a.Equals(&actor) {
 			return true
 		}
@@ -539,7 +541,7 @@ func (c *Content) HasActor(actor person.Person) bool {
 }
 
 func (c *Content) HasDubbing(dubbing person.Person) bool {
-	for _, d := range c.dubbing {
+	for _, d := range c.Dubbing {
 		if d.Equals(&dubbing) {
 			return true
 		}
@@ -548,7 +550,7 @@ func (c *Content) HasDubbing(dubbing person.Person) bool {
 }
 
 func (c *Content) HasBoxOffice(boxOffice small_models.BoxOffice) bool {
-	for _, b := range c.boxOffices {
+	for _, b := range c.BoxOffices {
 		if b.Equals(&boxOffice) {
 			return true
 		}
@@ -557,7 +559,7 @@ func (c *Content) HasBoxOffice(boxOffice small_models.BoxOffice) bool {
 }
 
 func (c *Content) HasAudience(audience small_models.Audience) bool {
-	for _, a := range c.audiences {
+	for _, a := range c.Audiences {
 		if a.Equals(&audience) {
 			return true
 		}

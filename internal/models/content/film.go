@@ -4,57 +4,38 @@ import (
 	"time"
 )
 
-// Film представляет фильм.
+/*
+TODO: тесты
+*/
+
 type Film struct {
 	Content
-	year     int `json:"year"`     // год выпуска
-	duration int `json:"duration"` // Продолжительность
+	Duration int `json:"Duration"` // Продолжительность
 }
 
-func NewFilmEmpty() *Film {
+func (f *Film) NewFilmEmpty() *Film {
 	return &Film{}
 }
 
-func NewFilmFull(content Content, year int, duration int) *Film {
+func (f *Film) NewFilmFull(content Content, year int, duration int) *Film {
 	return &Film{
 		Content:  content,
-		year:     year,
-		duration: duration,
+		Duration: duration,
 	}
 }
 
 func (f *Film) Equals(other *Film) bool {
-	return f.Content.title == other.title &&
-		f.year == other.year
-}
-
-func (f *Film) GetYear() int {
-	return f.year
-}
-
-func (f *Film) SetYear(year int) {
-	f.year = year
+	return f.Id == other.Id
 }
 
 func (f *Film) GetDuration() int {
-	return f.duration
-}
-
-func (f *Film) SetDuration(duration int) {
-	f.duration = duration
+	if f == nil {
+		return 0
+	}
+	return f.Duration
 }
 
 // функции
-
-// IsNewRelease проверяет, является ли фильм новым релизом.
-func (f *Film) IsNewRelease(currentYear int) bool {
-	return f.year == currentYear
-}
-
-// является ли фильм старым (выпущен более 30 лет назад)
-func (f *Film) IsOld(currentYear int) bool {
-	return currentYear-f.year > 30
-}
 
 func (f *Film) CalculateProfit() int {
 	totalBoxOffice := 0
