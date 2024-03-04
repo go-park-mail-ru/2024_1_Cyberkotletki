@@ -21,7 +21,7 @@ import (
 // @Router /content/contentPreview [get]
 func GetContentPreview(w http.ResponseWriter, r *http.Request) {
 	if id, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 32); err == nil {
-		if compilation, err := content.GetContentPreviewInfo(id); err != nil {
+		if compilation, err := content.GetContentPreviewInfo(int(id)); err != nil {
 			if err.Type == exc.NotFound {
 				httputil.NewError(w, 404, *err)
 			} else {

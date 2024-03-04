@@ -1,12 +1,11 @@
 package user
 
 import (
-	"errors"
+	exc "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/exceptions"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/content"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/person"
 	"golang.org/x/crypto/bcrypt"
 	"net/mail"
-	"strings"
 	"time"
 )
 
@@ -29,17 +28,34 @@ type User struct {
 	RegistrationDate time.Time        `json:"registration_date"` // Дата регистрации пользователя
 }
 
-func (u *User) ValidatePassword(password string) error {
-	if (len(password) < 8) || (len(password) > 128) {
-		err := errors.New(" invalid Password format ")
-		return err
+func (u *User) ValidatePassword(password string) *exc.Exception {
+	if len(password) < 8 {
+		return &exc.Exception{
+			When:  time.Now(),
+			What:  "Пароль должен содержать 8 символов или более",
+			Layer: exc.Service,
+			Type:  exc.Unprocessable,
+		}
+	}
+	if len(password) > 72 {
+		return &exc.Exception{
+			When:  time.Now(),
+			What:  "Слишком длинный пароль",
+			Layer: exc.Service,
+			Type:  exc.Unprocessable,
+		}
 	}
 	return nil
 }
 
-func (u *User) ValidateEmail(password string) error {
-	if _, err := mail.ParseAddress(u.Email); err != nil {
-		return errors.New("invalid Email format")
+func (u *User) ValidateEmail(email string) *exc.Exception {
+	if _, err := mail.ParseAddress(email); err != nil {
+		return &exc.Exception{
+			When:  time.Now(),
+			What:  "Невалидный Email",
+			Layer: exc.Service,
+			Type:  exc.Unprocessable,
+		}
 	}
 	return nil
 }
@@ -50,215 +66,6 @@ func (u *User) CheckPassword(password string) bool {
 	return err == nil
 }
 
-// Validate проверяет, что все обязательные поля User заполнены и что электронная почта имеет правильный формат.
-func (u *User) Validate() error {
-	if u.Id <= 0 {
-		return errors.New("id is required")
-	}
-	if strings.TrimSpace(u.Name) == "" {
-		return errors.New("name is required")
-	}
-	if strings.TrimSpace(u.Email) == "" {
-		return errors.New("email is required")
-	}
-	if _, err := mail.ParseAddress(u.Email); err != nil {
-		return errors.New("invalid Email format")
-	}
-	if u.RegistrationDate.IsZero() {
-		return errors.New("registration date is required")
-	}
-	return nil
-}
-
 func NewUserEmpty() *User {
 	return new(User)
-}
-
-func NewUserFull(id int, name string, email string, passwordHash string, birthDate time.Time, savedFilms []content.Film,
-	savedSeries []content.Series, savedPersons []person.Person, friends []User, expectedFilms []content.Film,
-	registrationDate time.Time) *User {
-	return &User{
-		Id:               id,
-		Name:             name,
-		Email:            email,
-		PasswordHash:     passwordHash,
-		BirthDate:        birthDate,
-		SavedFilms:       savedFilms,
-		SavedSeries:      savedSeries,
-		SavedPersons:     savedPersons,
-		Friends:          friends,
-		ExpectedFilms:    expectedFilms,
-		RegistrationDate: registrationDate,
-	}
-}
-
-func (u User) GetSavedFilms() []content.Film {
-	if u.SavedFilms == nil {
-		return make([]content.Film, 0)
-	}
-	return u.SavedFilms
-}
-
-func (u User) GetSavedSeries() []content.Series {
-	if u.SavedFilms == nil {
-		return make([]content.Series, 0)
-	}
-	return u.SavedSeries
-}
-
-func (u User) GetSavedPersons() []person.Person {
-	if u.SavedFilms == nil {
-		return make([]person.Person, 0)
-	}
-	return u.SavedPersons
-}
-
-func (u User) GetFriends() []User {
-	if u.SavedFilms == nil {
-		return make([]User, 0)
-	}
-	return u.Friends
-}
-
-func (u User) GetExpectedFilms() []content.Film {
-	if u.SavedFilms == nil {
-		return make([]content.Film, 0)
-	}
-	return u.ExpectedFilms
-}
-
-func (u *User) AddSavedFilm(film content.Film) {
-	u.SavedFilms = append(u.SavedFilms, film)
-}
-
-func (u *User) AddSavedSeries(series content.Series) {
-	u.SavedSeries = append(u.SavedSeries, series)
-}
-
-func (u *User) AddSavedPerson(person person.Person) {
-	u.SavedPersons = append(u.SavedPersons, person)
-}
-
-func (u *User) AddFriend(friend User) {
-	u.Friends = append(u.Friends, friend)
-}
-
-func (u *User) AddExpectedFilm(film content.Film) {
-	u.ExpectedFilms = append(u.ExpectedFilms, film)
-}
-
-func (u *User) RemoveSavedFilm(film content.Film) {
-	for i, f := range u.SavedFilms {
-		if f.Equals(&film) {
-			u.SavedFilms = append(u.SavedFilms[:i], u.SavedFilms[i+1:]...)
-			break
-		}
-	}
-}
-
-func (u *User) RemoveSavedSeries(series content.Series) {
-	for i, s := range u.SavedSeries {
-		if s.Equals(&series) {
-			u.SavedSeries = append(u.SavedSeries[:i], u.SavedSeries[i+1:]...)
-			break
-		}
-	}
-}
-
-func (u *User) RemoveSavedPerson(person person.Person) {
-	for i, p := range u.SavedPersons {
-		if p.Equals(&person) {
-			u.SavedPersons = append(u.SavedPersons[:i], u.SavedPersons[i+1:]...)
-			break
-		}
-	}
-}
-
-func (u *User) RemoveFriend(friend User) {
-	for i, f := range u.Friends {
-		if f.Equals(&friend) {
-			u.Friends = append(u.Friends[:i], u.Friends[i+1:]...)
-			break
-		}
-	}
-}
-
-func (u *User) RemoveExpectedFilm(film content.Film) {
-	for i, f := range u.ExpectedFilms {
-		if f.Equals(&film) {
-			u.ExpectedFilms = append(u.ExpectedFilms[:i], u.ExpectedFilms[i+1:]...)
-			break
-		}
-	}
-}
-
-// сохранен ли фильм пользователем.
-func (u *User) HasSavedFilm(film content.Film) bool {
-	for _, f := range u.SavedFilms {
-		if f.Equals(&film) {
-			return true
-		}
-	}
-	return false
-}
-
-func (u *User) HasSavedSeries(series content.Series) bool {
-	for _, s := range u.SavedSeries {
-		if s.Equals(&series) {
-			return true
-		}
-	}
-	return false
-}
-
-func (u *User) HasSavedPerson(person person.Person) bool {
-	for _, p := range u.SavedPersons {
-		if p.Equals(&person) {
-			return true
-		}
-	}
-	return false
-}
-
-// сравнивает двух пользователей на равенство
-func (u *User) Equals(other *User) bool {
-	return (u.Id == other.Id)
-}
-
-func (u *User) HasFriend(friend User) bool {
-	for _, f := range u.Friends {
-		if f.Equals(&friend) {
-			return true
-		}
-	}
-	return false
-}
-
-func (u *User) HasExpectedFilm(film content.Film) bool {
-	for _, f := range u.ExpectedFilms {
-		if f.Equals(&film) {
-			return true
-		}
-	}
-	return false
-}
-
-// возвращает день рождения друга.
-func (u *User) FriendBirthday(friend *User) (time.Time, error) {
-	for _, f := range u.Friends {
-		if f.Id == friend.Id {
-			return f.BirthDate, nil
-		}
-	}
-	return time.Time{}, errors.New("friend not found")
-}
-
-// возвращает фильмы, сохраненные другом.
-func (u *User) FriendFilms(friend *User) ([]content.Film, error) {
-	for _, f := range u.Friends {
-		if f.Id == friend.Id {
-			return f.SavedFilms, nil
-		}
-	}
-	return nil, errors.New("friend not found")
 }

@@ -9,9 +9,10 @@ const (
 )
 
 type InitParams struct {
-	Addr       string
-	Mode       ServerMode
-	GenSwagger bool
+	Addr         string
+	Mode         ServerMode
+	GenSwagger   bool
+	StaticFolder string
 }
 
 // todo переименовать файл?

@@ -3,6 +3,8 @@ package app
 import (
 	"context"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/config"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/db/content"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/db/user"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/transport/rest"
 	"github.com/gorilla/mux"
 	"log"
@@ -28,6 +30,10 @@ func Init(logger *log.Logger, params config.InitParams) *http.Server {
 	} else {
 		logger.Printf("Логи swagger кодогена:\n%s", out)
 	}
+
+	// DB
+	user.UsersDatabase.InitDB()
+	content.FilmsDatabase.InitDB()
 
 	return &http.Server{
 		Addr:         params.Addr,

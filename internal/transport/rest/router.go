@@ -10,6 +10,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/transport/rest/routes/playground"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/transport/rest/routes/swagger"
 	"github.com/gorilla/mux"
+	"net/http"
 )
 
 // Routes это map с парами path - функция для регистрации путей
@@ -30,6 +31,11 @@ func RegisterRoutes(router *mux.Router, params config.InitParams) {
 	allowedOrigin.SetAllowedOriginsFromConfig(params)
 	router.Use(allowedOrigin.SetCORS)
 
+	// Статика
+	fs := http.FileServer(http.Dir(params.StaticFolder))
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
+
+	// Ручки
 	for path, registerRoute := range routes {
 		r := router.PathPrefix(path).Subrouter()
 		registerRoute(r)

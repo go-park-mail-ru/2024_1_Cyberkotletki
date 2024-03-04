@@ -1,7 +1,7 @@
-package db
+package user
 
 import (
-	"errors"
+	exc "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/exceptions"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/content"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/person"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/user"
@@ -16,8 +16,10 @@ type UsersDB struct {
 	usersLastId int64
 }
 
-// InitUsersDB Инициализирует небольшую таблицу пользователей
-func (u *UsersDB) InitUsersDB() {
+var UsersDatabase = new(UsersDB)
+
+// InitDB Инициализирует небольшую таблицу пользователей
+func (u *UsersDB) InitDB() {
 	u.dbMutex.Lock()
 	defer u.dbMutex.Unlock()
 
@@ -76,41 +78,36 @@ func (u *UsersDB) HasUser(user user.User) bool {
 	return false
 }
 
-func (u *UsersDB) HasUserWithEmailAndPassword(user user.User) bool {
-	for _, c := range u.DB {
-		if user.Email == c.Email && user.PasswordHash == c.PasswordHash {
-			return true
+func (u *UsersDB) AddUser(userObj user.User) (*user.User, *exc.Exception) {
+	u.dbMutex.Lock()
+	defer u.dbMutex.Unlock()
+	if u.HasUser(userObj) {
+		return nil, &exc.Exception{
+			When:  time.Now(),
+			What:  "Пользователь с таким Email уже существует",
+			Layer: exc.Database,
+			Type:  exc.AlreadyExists,
 		}
 	}
-	return false
-}
-
-func (u *UsersDB) AddUser(id int, name string, email string, passwordHash string, birthDate time.Time, savedFilms []content.Film,
-	savedSeries []content.Series, savedPersons []person.Person, friends []user.User, expectedFilms []content.Film,
-	registrationDate time.Time) (*user.User, error) {
-
-	user_obj := *user.NewUserFull(id, name, email, passwordHash, birthDate, savedFilms,
-		savedSeries, savedPersons, friends, expectedFilms, registrationDate)
-	u.dbMutex.Lock()
-	defer u.dbMutex.Unlock()
-	if u.HasUser(user_obj) {
-		err := errors.New("user_obj with this id email already exists")
-		return &user_obj, err
-	}
 	atomic.AddInt64(&u.usersLastId, u.usersLastId+1)
-	user_obj.Id = int(u.usersLastId)
-	u.DB[user_obj.Id] = user_obj
-	return &user_obj, nil
+	userObj.Id = int(u.usersLastId)
+	u.DB[userObj.Id] = userObj
+	return &userObj, nil
 }
 
-func (u *UsersDB) GetUser(id int) (*user.User, error) {
+func (u *UsersDB) GetUserByEmail(email string) (*user.User, *exc.Exception) {
 	u.dbMutex.Lock()
 	defer u.dbMutex.Unlock()
 
-	user_obj, ok := u.DB[id]
-	if ok {
-		return &user_obj, nil
+	for _, us := range u.DB {
+		if us.Email == email {
+			return &us, nil
+		}
 	}
-	err := errors.New("user with this id not found")
-	return nil, err
+	return nil, &exc.Exception{
+		When:  time.Now(),
+		What:  "Пользователь с таким email не найден",
+		Layer: exc.Database,
+		Type:  exc.NotFound,
+	}
 }

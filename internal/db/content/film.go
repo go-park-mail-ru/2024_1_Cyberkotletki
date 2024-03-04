@@ -1,7 +1,7 @@
-package db
+package content
 
 import (
-	"errors"
+	exc "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/exceptions"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/audience"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/award"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/boxoffice"
@@ -9,7 +9,6 @@ import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/country"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/genre"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/person"
-	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -21,14 +20,17 @@ type FilmsDB struct {
 	filmsLastId atomic.Int64
 }
 
-// InitFilmsDB Инициализирует небольшую таблицу фильмов
-func (f *FilmsDB) InitFilmsDB() {
+var FilmsDatabase = &FilmsDB{
+	DB: make(map[int]content.Film),
+}
+
+// InitDB Инициализирует небольшую таблицу фильмов
+func (f *FilmsDB) InitDB() {
 	f.dbMutex.Lock()
 	defer f.dbMutex.Unlock()
 
-	f.DB = make(map[int]content.Film)
-
 	// Заполнение базы данных DB
+	f.filmsLastId.Add(30)
 	f.DB[1] = content.Film{
 		Content: content.Content{
 			Id:            1,
@@ -65,7 +67,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2011, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(2011, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           8.8,
 			Actors: []person.Person{
@@ -83,7 +85,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/6712baa5-53be-44a0-a700-6f1042c7fc97.jpg",
+			Poster:      "/posters/6712baa5-53be-44a0-a700-6f1042c7fc97.jpg",
 			Playback:    "",
 		},
 		Duration: 112,
@@ -124,7 +126,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2013, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(2013, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           8.0,
 			Actors: []person.Person{
@@ -142,7 +144,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/be085ecb-331c-444a-a693-a9a4f6aa3241.jpg",
+			Poster:      "/posters/be085ecb-331c-444a-a693-a9a4f6aa3241.jpg",
 			Playback:    "",
 		},
 		Duration: 180,
@@ -183,7 +185,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1997, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(1997, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           8.0,
 			Actors: []person.Person{
@@ -201,7 +203,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/8d061467-a6f5-4198-80e9-02cd31157a00.jpg",
+			Poster:      "/posters/8d061467-a6f5-4198-80e9-02cd31157a00.jpg",
 			Playback:    "",
 		},
 		Duration: 100,
@@ -242,7 +244,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1994, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(1994, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           9.1,
 			Actors: []person.Person{
@@ -260,7 +262,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/4d685b8f-3762-41b1-af4a-3776f9a11057.jpg",
+			Poster:      "/posters/4d685b8f-3762-41b1-af4a-3776f9a11057.jpg",
 			Playback:    "",
 		},
 		Duration: 142,
@@ -301,7 +303,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1999, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(1999, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           9.1,
 			Actors: []person.Person{
@@ -319,7 +321,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/69480722-3e05-4519-bb04-111ecfd5ef8c.jpg",
+			Poster:      "/posters/69480722-3e05-4519-bb04-111ecfd5ef8c.jpg",
 			Playback:    "",
 		},
 		Duration: 189,
@@ -360,7 +362,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1994, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(1994, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           8.9,
 			Actors: []person.Person{
@@ -378,7 +380,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/c3bf8150-b240-4b2b-aa7d-e1963e90c558.jpg",
+			Poster:      "/posters/c3bf8150-b240-4b2b-aa7d-e1963e90c558.jpg",
 			Playback:    "",
 		},
 		Duration: 142,
@@ -419,7 +421,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1997, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(1997, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           8.6,
 			Actors: []person.Person{
@@ -437,7 +439,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/423a8b50-0239-4e59-919f-9045046c0809.jpg",
+			Poster:      "/posters/423a8b50-0239-4e59-919f-9045046c0809.jpg",
 			Playback:    "",
 		},
 		Duration: 87,
@@ -478,7 +480,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2006, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(2006, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           7.7,
 			Actors: []person.Person{
@@ -496,7 +498,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/d104ced8-fd3d-4a52-b7b9-11220e38ac3e.jpg",
+			Poster:      "/posters/d104ced8-fd3d-4a52-b7b9-11220e38ac3e.jpg",
 			Playback:    "",
 		},
 		Duration: 109,
@@ -537,7 +539,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2019, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(2019, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           8.0,
 			Actors: []person.Person{
@@ -555,7 +557,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/2c3258b0-7d6c-4256-8e76-5cf8a381dc1d.jpg",
+			Poster:      "/posters/2c3258b0-7d6c-4256-8e76-5cf8a381dc1d.jpg",
 			Playback:    "",
 		},
 		Duration: 131,
@@ -596,7 +598,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2019, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(2019, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           7.7,
 			Actors: []person.Person{
@@ -614,7 +616,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/22151415-7f1b-4d35-909c-454d0274c975.jpg",
+			Poster:      "/posters/22151415-7f1b-4d35-909c-454d0274c975.jpg",
 			Playback:    "",
 		},
 		Duration: 161,
@@ -655,7 +657,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1994, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(1994, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           8.7,
 			Actors: []person.Person{
@@ -673,7 +675,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/13fc2c3d-bbfd-4334-b69c-1fc2c5de9d4d.jpg",
+			Poster:      "/posters/13fc2c3d-bbfd-4334-b69c-1fc2c5de9d4d.jpg",
 			Playback:    "",
 		},
 		Duration: 133,
@@ -714,7 +716,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1998, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(1998, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           8.6,
 			Actors: []person.Person{
@@ -732,7 +734,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/3ad819ce-71d1-47bf-993f-505a78ecb5cf.jpg",
+			Poster:      "/posters/3ad819ce-71d1-47bf-993f-505a78ecb5cf.jpg",
 			Playback:    "",
 		},
 		Duration: 107,
@@ -773,7 +775,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2000, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(2000, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           8.2,
 			Actors: []person.Person{
@@ -791,7 +793,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/fb91434e-7ff9-4930-87ed-01ecd502eeb7.jpg",
+			Poster:      "/posters/fb91434e-7ff9-4930-87ed-01ecd502eeb7.jpg",
 			Playback:    "",
 		},
 		Duration: 127,
@@ -832,7 +834,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2009, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(2009, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           8.1,
 			Actors: []person.Person{
@@ -850,7 +852,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/d6182066-4c04-46b4-97b4-fbb43e8a3915.jpg",
+			Poster:      "/posters/d6182066-4c04-46b4-97b4-fbb43e8a3915.jpg",
 			Playback:    "",
 		},
 		Duration: 128,
@@ -891,7 +893,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2009, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(2009, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           8.0,
 			Actors: []person.Person{
@@ -909,7 +911,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/b969d3f8-bc34-4624-bd70-5a89014fe832.jpg",
+			Poster:      "/posters/b969d3f8-bc34-4624-bd70-5a89014fe832.jpg",
 			Playback:    "",
 		},
 		Duration: 108,
@@ -950,7 +952,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2009, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(2009, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           8.0,
 			Actors: []person.Person{
@@ -968,7 +970,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/be649b3e-2610-40a6-b717-8591fe5e8911.jpg",
+			Poster:      "/posters/be649b3e-2610-40a6-b717-8591fe5e8911.jpg",
 			Playback:    "",
 		},
 		Duration: 153,
@@ -1009,7 +1011,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1998, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(1998, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           8.0,
 			Actors: []person.Person{
@@ -1027,7 +1029,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/97816692-ab94-4554-9b86-b928e56a4163.jpg",
+			Poster:      "/posters/97816692-ab94-4554-9b86-b928e56a4163.jpg",
 			Playback:    "",
 		},
 		Duration: 189,
@@ -1068,7 +1070,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2005, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(2005, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           7.9,
 			Actors: []person.Person{
@@ -1086,7 +1088,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/ec6d73d4-93b7-4ef4-8a5f-c0655e948f1d.jpg",
+			Poster:      "/posters/ec6d73d4-93b7-4ef4-8a5f-c0655e948f1d.jpg",
 			Playback:    "",
 		},
 		Duration: 140,
@@ -1127,7 +1129,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2022, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(2022, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           7.9,
 			Actors: []person.Person{
@@ -1145,7 +1147,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/738942dd-2e36-4c3a-970a-fc351368acd3.jpg",
+			Poster:      "/posters/738942dd-2e36-4c3a-970a-fc351368acd3.jpg",
 			Playback:    "",
 		},
 		Duration: 123,
@@ -1186,7 +1188,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2015, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(2015, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           7.8,
 			Actors: []person.Person{
@@ -1204,7 +1206,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/9bddc2a2-c1f8-4156-aa45-482ce4a2ca11.jpg",
+			Poster:      "/posters/9bddc2a2-c1f8-4156-aa45-482ce4a2ca11.jpg",
 			Playback:    "",
 		},
 		Duration: 120,
@@ -1245,7 +1247,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1990, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(1990, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           8.3,
 			Actors: []person.Person{
@@ -1263,7 +1265,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/694860f4-e0fa-464b-928a-35857864ff7f.jpg",
+			Poster:      "/posters/694860f4-e0fa-464b-928a-35857864ff7f.jpg",
 			Playback:    "",
 		},
 		Duration: 103,
@@ -1304,7 +1306,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1973, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(1973, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           8.8,
 			Actors: []person.Person{
@@ -1322,7 +1324,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/f92f275b-b53f-4d97-9171-ce49cbb9e077.jpg",
+			Poster:      "/posters/f92f275b-b53f-4d97-9171-ce49cbb9e077.jpg",
 			Playback:    "",
 		},
 		Duration: 88,
@@ -1363,7 +1365,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1965, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(1965, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           8.7,
 			Actors: []person.Person{
@@ -1381,7 +1383,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/f92f275b-b53f-4d97-9171-ce49cbb9e077.jpg",
+			Poster:      "/posters/f92f275b-b53f-4d97-9171-ce49cbb9e077.jpg",
 			Playback:    "",
 		},
 		Duration: 95,
@@ -1422,7 +1424,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2019, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(2019, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           7.1,
 			Actors: []person.Person{
@@ -1440,7 +1442,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/24d80d45-f3db-46d2-abc3-da115d979a5e.jpg",
+			Poster:      "/posters/24d80d45-f3db-46d2-abc3-da115d979a5e.jpg",
 			Playback:    "",
 		},
 		Duration: 109,
@@ -1481,7 +1483,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1971, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(1971, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           8.5,
 			Actors: []person.Person{
@@ -1499,7 +1501,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/de2cd29e-a7c6-401d-aeb5-1bc51ebac02f.jpg",
+			Poster:      "/posters/de2cd29e-a7c6-401d-aeb5-1bc51ebac02f.jpg",
 			Playback:    "",
 		},
 		Duration: 84,
@@ -1540,7 +1542,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1968, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(1968, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           8.5,
 			Actors: []person.Person{
@@ -1558,7 +1560,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/e9137c38-42f7-4f10-a59a-40175b8ad909.jpg",
+			Poster:      "/posters/e9137c38-42f7-4f10-a59a-40175b8ad909.jpg",
 			Playback:    "",
 		},
 		Duration: 94,
@@ -1599,7 +1601,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1966, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(1966, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           8.5,
 			Actors: []person.Person{
@@ -1617,7 +1619,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/d8f4a209-e92e-4536-9464-b8f33bcee617.jpg",
+			Poster:      "/posters/d8f4a209-e92e-4536-9464-b8f33bcee617.jpg",
 			Playback:    "",
 		},
 		Duration: 82,
@@ -1658,7 +1660,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1992, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(1992, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           8.0,
 			Actors: []person.Person{
@@ -1676,7 +1678,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/0db9ad6e-a213-4fa9-bf2e-a4ea1185963d.jpg",
+			Poster:      "/posters/0db9ad6e-a213-4fa9-bf2e-a4ea1185963d.jpg",
 			Playback:    "",
 		},
 		Duration: 119,
@@ -1717,7 +1719,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2021, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(2021, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           7.6,
 			Actors: []person.Person{
@@ -1735,7 +1737,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/ba9e666c-e9f0-45d7-90e5-4cc96e20626b.jpg",
+			Poster:      "/posters/ba9e666c-e9f0-45d7-90e5-4cc96e20626b.jpg",
 			Playback:    "",
 		},
 		Duration: 134,
@@ -1776,7 +1778,7 @@ func (f *FilmsDB) InitFilmsDB() {
 			BoxOffices:       []boxoffice.BoxOffice{},
 			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2020, time.January, 0, 0, 0, 0, 0, time.UTC),
-			Release:          time.Now(),
+			Release:          time.Date(2020, time.January, 0, 0, 0, 0, 0, time.UTC),
 			AgeRestriction:   0,
 			Rating:           7.7,
 			Actors: []person.Person{
@@ -1794,62 +1796,48 @@ func (f *FilmsDB) InitFilmsDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/assets/examples/static/posters/cdcdaad3-ca72-4fee-971a-bf9d7866d0d1.jpg",
+			Poster:      "/posters/cdcdaad3-ca72-4fee-971a-bf9d7866d0d1.jpg",
 			Playback:    "",
 		},
 		Duration: 76,
 	}
 }
 
-func (f *FilmsDB) GetFilm(id int) (*content.Film, error) {
+func (f *FilmsDB) GetFilm(id int) (*content.Film, *exc.Exception) {
 	f.dbMutex.Lock()
 	defer f.dbMutex.Unlock()
-
-	film_obj, ok := f.DB[id]
-	if ok {
-		return &film_obj, nil
+	if filmObj, ok := f.DB[id]; ok {
+		return &filmObj, nil
 	}
-	err := errors.New("film with this id not found")
-	return nil, err
+	return nil, &exc.Exception{
+		When:  time.Now(),
+		What:  "Фильм с таким id не найден",
+		Layer: exc.Database,
+		Type:  exc.NotFound,
+	}
 }
 
-// возвращает фильмы определенного жанра
-func (f *FilmsDB) GetFilmsByGenre(genreId int) ([]content.Film, error) {
+// GetFilmsByGenre возвращает фильмы определенного жанра
+func (f *FilmsDB) GetFilmsByGenre(genreId int) ([]content.Film, *exc.Exception) {
 	f.dbMutex.Lock()
 	defer f.dbMutex.Unlock()
 
 	var films []content.Film
 	for _, film := range f.DB {
-		for _, genre_obj := range film.Content.Genres {
-			if genre_obj.Id == genreId {
+		for _, genreObj := range film.Content.Genres {
+			if genreObj.Id == genreId {
 				films = append(films, film)
 				break
 			}
 		}
 	}
 	if films == nil {
-		err := errors.New("films not found")
-		return nil, err
-	}
-	return films, nil
-}
-
-// возвращает фильмы, отсортированные по дате релиза
-func (f *FilmsDB) GetFilmsByReleaseDate() ([]content.Film, error) {
-	f.dbMutex.Lock()
-	defer f.dbMutex.Unlock()
-
-	films := make([]content.Film, 0, len(f.DB))
-	for _, film := range f.DB {
-		films = append(films, film)
-	}
-	sort.Slice(films, func(i, j int) bool {
-		return films[i].Content.Release.Before(films[j].Content.Release)
-	})
-
-	if films == nil {
-		err := errors.New("films not found")
-		return nil, err
+		return nil, &exc.Exception{
+			When:  time.Now(),
+			What:  "Фильмы не найдены",
+			Layer: exc.Database,
+			Type:  exc.NotFound,
+		}
 	}
 	return films, nil
 }

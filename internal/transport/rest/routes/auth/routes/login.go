@@ -31,7 +31,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			Type:  exc.Unprocessable,
 		})
 	} else if key, err := auth.Login(*loginData); err != nil {
-		if err.Type == exc.NotFound {
+		// forbidden тоже будет восприниматься как not found
+		if err.Type == exc.NotFound || err.Type == exc.Forbidden {
 			httputil.NewError(w, 404, *err)
 		} else {
 			httputil.NewError(w, 500, *err)
