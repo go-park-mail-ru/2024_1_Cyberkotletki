@@ -1,0 +1,242 @@
+definitions:
+  auth.LoginData:
+    properties:
+      login:
+        example: email@email.com
+        format: string
+        type: string
+      password:
+        example: SecretPassword1!
+        format: string
+        type: string
+    type: object
+  auth.RegisterData:
+    properties:
+      email:
+        example: email@email.com
+        format: string
+        type: string
+      password:
+        example: SecretPassword1!
+        format: string
+        type: string
+    type: object
+  collections.CompilationData:
+    properties:
+      genre:
+        example: action
+        type: string
+      ids:
+        example:
+        - 1
+        - 2
+        - 3
+        items:
+          type: integer
+        type: array
+    type: object
+  collections.GenresData:
+    properties:
+      genres:
+        example:
+        - action
+        - drama
+        - comedian
+        items:
+          type: string
+        type: array
+    type: object
+  content.PreviewInfoData:
+    properties:
+      actors:
+        example:
+        - Том Хэнкс
+        - Сергей Бодров
+        items:
+          type: string
+        type: array
+      country:
+        example: Россия
+        type: string
+      director:
+        example: Тарантино
+        type: string
+      genre:
+        example: Боевик
+        type: string
+      original_title:
+        example: Batman
+        type: string
+      poster:
+        example: /static/poster.jpg
+        type: string
+      release_year:
+        example: 2020
+        type: integer
+      title:
+        example: Бэтмен
+        type: string
+    type: object
+  httputil.HTTPError:
+    properties:
+      code:
+        example: 400
+        type: integer
+      message:
+        example: status bad request
+        type: string
+    type: object
+info:
+  contact: {}
+  title: API Киноскопа
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Авторизация пользователя. При успешной авторизации отправляет куки
+        с сессией. Если пользователь уже авторизован, то прежний cookies с сессией
+        перезаписывается
+      parameters:
+      - description: Данные для входа
+        in: body
+        name: loginData
+        required: true
+        schema:
+          $ref: '#/definitions/auth.LoginData'
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Регистрация пользователя. Сразу же возвращает сессию в cookies
+      parameters:
+      - description: Данные для регистрации
+        in: body
+        name: registerData
+        required: true
+        schema:
+          $ref: '#/definitions/auth.RegisterData'
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      tags:
+      - Auth
+  /collections/compilation/{genre}:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает актуальные подборки фильмов по указанному жанру. Если
+        передать cookies с сессией, то подборка будет персонализированной
+      parameters:
+      - default: session=xxx
+        description: session
+        in: header
+        name: Cookie
+        type: string
+      - description: Название жанра
+        in: path
+        name: genre
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Список с id фильмов указанного жанра
+          schema:
+            $ref: '#/definitions/collections.CompilationData'
+        "400":
+          description: Требуется указать жанр
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "404":
+          description: Такой жанр не найден
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      tags:
+      - Collections
+  /collections/genres:
+    get:
+      description: Возвращает список всех доступных жанров фильмов и сериалов
+      responses:
+        "200":
+          description: Список с id фильмов указанного жанра
+          schema:
+            $ref: '#/definitions/collections.GenresData'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      tags:
+      - Collections
+  /content/contentPreview:
+    get:
+      description: Возвращает краткую информацию о фильме или сериале
+      parameters:
+      - description: ID искомого контента. Контентом может быть как фильм, так и сериал
+        in: query
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: Список с id фильмов указанного жанра
+          schema:
+            $ref: '#/definitions/content.PreviewInfoData'
+        "400":
+          description: Требуется указать валидный id контента
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "404":
+          description: Контент с таким id не найден
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      tags:
+      - Content
+  /playground/ping:
+    get:
+      description: Проверка соединения через классический ping pong
+      responses:
+        "200":
+          description: Pong
+          schema:
+            type: string
+      tags:
+      - Playground
+swagger: "2.0"

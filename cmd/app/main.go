@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"flag"
+	_ "github.com/go-park-mail-ru/2024_1_Cyberkotletki/docs"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/app"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/config"
 	"log"
@@ -15,16 +16,21 @@ var (
 	listenAddress string
 	listenPort    string
 	serverMode    config.ServerMode
+	genSwagger    bool
 )
 
+// @title API Киноскопа
+// @version 1.0
 func main() {
-	flag.StringVar(&listenAddress, "listen-address", "0.0.0.0", "server listen address")
-	flag.StringVar(&listenPort, "listen-port", ":8000", "server listen port")
+	flag.StringVar(&listenAddress, "listen-address", "0.0.0.0", "Адрес сервера")
+	flag.StringVar(&listenPort, "listen-port", ":8000", "Порт сервера")
 	flag.IntVar((*int)(&serverMode), "server-mode", 2, "0 = deploy\n1 = test\n2 = dev")
+	flag.BoolVar(&genSwagger, "generate-swagger", true, "true = сгенерировать swagger")
 	flag.Parse()
 	params := config.InitParams{
-		Addr: listenAddress + listenPort,
-		Mode: serverMode,
+		Addr:       listenAddress + listenPort,
+		Mode:       serverMode,
+		GenSwagger: genSwagger,
 	}
 
 	logger := log.New(os.Stdout, "server: ", log.LstdFlags)
