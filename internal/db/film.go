@@ -2,9 +2,13 @@ package db
 
 import (
 	"errors"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/audience"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/award"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/boxoffice"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/content"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/country"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/genre"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/person"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/small_models"
 	"sort"
 	"sync"
 	"sync/atomic"
@@ -30,13 +34,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            1,
 			Title:         "1+1",
 			OriginalTitle: "Intouchables",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   2,
 					Name: "Франция",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   1,
 					Name: "драма",
@@ -58,8 +62,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2011, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -77,7 +81,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/6712baa5-53be-44a0-a700-6f1042c7fc97.jpg",
 			Playback:    "",
@@ -89,13 +93,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            2,
 			Title:         "Волк с Уолл-стрит",
 			OriginalTitle: "The Wolf jf Wall Stret",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   1,
 					Name: "США",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   1,
 					Name: "драма",
@@ -117,8 +121,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2013, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -136,7 +140,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/be085ecb-331c-444a-a693-a9a4f6aa3241.jpg",
 			Playback:    "",
@@ -148,13 +152,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            3,
 			Title:         "Брат",
 			OriginalTitle: "",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   3,
 					Name: "Россия",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   1,
 					Name: "драма",
@@ -176,8 +180,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1997, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -195,7 +199,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/8d061467-a6f5-4198-80e9-02cd31157a00.jpg",
 			Playback:    "",
@@ -207,13 +211,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            4,
 			Title:         "Побег из Шоушенка",
 			OriginalTitle: "The Shawshank Redemption",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   1,
 					Name: "США",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   1,
 					Name: "драма",
@@ -235,8 +239,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1994, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -254,7 +258,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/4d685b8f-3762-41b1-af4a-3776f9a11057.jpg",
 			Playback:    "",
@@ -266,13 +270,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            5,
 			Title:         "Зеленпя миля",
 			OriginalTitle: "The Green Mile",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   1,
 					Name: "США",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   1,
 					Name: "драма",
@@ -294,8 +298,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1999, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -313,7 +317,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/69480722-3e05-4519-bb04-111ecfd5ef8c.jpg",
 			Playback:    "",
@@ -325,13 +329,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            6,
 			Title:         "Форрест Гамп",
 			OriginalTitle: "Forrest Gump",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   1,
 					Name: "США",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   1,
 					Name: "драма",
@@ -353,8 +357,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1994, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -372,7 +376,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/c3bf8150-b240-4b2b-aa7d-e1963e90c558.jpg",
 			Playback:    "",
@@ -384,13 +388,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            7,
 			Title:         "Достучаться до небес",
 			OriginalTitle: "Knockin' on Haven's Door",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   4,
 					Name: "Германия",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   1,
 					Name: "драма",
@@ -412,8 +416,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1997, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -431,7 +435,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/423a8b50-0239-4e59-919f-9045046c0809.jpg",
 			Playback:    "",
@@ -443,13 +447,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            8,
 			Title:         "Дьявол носит Prada",
 			OriginalTitle: "The Devil Wears Prada",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   1,
 					Name: "США",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   1,
 					Name: "драма",
@@ -471,8 +475,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2006, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -490,7 +494,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/d104ced8-fd3d-4a52-b7b9-11220e38ac3e.jpg",
 			Playback:    "",
@@ -502,13 +506,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            9,
 			Title:         "Паразиты",
 			OriginalTitle: "Gisaengchung",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   5,
 					Name: "Корея Южная",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   1,
 					Name: "драма",
@@ -530,8 +534,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2019, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -549,7 +553,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/2c3258b0-7d6c-4256-8e76-5cf8a381dc1d.jpg",
 			Playback:    "",
@@ -561,13 +565,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            10,
 			Title:         "Однажды в... Голливуде",
 			OriginalTitle: "Once Upon a Time in... Hollywood",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   1,
 					Name: "США",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   1,
 					Name: "драма",
@@ -589,8 +593,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2019, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -608,7 +612,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/22151415-7f1b-4d35-909c-454d0274c975.jpg",
 			Playback:    "",
@@ -620,13 +624,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            11,
 			Title:         "Леон",
 			OriginalTitle: "Leon",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   2,
 					Name: "Франция",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   2,
 					Name: "боевик",
@@ -648,8 +652,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1994, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -667,7 +671,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/13fc2c3d-bbfd-4334-b69c-1fc2c5de9d4d.jpg",
 			Playback:    "",
@@ -679,13 +683,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            12,
 			Title:         "Карты, деньги, два ствола",
 			OriginalTitle: "Lock, Stock and Two Smocking Bar",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   6,
 					Name: "Великобритания",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   2,
 					Name: "боевик",
@@ -707,8 +711,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1998, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -726,7 +730,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/3ad819ce-71d1-47bf-993f-505a78ecb5cf.jpg",
 			Playback:    "",
@@ -738,13 +742,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            13,
 			Title:         "Брат 2",
 			OriginalTitle: "",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   3,
 					Name: "Россия",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   2,
 					Name: "боевик",
@@ -766,8 +770,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2000, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -785,7 +789,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/fb91434e-7ff9-4930-87ed-01ecd502eeb7.jpg",
 			Playback:    "",
@@ -797,13 +801,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            14,
 			Title:         "Шерлок Холмс",
 			OriginalTitle: "Sherlock Holmes",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   1,
 					Name: "США",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   2,
 					Name: "боевик",
@@ -825,8 +829,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2009, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -844,7 +848,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/d6182066-4c04-46b4-97b4-fbb43e8a3915.jpg",
 			Playback:    "",
@@ -856,13 +860,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            15,
 			Title:         "Законопослушный гражданин",
 			OriginalTitle: "Law Abiding Citizen",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   1,
 					Name: "США",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   2,
 					Name: "боевик",
@@ -884,8 +888,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2009, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -903,7 +907,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/b969d3f8-bc34-4624-bd70-5a89014fe832.jpg",
 			Playback:    "",
@@ -915,13 +919,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            16,
 			Title:         "Бесславные Ублюдки",
 			OriginalTitle: "Inglorious Basterds",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   4,
 					Name: "Германия",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   2,
 					Name: "боевик",
@@ -943,8 +947,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2009, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -962,7 +966,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/be649b3e-2610-40a6-b717-8591fe5e8911.jpg",
 			Playback:    "",
@@ -974,13 +978,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            17,
 			Title:         "Такси",
 			OriginalTitle: "Taxi",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   2,
 					Name: "Франция",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   2,
 					Name: "боевик",
@@ -1002,8 +1006,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1998, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -1021,7 +1025,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/97816692-ab94-4554-9b86-b928e56a4163.jpg",
 			Playback:    "",
@@ -1033,13 +1037,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            18,
 			Title:         "Бэтмен: Начало",
 			OriginalTitle: "Batman Begins",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   1,
 					Name: "США",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   2,
 					Name: "боевик",
@@ -1061,8 +1065,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2005, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -1080,7 +1084,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/ec6d73d4-93b7-4ef4-8a5f-c0655e948f1d.jpg",
 			Playback:    "",
@@ -1092,13 +1096,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            19,
 			Title:         "Переводчик",
 			OriginalTitle: "The Covenant",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   6,
 					Name: "Великобритания",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   2,
 					Name: "боевик",
@@ -1120,8 +1124,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2022, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -1139,7 +1143,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/738942dd-2e36-4c3a-970a-fc351368acd3.jpg",
 			Playback:    "",
@@ -1151,13 +1155,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            20,
 			Title:         "Безумный Макс: Дорога ярости",
 			OriginalTitle: "Mad Max: Fury Road",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   6,
 					Name: "Австралия",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   2,
 					Name: "боевик",
@@ -1179,8 +1183,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2015, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -1198,7 +1202,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/9bddc2a2-c1f8-4156-aa45-482ce4a2ca11.jpg",
 			Playback:    "",
@@ -1210,13 +1214,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            21,
 			Title:         "Один дома",
 			OriginalTitle: "Home Alone",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   1,
 					Name: "США",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   3,
 					Name: "комедия",
@@ -1238,8 +1242,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1990, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -1257,7 +1261,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/694860f4-e0fa-464b-928a-35857864ff7f.jpg",
 			Playback:    "",
@@ -1269,13 +1273,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            22,
 			Title:         "Иван Васильевич меняет профессию",
 			OriginalTitle: "",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   8,
 					Name: "СССР",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   3,
 					Name: "комедия",
@@ -1297,8 +1301,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1973, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -1316,7 +1320,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/f92f275b-b53f-4d97-9171-ce49cbb9e077.jpg",
 			Playback:    "",
@@ -1328,13 +1332,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            23,
 			Title:         "Операция  «Ы» и длугие приклюяения Шурика",
 			OriginalTitle: "The Green Mile",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   7,
 					Name: "СССР",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   3,
 					Name: "комедия",
@@ -1356,8 +1360,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1965, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -1375,7 +1379,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/f92f275b-b53f-4d97-9171-ce49cbb9e077.jpg",
 			Playback:    "",
@@ -1387,13 +1391,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            24,
 			Title:         "Холоп",
 			OriginalTitle: "",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   3,
 					Name: "Россия",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   3,
 					Name: "комедия",
@@ -1415,8 +1419,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2019, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -1434,7 +1438,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/24d80d45-f3db-46d2-abc3-da115d979a5e.jpg",
 			Playback:    "",
@@ -1446,13 +1450,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            25,
 			Title:         "Джентельмены удачи",
 			OriginalTitle: "",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   7,
 					Name: "СССР",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   3,
 					Name: "комедия",
@@ -1474,8 +1478,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1971, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -1493,7 +1497,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/de2cd29e-a7c6-401d-aeb5-1bc51ebac02f.jpg",
 			Playback:    "",
@@ -1505,13 +1509,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            26,
 			Title:         "Бриллиантовая рука",
 			OriginalTitle: "",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   7,
 					Name: "СССР",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   3,
 					Name: "комедия",
@@ -1533,8 +1537,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1968, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -1552,7 +1556,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/e9137c38-42f7-4f10-a59a-40175b8ad909.jpg",
 			Playback:    "",
@@ -1564,13 +1568,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            27,
 			Title:         "Кавказская пленница, или Новые приключения Шурика",
 			OriginalTitle: "",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   7,
 					Name: "СССР",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   3,
 					Name: "комедия",
@@ -1592,8 +1596,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1966, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -1611,7 +1615,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/d8f4a209-e92e-4536-9464-b8f33bcee617.jpg",
 			Playback:    "",
@@ -1623,13 +1627,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            1,
 			Title:         "Один дома 2: Затерянный в Нью-Йорке",
 			OriginalTitle: "Home Alone 2: Lost in New York",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   1,
 					Name: "США",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   3,
 					Name: "комедия",
@@ -1651,8 +1655,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(1992, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -1670,7 +1674,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/0db9ad6e-a213-4fa9-bf2e-a4ea1185963d.jpg",
 			Playback:    "",
@@ -1682,13 +1686,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            1,
 			Title:         "Круэлла",
 			OriginalTitle: "Cruella",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   1,
 					Name: "США",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   3,
 					Name: "комедия",
@@ -1710,8 +1714,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2021, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -1729,7 +1733,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/ba9e666c-e9f0-45d7-90e5-4cc96e20626b.jpg",
 			Playback:    "",
@@ -1741,13 +1745,13 @@ func (f *FilmsDB) InitFilmsDB() {
 			Id:            1,
 			Title:         "Батя",
 			OriginalTitle: "",
-			Country: []small_models.Country{
+			Country: []country.Country{
 				{
 					Id:   3,
 					Name: "Россия",
 				},
 			},
-			Genres: []small_models.Genre{
+			Genres: []genre.Genre{
 				{
 					Id:   3,
 					Name: "комедия",
@@ -1769,8 +1773,8 @@ func (f *FilmsDB) InitFilmsDB() {
 			Editors:          []person.Person{},
 			Budget:           0,
 			Marketing:        0,
-			BoxOffices:       []small_models.BoxOffice{},
-			Audiences:        []small_models.Audience{},
+			BoxOffices:       []boxoffice.BoxOffice{},
+			Audiences:        []audience.Audience{},
 			Premiere:         time.Date(2020, time.January, 0, 0, 0, 0, 0, time.UTC),
 			Release:          time.Now(),
 			AgeRestriction:   0,
@@ -1788,7 +1792,7 @@ func (f *FilmsDB) InitFilmsDB() {
 				},
 			},
 			Dubbing:     []person.Person{},
-			Awards:      []small_models.Award{},
+			Awards:      []award.Award{},
 			Description: "",
 			Poster:      "/assets/examples/static/posters/cdcdaad3-ca72-4fee-971a-bf9d7866d0d1.jpg",
 			Playback:    "",
@@ -1816,8 +1820,8 @@ func (f *FilmsDB) GetFilmsByGenre(genreId int) ([]content.Film, error) {
 
 	var films []content.Film
 	for _, film := range f.DB {
-		for _, genre := range film.Content.Genres {
-			if genre.Id == genreId {
+		for _, genre_obj := range film.Content.Genres {
+			if genre_obj.Id == genreId {
 				films = append(films, film)
 				break
 			}

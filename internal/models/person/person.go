@@ -1,7 +1,9 @@
 package person
 
 import (
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/small_models"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/award"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/genre"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/place_of_birth"
 	"time"
 )
 
@@ -10,23 +12,23 @@ TODO: тесты
 */
 
 type Person struct {
-	Id          int                       `json:"id"`
-	FirstName   string                    `json:"first_name"`
-	LastName    string                    `json:"last_name"`
-	BirthDate   time.Time                 `json:"birth_date"`
-	Age         int                       `json:"age"`
-	DeathDate   time.Time                 `json:"death_date,omitempty"`
-	StartCareer time.Time                 `json:"start_career"`
-	EndCareer   time.Time                 `json:"end_career,omitempty"`
-	Photo       string                    `json:"photo"`
-	BirthPlace  small_models.PlaceOfBirth `json:"birth_place"`
-	Genres      []small_models.Genre      `json:"genres"`
-	Career      []string                  `json:"career"`
-	Height      int                       `json:"height,omitempty"`
+	Id          int                         `json:"id"`
+	FirstName   string                      `json:"first_name"`
+	LastName    string                      `json:"last_name"`
+	BirthDate   time.Time                   `json:"birth_date"`
+	Age         int                         `json:"age"`
+	DeathDate   time.Time                   `json:"death_date,omitempty"`
+	StartCareer time.Time                   `json:"start_career"`
+	EndCareer   time.Time                   `json:"end_career,omitempty"`
+	Photo       string                      `json:"photo"`
+	BirthPlace  place_of_birth.PlaceOfBirth `json:"birth_place"`
+	Genres      []genre.Genre               `json:"genres"`
+	Career      []string                    `json:"career"`
+	Height      int                         `json:"height,omitempty"`
 	// Жена/муж
-	Spouse   string               `json:"spouse,omitempty"`
-	Children []string             `json:"children,omitempty"`
-	Awards   []small_models.Award `json:"awards,omitempty"`
+	Spouse   string        `json:"spouse,omitempty"`
+	Children []string      `json:"children,omitempty"`
+	Awards   []award.Award `json:"awards,omitempty"`
 }
 
 // конструкторы
@@ -36,8 +38,8 @@ func (p *Person) NewPersonEmpty() *Person {
 }
 
 // создает структуру со всеми полями, кроме отмеченных как omitempty, те заполняет только обязательные к заполнению поля
-func (p *Person) NewPersonOmitempty(id int, firstName string, lastName string, birthDate time.Time, age int, startCareer time.Time, photo string, birthPlace small_models.PlaceOfBirth,
-	genres []small_models.Genre, career []string) *Person {
+func (p *Person) NewPersonOmitempty(id int, firstName string, lastName string, birthDate time.Time, age int, startCareer time.Time,
+	photo string, birthPlace place_of_birth.PlaceOfBirth, genres []genre.Genre, career []string) *Person {
 	return &Person{
 		Id:          id,
 		FirstName:   firstName,
@@ -54,7 +56,7 @@ func (p *Person) NewPersonOmitempty(id int, firstName string, lastName string, b
 
 // создает новый объект Person со всеми данными
 func (p *Person) NewPersonFull(id int, firstName string, lastName string, birthDate time.Time, age int, deathDate time.Time, startCareer time.Time, endCareer time.Time, photo string,
-	birthPlace small_models.PlaceOfBirth, genres []small_models.Genre, career []string, height int, spouse string, children []string, awards []small_models.Award) *Person {
+	birthPlace place_of_birth.PlaceOfBirth, genres []genre.Genre, career []string, height int, spouse string, children []string, awards []award.Award) *Person {
 	return &Person{
 		Id:          id,
 		FirstName:   firstName,
@@ -77,9 +79,9 @@ func (p *Person) NewPersonFull(id int, firstName string, lastName string, birthD
 
 // геттеры
 
-func (p Person) GetGenres() []small_models.Genre {
+func (p Person) GetGenres() []genre.Genre {
 	if p.Genres == nil {
-		return make([]small_models.Genre, 0)
+		return make([]genre.Genre, 0)
 	}
 	return p.Genres
 }
@@ -98,20 +100,20 @@ func (p Person) Getstring() []string {
 	return p.Children
 }
 
-func (p Person) GetAwards() []small_models.Award {
+func (p Person) GetAwards() []award.Award {
 	if p.Genres == nil {
-		return make([]small_models.Award, 0)
+		return make([]award.Award, 0)
 	}
 	return p.Awards
 }
 
 // добавление, удаление и проверка наличия элемента в слайсах
 
-func (p *Person) AddGenre(genre small_models.Genre) {
+func (p *Person) AddGenre(genre genre.Genre) {
 	p.Genres = append(p.Genres, genre)
 }
 
-func (p *Person) RemoveGenre(genre small_models.Genre) {
+func (p *Person) RemoveGenre(genre genre.Genre) {
 	for i, g := range p.Genres {
 		if g.Equals(&genre) {
 			p.Genres = append(p.Genres[:i], p.Genres[i+1:]...)
@@ -120,7 +122,7 @@ func (p *Person) RemoveGenre(genre small_models.Genre) {
 	}
 }
 
-func (p *Person) HasGenre(genre small_models.Genre) bool {
+func (p *Person) HasGenre(genre genre.Genre) bool {
 	for _, g := range p.Genres {
 		if g.Equals(&genre) {
 			return true
@@ -173,11 +175,11 @@ func (p *Person) HasChild(child string) bool {
 	return false
 }
 
-func (p *Person) AddAward(award small_models.Award) {
+func (p *Person) AddAward(award award.Award) {
 	p.Awards = append(p.Awards, award)
 }
 
-func (p *Person) RemoveAward(award small_models.Award) {
+func (p *Person) RemoveAward(award award.Award) {
 	for i, a := range p.Awards {
 		if a.Equals(&award) {
 			p.Awards = append(p.Awards[:i], p.Awards[i+1:]...)
@@ -186,7 +188,7 @@ func (p *Person) RemoveAward(award small_models.Award) {
 	}
 }
 
-func (p *Person) HasAward(award small_models.Award) bool {
+func (p *Person) HasAward(award award.Award) bool {
 	for _, a := range p.Awards {
 		if a.Equals(&award) {
 			return true
