@@ -1,11 +1,12 @@
 module github.com/go-park-mail-ru/2024_1_Cyberkotletki
 
-go 1.22
+go 1.22.0
 
 require (
 	github.com/gorilla/mux v1.8.1
 	github.com/swaggo/http-swagger/v2 v2.0.2
 	github.com/swaggo/swag v1.16.3
+	golang.org/x/crypto v0.20.0
 )
 
 require (
@@ -17,7 +18,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/swaggo/files/v2 v2.0.0 // indirect
-	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/tools v0.7.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
