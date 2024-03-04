@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"time"
 )
 
@@ -18,7 +19,15 @@ func Init(logger *log.Logger, params config.InitParams) *http.Server {
 
 	// REST API
 	router := mux.NewRouter()
-	rest.RegisterRoutes(router)
+	rest.RegisterRoutes(router, params)
+
+	// Swagger
+	cmd := exec.Command("swag", "init", "--dir", "cmd/app,internal/transport/rest", "--parseDependency")
+	if out, err := cmd.Output(); err != nil {
+		logger.Fatal("Не удалось сгенерировать документацию сваггер по причине: ", err)
+	} else {
+		logger.Printf("Логи swagger кодогена:\n%s", out)
+	}
 
 	return &http.Server{
 		Addr:         params.Addr,

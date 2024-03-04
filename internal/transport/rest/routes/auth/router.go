@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/transport/rest/auth/routes"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/transport/rest/routes/auth/routes"
 	"github.com/gorilla/mux"
 )
 
