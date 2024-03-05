@@ -29,6 +29,8 @@ func (f *FilmsDB) InitDB() {
 	f.dbMutex.Lock()
 	defer f.dbMutex.Unlock()
 
+	f.DB = make(map[int]content.Film)
+
 	// Заполнение базы данных DB
 	f.filmsLastId.Add(30)
 	f.DB[1] = content.Film{

@@ -16,7 +16,10 @@ type UsersDB struct {
 	usersLastId int64
 }
 
-var UsersDatabase = new(UsersDB)
+// var UsersDatabase = new(UsersDB)
+var FilmsDatabase = &UsersDB{
+	DB: make(map[int]user.User),
+}
 
 // InitDB Инициализирует небольшую таблицу пользователей
 func (u *UsersDB) InitDB() {
