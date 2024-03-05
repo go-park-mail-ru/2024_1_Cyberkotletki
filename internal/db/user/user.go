@@ -16,8 +16,7 @@ type UsersDB struct {
 	usersLastId int64
 }
 
-// var UsersDatabase = new(UsersDB)
-var FilmsDatabase = &UsersDB{
+var UsersDatabase = &UsersDB{
 	DB: make(map[int]user.User),
 }
 

@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"flag"
+	"fmt"
 	_ "github.com/go-park-mail-ru/2024_1_Cyberkotletki/docs"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/app"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/config"
@@ -25,14 +26,14 @@ var (
 // @version 1.0
 func main() {
 	staticDefaultFolder, _ := os.Getwd()
-	flag.StringVar(&listenAddress, "listen-address", "0.0.0.0", "Адрес сервера")
-	flag.StringVar(&listenPort, "listen-port", ":8000", "Порт сервера")
+	flag.StringVar(&listenAddress, "listen-address", "localhost", "Адрес сервера")
+	flag.StringVar(&listenPort, "listen-port", "8000", "Порт сервера")
 	flag.IntVar((*int)(&serverMode), "server-mode", 2, "0 = deploy\n1 = test\n2 = dev")
 	flag.BoolVar(&genSwagger, "generate-swagger", true, "true = сгенерировать swagger")
 	flag.StringVar(&staticFolder, "static-folder", filepath.Join(staticDefaultFolder, "assets", "examples", "static"), "путь до папки со статикой")
 	flag.Parse()
 	params := config.InitParams{
-		Addr:         listenAddress + listenPort,
+		Addr:         fmt.Sprintf("%s:%s", listenAddress, listenPort),
 		Mode:         serverMode,
 		GenSwagger:   genSwagger,
 		StaticFolder: staticFolder,
