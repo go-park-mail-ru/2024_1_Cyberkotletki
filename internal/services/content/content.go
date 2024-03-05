@@ -15,6 +15,8 @@ type PreviewInfoData struct {
 	Director      string   `json:"director" example:"Тарантино"`
 	Actors        []string `json:"actors" example:"Том Хэнкс,Сергей Бодров"`
 	Poster        string   `json:"poster" example:"/static/poster.jpg"`
+	Rating        float64  `json:"rating" example:"9.1"`
+	Duration      int      `json:"duration" example:"134"`
 }
 
 func GetContentPreviewInfo(contentId int) (*PreviewInfoData, *exc.Exception) {
@@ -32,7 +34,9 @@ func GetContentPreviewInfo(contentId int) (*PreviewInfoData, *exc.Exception) {
 				fmt.Sprintf("%s %s", film.Actors[0].FirstName, film.Actors[0].LastName),
 				fmt.Sprintf("%s %s", film.Actors[1].FirstName, film.Actors[1].LastName),
 			},
-			Poster: film.Poster,
+			Poster:   film.Poster,
+			Rating:   film.Rating,
+			Duration: film.Duration,
 		}, nil
 	}
 }
