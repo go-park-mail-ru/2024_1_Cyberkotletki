@@ -96,7 +96,7 @@ func (f *FilmsDB) InitDB() {
 		Content: content.Content{
 			Id:            2,
 			Title:         "Волк с Уолл-стрит",
-			OriginalTitle: "The Wolf jf Wall Stret",
+			OriginalTitle: "The Wolf from Wall Street",
 			Country: []country.Country{
 				{
 					Id:   1,
@@ -272,7 +272,7 @@ func (f *FilmsDB) InitDB() {
 	f.DB[5] = content.Film{
 		Content: content.Content{
 			Id:            5,
-			Title:         "Зеленпя миля",
+			Title:         "Зеленая миля",
 			OriginalTitle: "The Green Mile",
 			Country: []country.Country{
 				{
@@ -922,7 +922,7 @@ func (f *FilmsDB) InitDB() {
 		Content: content.Content{
 			Id:            16,
 			Title:         "Бесславные Ублюдки",
-			OriginalTitle: "Inglorious Basterds",
+			OriginalTitle: "Inglorious Bastards",
 			Country: []country.Country{
 				{
 					Id:   4,
@@ -1334,8 +1334,8 @@ func (f *FilmsDB) InitDB() {
 	f.DB[23] = content.Film{
 		Content: content.Content{
 			Id:            23,
-			Title:         "Операция  «Ы» и длугие приклюяения Шурика",
-			OriginalTitle: "The Green Mile",
+			Title:         "Операция  «Ы» и другие приклюяения Шурика",
+			OriginalTitle: "",
 			Country: []country.Country{
 				{
 					Id:   7,
@@ -1385,7 +1385,7 @@ func (f *FilmsDB) InitDB() {
 			Dubbing:     []person.Person{},
 			Awards:      []award.Award{},
 			Description: "",
-			Poster:      "/posters/f92f275b-b53f-4d97-9171-ce49cbb9e077.jpg",
+			Poster:      "/posters/4b1d2c78-5a85-4045-989b-e1c1c283c2e5.jpg",
 			Playback:    "",
 		},
 		Duration: 95,
@@ -1628,7 +1628,7 @@ func (f *FilmsDB) InitDB() {
 	}
 	f.DB[28] = content.Film{
 		Content: content.Content{
-			Id:            1,
+			Id:            28,
 			Title:         "Один дома 2: Затерянный в Нью-Йорке",
 			OriginalTitle: "Home Alone 2: Lost in New York",
 			Country: []country.Country{
@@ -1687,7 +1687,7 @@ func (f *FilmsDB) InitDB() {
 	}
 	f.DB[29] = content.Film{
 		Content: content.Content{
-			Id:            1,
+			Id:            29,
 			Title:         "Круэлла",
 			OriginalTitle: "Cruella",
 			Country: []country.Country{
@@ -1746,7 +1746,7 @@ func (f *FilmsDB) InitDB() {
 	}
 	f.DB[30] = content.Film{
 		Content: content.Content{
-			Id:            1,
+			Id:            30,
 			Title:         "Батя",
 			OriginalTitle: "",
 			Country: []country.Country{

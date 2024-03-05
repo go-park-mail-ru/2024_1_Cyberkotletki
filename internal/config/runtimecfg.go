@@ -13,6 +13,5 @@ type InitParams struct {
 	Mode         ServerMode
 	GenSwagger   bool
 	StaticFolder string
+	CORS         string
 }
-
-// todo переименовать файл?

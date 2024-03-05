@@ -20,6 +20,7 @@ var (
 	serverMode    config.ServerMode
 	genSwagger    bool
 	staticFolder  string
+	cors          string
 )
 
 // @title API Киноскопа
@@ -31,12 +32,14 @@ func main() {
 	flag.IntVar((*int)(&serverMode), "server-mode", 2, "0 = deploy\n1 = test\n2 = dev")
 	flag.BoolVar(&genSwagger, "generate-swagger", true, "true = сгенерировать swagger")
 	flag.StringVar(&staticFolder, "static-folder", filepath.Join(staticDefaultFolder, "assets", "examples", "static"), "путь до папки со статикой")
+	flag.StringVar(&staticFolder, cors, "http://localhost", "Параметр Access-Control-Allow-Origin")
 	flag.Parse()
 	params := config.InitParams{
 		Addr:         fmt.Sprintf("%s:%s", listenAddress, listenPort),
 		Mode:         serverMode,
 		GenSwagger:   genSwagger,
 		StaticFolder: staticFolder,
+		CORS:         cors,
 	}
 
 	logger := log.New(os.Stdout, "server: ", log.LstdFlags)

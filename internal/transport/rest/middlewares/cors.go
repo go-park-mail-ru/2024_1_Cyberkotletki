@@ -10,18 +10,16 @@ type CORSConfig struct {
 }
 
 func (corsConfig *CORSConfig) SetAllowedOriginsFromConfig(params config.InitParams) {
-	// todo: чтение настроек cors из конфига
 	switch params.Mode {
 	case config.DevMode:
-		corsConfig.AllowedOrigin = "0.0.0.0:8001"
+		corsConfig.AllowedOrigin = "http://localhost:3000"
 	case config.DeployMode, config.TestMode:
-		// todo
+		corsConfig.AllowedOrigin = params.CORS
 	}
 }
 
 func (corsConfig *CORSConfig) SetCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// todo добавить больше заголовков и настроить их через конфиг
 		w.Header().Set("Access-Control-Max-Age", "86400")
 		w.Header().Set("Access-Control-Allow-Origin", corsConfig.AllowedOrigin)
 		w.Header().Set("Vary", "Origin")

@@ -16,8 +16,8 @@ func TestUsersDB_Init(t *testing.T) {
 		t.Errorf("Expected length of UsersDB to be 3, got %d", len(usersDB.DB))
 	}
 
-	if user_Obj, ok := usersDB.DB[1]; !ok || user_Obj.Name != "Egor" {
-		t.Errorf("Expected to find user_Obj with name Egor, got %v", user_Obj)
+	if userObj, ok := usersDB.DB[1]; !ok || userObj.Name != "Egor" {
+		t.Errorf("Expected to find user_Obj with name Egor, got %v", userObj)
 	}
 }
 func TestUsersDB_AddUser(t *testing.T) {
