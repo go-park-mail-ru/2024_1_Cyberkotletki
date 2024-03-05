@@ -24,11 +24,13 @@ func Init(logger *log.Logger, params config.InitParams) *http.Server {
 	rest.RegisterRoutes(router, params)
 
 	// Swagger
-	cmd := exec.Command("swag", "init", "--dir", "cmd/app,internal/transport/rest", "--parseDependency")
-	if out, err := cmd.Output(); err != nil {
-		logger.Fatal("Не удалось сгенерировать документацию сваггер по причине: ", err)
-	} else {
-		logger.Printf("Логи swagger кодогена:\n%s", out)
+	if params.GenSwagger {
+		cmd := exec.Command("swag", "init", "--dir", "cmd/app,internal/transport/rest", "--parseDependency")
+		if out, err := cmd.Output(); err != nil {
+			logger.Fatal("Не удалось сгенерировать документацию сваггер по причине: ", err)
+		} else {
+			logger.Printf("Логи swagger кодогена:\n%s", out)
+		}
 	}
 
 	// DB
