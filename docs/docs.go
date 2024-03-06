@@ -328,6 +328,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Тарантино"
                 },
+                "duration": {
+                    "type": "integer",
+                    "example": 134
+                },
                 "genre": {
                     "type": "string",
                     "example": "Боевик"
@@ -339,6 +343,10 @@ const docTemplate = `{
                 "poster": {
                     "type": "string",
                     "example": "/static/poster.jpg"
+                },
+                "rating": {
+                    "type": "number",
+                    "example": 9.1
                 },
                 "release_year": {
                     "type": "integer",

@@ -1,11 +1,11 @@
 package config
 
-type ServerMode int
+type ServerMode string
 
 const (
-	DeployMode = iota
-	TestMode
-	DevMode
+	DeployMode = "prod"
+	TestMode   = "test"
+	DevMode    = "dev"
 )
 
 type InitParams struct {
@@ -13,6 +13,5 @@ type InitParams struct {
 	Mode         ServerMode
 	GenSwagger   bool
 	StaticFolder string
+	CORS         string
 }
-
-// todo переименовать файл?

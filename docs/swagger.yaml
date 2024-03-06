@@ -61,6 +61,9 @@ definitions:
       director:
         example: Тарантино
         type: string
+      duration:
+        example: 134
+        type: integer
       genre:
         example: Боевик
         type: string
@@ -70,6 +73,9 @@ definitions:
       poster:
         example: /static/poster.jpg
         type: string
+      rating:
+        example: 9.1
+        type: number
       release_year:
         example: 2020
         type: integer
