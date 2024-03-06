@@ -1,12 +1,11 @@
-package models
+package user
 
 import (
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/user"
 	"testing"
 )
 
 func TestValidatePassword(t *testing.T) {
-	var userObj = user.NewUserEmpty()
+	var userObj = NewUserEmpty()
 	var password = ""
 	err := userObj.ValidatePassword(password)
 
@@ -33,7 +32,7 @@ func TestValidatePassword(t *testing.T) {
 }
 
 func TestValidateEmail(t *testing.T) {
-	var userObj = user.NewUserEmpty()
+	var userObj = NewUserEmpty()
 	var email = "email@gmailcom"
 	err := userObj.ValidateEmail(email)
 
