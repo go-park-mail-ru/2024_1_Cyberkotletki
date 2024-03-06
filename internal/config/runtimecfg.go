@@ -3,9 +3,9 @@ package config
 type ServerMode string
 
 const (
-	DeployMode = "dev"
+	DeployMode = "prod"
 	TestMode   = "test"
-	DevMode    = "prod"
+	DevMode    = "dev"
 )
 
 type InitParams struct {
