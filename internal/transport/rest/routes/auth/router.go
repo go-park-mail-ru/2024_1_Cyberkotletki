@@ -8,4 +8,6 @@ import (
 func RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/login", routes.Login)
 	router.HandleFunc("/register", routes.Register)
+	router.HandleFunc("/isAuth", routes.IsAuth)
+	router.HandleFunc("/logout", routes.Logout)
 }

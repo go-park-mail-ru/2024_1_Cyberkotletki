@@ -97,6 +97,29 @@ info:
   title: API Киноскопа
   version: "1.0"
 paths:
+  /auth/isAuth:
+    get:
+      description: Проверяет, авторизован ли пользователь
+      parameters:
+      - default: session=xxx
+        description: session
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+        "403":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      tags:
+      - Auth
   /auth/login:
     post:
       consumes:
@@ -124,6 +147,25 @@ paths:
             $ref: '#/definitions/httputil.HTTPError'
         "500":
           description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      tags:
+      - Auth
+  /auth/logout:
+    post:
+      description: Удаляет сессию
+      parameters:
+      - default: session=xxx
+        description: session
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+        "405":
+          description: Не авторизован
           schema:
             $ref: '#/definitions/httputil.HTTPError'
       tags:
