@@ -7,7 +7,6 @@ import (
 )
 
 func TestPreviewInfoData_GetContentPreviewInfo(t *testing.T) {
-	// Инициализация базы данных
 	content.FilmsDatabase.InitDB()
 	tests := []struct {
 		name      string

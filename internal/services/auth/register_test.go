@@ -6,7 +6,7 @@ import (
 )
 
 func TestRegisterData_Register(t *testing.T) {
-	// Инициализация базы данных
+	// Инициализация бд юзеров
 	user.UsersDatabase.InitDB()
 
 	tests := []struct {

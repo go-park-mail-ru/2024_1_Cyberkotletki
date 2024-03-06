@@ -7,13 +7,13 @@ import (
 
 type sessionsDB struct {
 	sync.RWMutex
-	sessions map[string]int
+	Sessions map[string]int
 }
 
 func (SDB *sessionsDB) NewSession(id int) string {
 	sessionId := uuid.New().String()
 	SDB.Lock()
-	SDB.sessions[sessionId] = id
+	SDB.Sessions[sessionId] = id
 	SDB.Unlock()
 	return sessionId
 }
@@ -21,7 +21,7 @@ func (SDB *sessionsDB) NewSession(id int) string {
 func (SDB *sessionsDB) CheckSession(session string) (int, bool) {
 	SDB.Lock()
 	defer SDB.Unlock()
-	if s, ok := SDB.sessions[session]; ok {
+	if s, ok := SDB.Sessions[session]; ok {
 		return s, true
 	}
 	return -1, false
@@ -30,11 +30,11 @@ func (SDB *sessionsDB) CheckSession(session string) (int, bool) {
 func (SDB *sessionsDB) DeleteSession(session string) bool {
 	SDB.Lock()
 	defer SDB.Unlock()
-	if _, ok := SDB.sessions[session]; ok {
-		delete(SDB.sessions, session)
+	if _, ok := SDB.Sessions[session]; ok {
+		delete(SDB.Sessions, session)
 		return true
 	}
 	return false
 }
 
-var SessionsDB = sessionsDB{sessions: make(map[string]int)}
+var SessionsDB = sessionsDB{Sessions: make(map[string]int)}
