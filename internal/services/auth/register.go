@@ -5,7 +5,6 @@ import (
 	userDB "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/db/user"
 	exc "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/exceptions"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/user"
-	"golang.org/x/crypto/bcrypt"
 	"time"
 )
 
@@ -22,7 +21,8 @@ func Register(registerData RegisterData) (string, *exc.Exception) {
 	if err := us.ValidatePassword(registerData.Password); err != nil {
 		return "", err
 	}
-	if hash, err := bcrypt.GenerateFromPassword([]byte(registerData.Password), 14); err != nil {
+
+	if hash := user.HashPassword(registerData.Password); hash == "" {
 		return "", &exc.Exception{
 			When:  time.Now(),
 			What:  "Внутренняя ошибка сервера",

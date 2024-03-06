@@ -1,10 +1,11 @@
 package user
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	exc "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/exceptions"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/content"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/person"
-	"golang.org/x/crypto/bcrypt"
 	"net/mail"
 	"time"
 )
@@ -37,7 +38,7 @@ func (u *User) ValidatePassword(password string) *exc.Exception {
 			Type:  exc.Unprocessable,
 		}
 	}
-	if len(password) > 72 {
+	if len(password) > 32 {
 		return &exc.Exception{
 			When:  time.Now(),
 			What:  "Слишком длинный пароль",
@@ -60,10 +61,15 @@ func (u *User) ValidateEmail(email string) *exc.Exception {
 	return nil
 }
 
+func HashPassword(password string) string {
+	hash := sha256.Sum256([]byte(password))
+	return hex.EncodeToString(hash[:])
+}
+
 // CheckPassword сравнивает пароль с хешем и возвращает true, если они совпадают.
 func (u *User) CheckPassword(password string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password))
-	return err == nil
+	hash := HashPassword(password)
+	return hash == u.PasswordHash
 }
 
 func NewUserEmpty() *User {
