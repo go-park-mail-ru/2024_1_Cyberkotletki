@@ -43,8 +43,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			Name:     "session",
 			Value:    key,
 			Expires:  time.Now().Add(24 * time.Hour),
+			Path:     "/",
 			HttpOnly: true,
-			Secure:   true,
+			MaxAge:   86400,
 		}
 		http.SetCookie(w, &cookie)
 	}

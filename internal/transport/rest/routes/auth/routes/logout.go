@@ -30,7 +30,6 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 				Value:    "",
 				Expires:  time.Unix(0, 0),
 				HttpOnly: true,
-				Secure:   true,
 			}
 			http.SetCookie(w, &cookie)
 			httputil.NewError(w, 403, exc.Exception{

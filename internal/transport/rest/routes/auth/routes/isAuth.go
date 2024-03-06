@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fmt"
 	exc "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/exceptions"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/services/auth"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/transport/rest/httputil"
@@ -17,6 +18,7 @@ import (
 // @Failure		500	{object}	httputil.HTTPError	"Внутренняя ошибка сервера"
 // @Router /auth/isAuth [get]
 func IsAuth(w http.ResponseWriter, r *http.Request) {
+	fmt.Println(r.Cookie("session"))
 	if session, err := r.Cookie("session"); err != nil {
 		httputil.NewError(w, 403, exc.Exception{
 			When:  time.Now(),
@@ -26,14 +28,6 @@ func IsAuth(w http.ResponseWriter, r *http.Request) {
 		})
 	} else {
 		if _, err := auth.IsAuth(session.Value); err != nil {
-			cookie := http.Cookie{
-				Name:     "session",
-				Value:    "",
-				Expires:  time.Unix(0, 0),
-				HttpOnly: true,
-				Secure:   true,
-			}
-			http.SetCookie(w, &cookie)
 			httputil.NewError(w, 403, *err)
 		} else {
 			if _, err := w.Write([]byte("authenticated")); err != nil {

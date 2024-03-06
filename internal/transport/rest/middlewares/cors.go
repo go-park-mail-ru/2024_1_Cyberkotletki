@@ -18,7 +18,7 @@ func (corsConfig *CORSConfig) SetCORS(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Max-Age", "86400")
 		w.Header().Set("Access-Control-Allow-Origin", corsConfig.AllowedOrigin)
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
-		w.Header().Set("Access-Control-Allow-Headers", "Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers")
+		w.Header().Set("Access-Control-Allow-Headers", "Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Cookie")
 		w.Header().Set("Vary", "Origin")
 		if r.Method == http.MethodOptions {
 			return
