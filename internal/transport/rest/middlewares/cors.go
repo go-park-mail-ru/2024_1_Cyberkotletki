@@ -10,12 +10,7 @@ type CORSConfig struct {
 }
 
 func (corsConfig *CORSConfig) SetAllowedOriginsFromConfig(params config.InitParams) {
-	switch params.Mode {
-	case config.DevMode:
-		corsConfig.AllowedOrigin = "http://localhost:3000"
-	case config.DeployMode, config.TestMode:
-		corsConfig.AllowedOrigin = params.CORS
-	}
+	corsConfig.AllowedOrigin = params.CORS
 }
 
 func (corsConfig *CORSConfig) SetCORS(next http.Handler) http.Handler {
