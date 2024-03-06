@@ -1,11 +1,11 @@
 package config
 
-type ServerMode int
+type ServerMode string
 
 const (
-	DeployMode = iota
-	TestMode
-	DevMode
+	DeployMode = "dev"
+	TestMode   = "test"
+	DevMode    = "prod"
 )
 
 type InitParams struct {

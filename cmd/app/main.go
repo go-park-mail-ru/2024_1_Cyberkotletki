@@ -12,7 +12,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"strconv"
 )
 
 // @title API Киноскопа
@@ -26,9 +25,14 @@ func main() {
 	staticDefaultFolder, _ := os.Getwd()
 	listenAddress := os.Getenv("LISTEN_ADDRESS")
 	listenPort := os.Getenv("LISTEN_PORT")
-	serverMode, err := strconv.ParseInt(os.Getenv("SERVER_MODE"), 10, 32)
-	if err != nil || serverMode > 2 || serverMode < 0 {
-		log.Fatal("Неправильное использование параметра SERVER_MODE")
+	serverMode := os.Getenv("SERVER_MODE")
+	switch serverMode {
+	case "PRODUCTION":
+		serverMode = "prod"
+	case "TEST":
+		serverMode = "test"
+	default:
+		serverMode = "dev"
 	}
 	var genSwagger bool
 	if swagger := os.Getenv("GEN_SWAGGER"); swagger == "true" {
