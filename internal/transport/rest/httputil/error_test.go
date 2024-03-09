@@ -2,7 +2,7 @@ package httputil
 
 import (
 	"fmt"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/exceptions"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/exceptions"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -17,7 +17,7 @@ func Test_NewError(t *testing.T) {
 		err    exceptions.Exception
 	}{
 		{
-			name:   "Test with 404 status and NotFound exception",
+			name:   "Test with 404 status and NotFound exceptions",
 			status: http.StatusNotFound,
 			err: exceptions.Exception{
 				When:  time.Now(),
@@ -27,7 +27,7 @@ func Test_NewError(t *testing.T) {
 			},
 		},
 		{
-			name:   "Test with 500 status and Server exception",
+			name:   "Test with 500 status and Server exceptions",
 			status: http.StatusInternalServerError,
 			err: exceptions.Exception{
 				When:  time.Now(),

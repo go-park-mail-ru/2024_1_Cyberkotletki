@@ -1,10 +1,10 @@
 package user
 
 import (
-	exc "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/exceptions"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/content"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/person"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/user"
+	exc "github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/exceptions"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -80,16 +80,11 @@ func (u *UsersDB) HasUser(user user.User) bool {
 	return false
 }
 
-func (u *UsersDB) AddUser(userObj user.User) (*user.User, *exc.Exception) {
+func (u *UsersDB) AddUser(userObj user.User) (*user.User, error) {
 	u.dbMutex.Lock()
 	defer u.dbMutex.Unlock()
 	if u.HasUser(userObj) {
-		return nil, &exc.Exception{
-			When:  time.Now(),
-			What:  "Пользователь с таким Email уже существует",
-			Layer: exc.Database,
-			Type:  exc.AlreadyExists,
-		}
+		return nil, exc.New(exc.Database, exc.AlreadyExists, "пользователь с таким email уже существует")
 	}
 	atomic.AddInt64(&u.usersLastId, u.usersLastId+1)
 	userObj.Id = int(u.usersLastId)
@@ -97,7 +92,7 @@ func (u *UsersDB) AddUser(userObj user.User) (*user.User, *exc.Exception) {
 	return &userObj, nil
 }
 
-func (u *UsersDB) GetUserByEmail(email string) (*user.User, *exc.Exception) {
+func (u *UsersDB) GetUserByEmail(email string) (*user.User, error) {
 	u.dbMutex.Lock()
 	defer u.dbMutex.Unlock()
 
@@ -106,10 +101,5 @@ func (u *UsersDB) GetUserByEmail(email string) (*user.User, *exc.Exception) {
 			return &us, nil
 		}
 	}
-	return nil, &exc.Exception{
-		When:  time.Now(),
-		What:  "Пользователь с таким email не найден",
-		Layer: exc.Database,
-		Type:  exc.NotFound,
-	}
+	return nil, exc.New(exc.Database, exc.NotFound, "пользователь с таким email не найден")
 }

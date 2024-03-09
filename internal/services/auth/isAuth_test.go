@@ -2,7 +2,7 @@ package auth
 
 import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/db/session"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/exceptions"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/exceptions"
 	"testing"
 	"time"
 )

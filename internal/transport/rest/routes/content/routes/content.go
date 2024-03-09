@@ -1,13 +1,11 @@
 package routes
 
 import (
-	"encoding/json"
-	exc "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/exceptions"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/services/content"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/transport/rest/httputil"
+	exc "github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/exceptions"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 // GetContentPreview
@@ -20,23 +18,19 @@ import (
 // @Failure		500	{object}	httputil.HTTPError	"Внутренняя ошибка сервера"
 // @Router /content/contentPreview [get]
 func GetContentPreview(w http.ResponseWriter, r *http.Request) {
-	if id, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 32); err == nil {
-		if compilation, err := content.GetContentPreviewInfo(int(id)); err != nil {
-			if err.Type == exc.NotFound {
-				httputil.NewError(w, 404, *err)
-			} else {
-				httputil.NewError(w, 500, *err)
-			}
-		} else {
-			j, _ := json.Marshal(compilation)
-			_, _ = w.Write(j)
-		}
-	} else {
-		httputil.NewError(w, 400, exc.Exception{
-			When:  time.Now(),
-			What:  "Требуется указать валидный id контента",
-			Layer: exc.Transport,
-			Type:  exc.Unprocessable,
-		})
+	id, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 32)
+	if err != nil {
+		httputil.NewError(w, http.StatusBadRequest, exc.New(exc.Transport, exc.BadRequest, "требуется указать валидный id контента"))
+		return
 	}
+	contentPreview, err := content.GetContentPreviewInfo(int(id))
+	if err != nil {
+		if exc.Is(err, exc.NotFoundErr) {
+			httputil.NewError(w, http.StatusNotFound, err)
+		} else {
+			httputil.NewError(w, http.StatusInternalServerError, err)
+		}
+		return
+	}
+	httputil.WriteJSON(w, *contentPreview)
 }

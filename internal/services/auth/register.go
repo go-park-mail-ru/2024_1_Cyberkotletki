@@ -3,9 +3,8 @@ package auth
 import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/db/session"
 	userDB "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/db/user"
-	exc "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/exceptions"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/user"
-	"time"
+	exc "github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/exceptions"
 )
 
 type RegisterData struct {
@@ -13,7 +12,8 @@ type RegisterData struct {
 	Password string `json:"password" example:"SecretPassword1!" format:"string"`
 }
 
-func Register(registerData RegisterData) (string, *exc.Exception) {
+// Register создаёт пользователя в системе и сразу же возвращает сессию
+func Register(registerData RegisterData) (string, error) {
 	us := user.NewUserEmpty()
 	if err := us.ValidateEmail(registerData.Email); err != nil {
 		return "", err
@@ -21,17 +21,11 @@ func Register(registerData RegisterData) (string, *exc.Exception) {
 	if err := us.ValidatePassword(registerData.Password); err != nil {
 		return "", err
 	}
-
 	if hash := user.HashPassword(registerData.Password); hash == "" {
-		return "", &exc.Exception{
-			When:  time.Now(),
-			What:  "Внутренняя ошибка сервера",
-			Layer: exc.Server,
-			Type:  exc.Untyped,
-		}
+		return "", exc.New(exc.Service, exc.Internal, "произошла непредвиденная ошибка", "не удалось получить хэш пароля")
 	} else {
 		us.Email = registerData.Email
-		us.PasswordHash = string(hash)
+		us.PasswordHash = hash
 	}
 	if us, err := userDB.UsersDatabase.AddUser(*us); err != nil {
 		return "", err

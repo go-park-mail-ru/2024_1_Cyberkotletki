@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/transport/rest/httputil"
 	"net/http"
 )
 
@@ -11,6 +12,6 @@ import (
 // @Router /playground/ping [get]
 func Ping(w http.ResponseWriter, r *http.Request) {
 	if _, err := w.Write([]byte("pong")); err != nil {
-		http.Error(w, "что-то пошло не так...", 503)
+		httputil.NewError(w, http.StatusInternalServerError, err)
 	}
 }

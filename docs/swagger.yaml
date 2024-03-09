@@ -164,10 +164,6 @@ paths:
       responses:
         "200":
           description: OK
-        "405":
-          description: Не авторизован
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
       tags:
       - Auth
   /auth/register:
@@ -199,7 +195,7 @@ paths:
             $ref: '#/definitions/httputil.HTTPError'
       tags:
       - Auth
-  /collections/compilation/{genre}:
+  /collections/compilation/genre/{genre}:
     get:
       consumes:
       - application/json

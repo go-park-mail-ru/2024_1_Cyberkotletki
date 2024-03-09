@@ -2,9 +2,10 @@ package routes
 
 import (
 	"encoding/json"
-	exc "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/exceptions"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/config"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/services/auth"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/transport/rest/httputil"
+	exc "github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/exceptions"
 	"net/http"
 	"time"
 )
@@ -24,29 +25,26 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	loginData := new(auth.LoginData)
 	if err := decoder.Decode(loginData); err != nil {
-		httputil.NewError(w, 400, exc.Exception{
-			When:  time.Now(),
-			What:  "Невалидный JSON",
-			Layer: exc.Transport,
-			Type:  exc.Unprocessable,
-		})
-	} else if key, err := auth.Login(*loginData); err != nil {
-		// forbidden тоже будет восприниматься как not found
-		if err.Type == exc.NotFound || err.Type == exc.Forbidden {
-			httputil.NewError(w, 404, *err)
-		} else {
-			httputil.NewError(w, 500, *err)
-		}
-	} else {
-		// todo expiration в конфиг
-		cookie := http.Cookie{
-			Name:     "session",
-			Value:    key,
-			Expires:  time.Now().Add(24 * time.Hour),
-			Path:     "/",
-			HttpOnly: true,
-			MaxAge:   86400,
-		}
-		http.SetCookie(w, &cookie)
+		httputil.NewError(w, http.StatusBadRequest, httputil.BadJSON)
+		return
 	}
+	key, err := auth.Login(*loginData)
+	if err != nil {
+		// forbidden (неверный пароль) тоже будет восприниматься как not found (пользователь не найден)
+		if exc.Is(err, exc.NotFoundErr) || exc.Is(err, exc.ForbiddenErr) {
+			httputil.NewError(w, http.StatusBadRequest, err)
+		} else {
+			httputil.NewError(w, http.StatusInternalServerError, err)
+		}
+		return
+	}
+	cookie := http.Cookie{
+		Name:     "session",
+		Value:    key,
+		Expires:  time.Now().Add(r.Context().Value("params").(config.InitParams).SessionAliveTime),
+		HttpOnly: true,
+		Secure:   r.Context().Value("params").(config.InitParams).CookiesSecure,
+		Path:     "/",
+	}
+	http.SetCookie(w, &cookie)
 }

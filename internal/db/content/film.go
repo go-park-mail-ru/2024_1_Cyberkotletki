@@ -1,7 +1,6 @@
 package content
 
 import (
-	exc "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/exceptions"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/audience"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/award"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/boxoffice"
@@ -9,6 +8,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/country"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/genre"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/models/person"
+	exc "github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/exceptions"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -1805,22 +1805,17 @@ func (f *FilmsDB) InitDB() {
 	}
 }
 
-func (f *FilmsDB) GetFilm(id int) (*content.Film, *exc.Exception) {
+func (f *FilmsDB) GetFilm(id int) (*content.Film, error) {
 	f.dbMutex.Lock()
 	defer f.dbMutex.Unlock()
 	if filmObj, ok := f.DB[id]; ok {
 		return &filmObj, nil
 	}
-	return nil, &exc.Exception{
-		When:  time.Now(),
-		What:  "Фильм с таким id не найден",
-		Layer: exc.Database,
-		Type:  exc.NotFound,
-	}
+	return nil, exc.New(exc.Database, exc.NotFound, "фильм с таким id не найден")
 }
 
 // GetFilmsByGenre возвращает фильмы определенного жанра
-func (f *FilmsDB) GetFilmsByGenre(genreId int) ([]content.Film, *exc.Exception) {
+func (f *FilmsDB) GetFilmsByGenre(genreId int) ([]content.Film, error) {
 	f.dbMutex.Lock()
 	defer f.dbMutex.Unlock()
 
@@ -1834,12 +1829,7 @@ func (f *FilmsDB) GetFilmsByGenre(genreId int) ([]content.Film, *exc.Exception) 
 		}
 	}
 	if films == nil {
-		return nil, &exc.Exception{
-			When:  time.Now(),
-			What:  "Фильмы не найдены",
-			Layer: exc.Database,
-			Type:  exc.NotFound,
-		}
+		return nil, exc.New(exc.Database, exc.NotFound, "Фильмы не найдены")
 	}
 	return films, nil
 }

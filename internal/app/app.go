@@ -14,10 +14,7 @@ import (
 	"time"
 )
 
-// todo: сделать RunParams и как-то логически разделить его с InitParams
-
 func Init(logger *log.Logger, params config.InitParams) *http.Server {
-	// todo: ко 2 рк надо будет сделать более продвинутый инит
 
 	// REST API
 	router := mux.NewRouter()
@@ -27,7 +24,7 @@ func Init(logger *log.Logger, params config.InitParams) *http.Server {
 	if params.GenSwagger {
 		cmd := exec.Command("swag", "init", "--dir", "cmd/app,internal/transport/rest", "--parseDependency")
 		if out, err := cmd.Output(); err != nil {
-			logger.Fatal("Не удалось сгенерировать документацию сваггер по причине: ", err)
+			logger.Fatalf("Не удалось сгенерировать документацию сваггер по причине: %s", out)
 		} else {
 			logger.Printf("Логи swagger кодогена:\n%s", out)
 		}
@@ -51,18 +48,17 @@ func Run(server *http.Server, params config.InitParams) error {
 	if params.Mode == config.DevMode {
 		return server.ListenAndServe()
 	} else {
-		// todo
-		// server.ListenAndServeTLS()
+		// для secure-соединения лучше использовать nginx
+		// return server.ListenAndServeTLS()
 		return nil
 	}
 }
 
-func Shutdown(server *http.Server, logger *log.Logger, quit <-chan os.Signal, done chan<- bool) {
+func Shutdown(server *http.Server, logger *log.Logger, quit <-chan os.Signal, done chan<- bool, params config.InitParams) {
 	<-quit
 	logger.Println("Завершение работы сервера...")
 
-	// todo: занести время для выполнения graceful shutdown в конфиг
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), params.GracefulShutdownTime)
 	defer cancel()
 
 	server.SetKeepAlivesEnabled(false)

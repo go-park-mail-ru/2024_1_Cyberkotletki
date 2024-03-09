@@ -114,12 +114,6 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK"
-                    },
-                    "405": {
-                        "description": "Не авторизован",
-                        "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
-                        }
                     }
                 }
             }
@@ -169,7 +163,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/collections/compilation/{genre}": {
+        "/collections/compilation/genre/{genre}": {
             "get": {
                 "description": "Возвращает актуальные подборки фильмов по указанному жанру. Если передать cookies с сессией, то подборка будет персонализированной",
                 "consumes": [

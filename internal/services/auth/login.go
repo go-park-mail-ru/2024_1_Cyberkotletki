@@ -3,8 +3,7 @@ package auth
 import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/db/session"
 	userDB "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/db/user"
-	exc "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/exceptions"
-	"time"
+	exc "github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/exceptions"
 )
 
 type LoginData struct {
@@ -12,7 +11,7 @@ type LoginData struct {
 	Password string `json:"password" example:"SecretPassword1!" format:"string"`
 }
 
-func Login(loginData LoginData) (string, *exc.Exception) {
+func Login(loginData LoginData) (string, error) {
 	us, err := userDB.UsersDatabase.GetUserByEmail(loginData.Login)
 	if err != nil {
 		return "", err
@@ -20,10 +19,5 @@ func Login(loginData LoginData) (string, *exc.Exception) {
 	if us.CheckPassword(loginData.Password) {
 		return session.SessionsDB.NewSession(us.Id), nil
 	}
-	return "", &exc.Exception{
-		When:  time.Now(),
-		What:  "Неверный пароль",
-		Layer: exc.Service,
-		Type:  exc.Forbidden,
-	}
+	return "", exc.New(exc.Service, exc.Forbidden, "неверный пароль")
 }

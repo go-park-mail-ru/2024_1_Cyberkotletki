@@ -2,8 +2,7 @@ package collections
 
 import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/db/content"
-	exc "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/exceptions"
-	"time"
+	exc "github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/exceptions"
 )
 
 type CompilationData struct {
@@ -11,7 +10,7 @@ type CompilationData struct {
 	ContentIdentifiers []int  `json:"ids" example:"1,2,3"`
 }
 
-func GetCompilation(genre string) (*CompilationData, *exc.Exception) {
+func GetCompilation(genre string) (*CompilationData, error) {
 	var genreId int
 	switch genre {
 	case "drama":
@@ -21,12 +20,7 @@ func GetCompilation(genre string) (*CompilationData, *exc.Exception) {
 	case "comedian":
 		genreId = 3
 	default:
-		return nil, &exc.Exception{
-			When:  time.Now(),
-			What:  "Такого жанра не существует",
-			Layer: exc.Service,
-			Type:  exc.NotFound,
-		}
+		return nil, exc.New(exc.Service, exc.NotFound, "такого жанра не существует")
 	}
 	if films, err := content.FilmsDatabase.GetFilmsByGenre(genreId); err != nil {
 		return nil, err

@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	_ "github.com/go-park-mail-ru/2024_1_Cyberkotletki/docs"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/config"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/transport/rest/middlewares"
@@ -8,28 +9,37 @@ import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/transport/rest/routes/collections"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/transport/rest/routes/content"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/transport/rest/routes/playground"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/transport/rest/routes/swagger"
 	"github.com/gorilla/mux"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"net/http"
 )
 
+type RouteRegister func(router *mux.Router, params config.InitParams)
+
 // Routes это map с парами path - функция для регистрации путей
-type Routes map[string]func(*mux.Router)
+type Routes map[string]RouteRegister
 
 var routes = Routes{
 	"/auth":        auth.RegisterRoutes,
 	"/collections": collections.RegisterRoutes,
 	"/content":     content.RegisterRoutes,
 	"/playground":  playground.RegisterRoutes,
-	"/swagger":     swagger.RegisterRoutes,
 }
 
 func RegisterRoutes(router *mux.Router, params config.InitParams) {
 	// CORS
-	// router.Use(mux.CORSMethodMiddleware(router))
 	allowedOrigin := new(middlewares.CORSConfig)
 	allowedOrigin.SetAllowedOriginsFromConfig(params)
 	router.Use(allowedOrigin.SetCORS)
+
+	// Проброс параметров
+	router.Use(
+		func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), "params", params)))
+			})
+		},
+	)
 
 	// Статика
 	fs := http.FileServer(http.Dir(params.StaticFolder))
@@ -37,7 +47,9 @@ func RegisterRoutes(router *mux.Router, params config.InitParams) {
 
 	// Ручки
 	for path, registerRoute := range routes {
-		r := router.PathPrefix(path).Subrouter()
-		registerRoute(r)
+		registerRoute(router.PathPrefix(path).Subrouter(), params)
 	}
+
+	// Swagger
+	router.PathPrefix("/").HandlerFunc(httpSwagger.WrapHandler)
 }

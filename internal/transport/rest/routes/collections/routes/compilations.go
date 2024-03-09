@@ -1,13 +1,11 @@
 package routes
 
 import (
-	"encoding/json"
-	exc "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/exceptions"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/services/collections"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/transport/rest/httputil"
+	exc "github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/exceptions"
 	"github.com/gorilla/mux"
 	"net/http"
-	"time"
 )
 
 // GetCompilation
@@ -20,25 +18,21 @@ import (
 // @Success		400	{object}	httputil.HTTPError	"Требуется указать жанр"
 // @Success		404	{object}	httputil.HTTPError	"Такой жанр не найден"
 // @Failure		500	{object}	httputil.HTTPError	"Внутренняя ошибка сервера"
-// @Router /collections/compilation/{genre} [get]
+// @Router /collections/compilation/genre/{genre} [get]
 func GetCompilation(w http.ResponseWriter, r *http.Request) {
-	if genre, ok := mux.Vars(r)["genre"]; ok {
-		if compilation, err := collections.GetCompilation(genre); err != nil {
-			if err.Type == exc.NotFound {
-				httputil.NewError(w, 404, *err)
-			} else {
-				httputil.NewError(w, 500, *err)
-			}
-		} else {
-			j, _ := json.Marshal(compilation)
-			_, _ = w.Write(j)
-		}
-	} else {
-		httputil.NewError(w, 400, exc.Exception{
-			When:  time.Now(),
-			What:  "Требуется указать жанр",
-			Layer: exc.Transport,
-			Type:  exc.Unprocessable,
-		})
+	genre, ok := mux.Vars(r)["genre"]
+	if !ok {
+		httputil.NewError(w, http.StatusBadRequest, exc.New(exc.Transport, exc.BadRequest, "требуется указать жанр"))
+		return
 	}
+	compilation, err := collections.GetCompilation(genre)
+	if err != nil {
+		if exc.Is(err, exc.NotFoundErr) {
+			httputil.NewError(w, http.StatusNotFound, err)
+		} else {
+			httputil.NewError(w, http.StatusInternalServerError, err)
+		}
+		return
+	}
+	httputil.WriteJSON(w, *compilation)
 }

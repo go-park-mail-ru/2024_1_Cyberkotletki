@@ -3,7 +3,6 @@ package content
 import (
 	"fmt"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/db/content"
-	exc "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/exceptions"
 )
 
 type PreviewInfoData struct {
@@ -19,24 +18,24 @@ type PreviewInfoData struct {
 	Duration      int      `json:"duration" example:"134"`
 }
 
-func GetContentPreviewInfo(contentId int) (*PreviewInfoData, *exc.Exception) {
-	if film, err := content.FilmsDatabase.GetFilm(contentId); err != nil {
+func GetContentPreviewInfo(contentId int) (*PreviewInfoData, error) {
+	film, err := content.FilmsDatabase.GetFilm(contentId)
+	if err != nil {
 		return nil, err
-	} else {
-		return &PreviewInfoData{
-			Title:         film.Title,
-			OriginalTitle: film.OriginalTitle,
-			ReleaseYear:   film.Release.Year(),
-			Country:       film.Country[0].Name,
-			Genre:         film.Genres[0].Name,
-			Director:      fmt.Sprintf("%s %s", film.Directors[0].FirstName, film.Directors[0].LastName),
-			Actors: []string{
-				fmt.Sprintf("%s %s", film.Actors[0].FirstName, film.Actors[0].LastName),
-				fmt.Sprintf("%s %s", film.Actors[1].FirstName, film.Actors[1].LastName),
-			},
-			Poster:   film.Poster,
-			Rating:   film.Rating,
-			Duration: film.Duration,
-		}, nil
 	}
+	return &PreviewInfoData{
+		Title:         film.Title,
+		OriginalTitle: film.OriginalTitle,
+		ReleaseYear:   film.Release.Year(),
+		Country:       film.Country[0].Name,
+		Genre:         film.Genres[0].Name,
+		Director:      fmt.Sprintf("%s %s", film.Directors[0].FirstName, film.Directors[0].LastName),
+		Actors: []string{
+			fmt.Sprintf("%s %s", film.Actors[0].FirstName, film.Actors[0].LastName),
+			fmt.Sprintf("%s %s", film.Actors[1].FirstName, film.Actors[1].LastName),
+		},
+		Poster:   film.Poster,
+		Rating:   film.Rating,
+		Duration: film.Duration,
+	}, nil
 }
