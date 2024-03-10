@@ -2,6 +2,7 @@ package auth
 
 import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/db/user"
+	exc "github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/exceptions"
 	"testing"
 )
 
@@ -12,7 +13,7 @@ func TestRegisterData_Register(t *testing.T) {
 	tests := []struct {
 		name    string
 		input   RegisterData
-		wantErr bool
+		wantErr error
 	}{
 		{
 			name: "Successful registration",
@@ -20,7 +21,7 @@ func TestRegisterData_Register(t *testing.T) {
 				Email:    "newuser@example.com",
 				Password: "NewUserPassword1!",
 			},
-			wantErr: false,
+			wantErr: nil,
 		},
 		{
 			name: "Unsuccessful registration - email already exists",
@@ -28,7 +29,7 @@ func TestRegisterData_Register(t *testing.T) {
 				Email:    "egor@example.com",
 				Password: "EgorPassword1!",
 			},
-			wantErr: true,
+			wantErr: exc.AlreadyExistsErr,
 		},
 		{
 			name: "Unsuccessful registration - invalid email",
@@ -36,30 +37,32 @@ func TestRegisterData_Register(t *testing.T) {
 				Email:    "invalid email",
 				Password: "InvalidEmailPassword1!",
 			},
-			wantErr: true,
+			wantErr: exc.BadRequestErr,
 		},
 		{
 			name: "Unsuccessful registration - invalid password",
 			input: RegisterData{
-				Email:    "invalid email",
+				Email:    "egor@example.com",
 				Password: "+",
 			},
-			wantErr: true,
+			wantErr: exc.BadRequestErr,
 		},
 		{
 			name: "Unsuccessful registration - invalid password",
 			input: RegisterData{
-				Email:    "invalid email",
+				Email:    "egor@example.com",
 				Password: "thisisaverylongpasswordthisisaverylongpasswordthisisaverylongpasswordthisisaverylongpassword",
 			},
-			wantErr: true,
+			wantErr: exc.BadRequestErr,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := Register(tt.input)
-			if (err != nil) != tt.wantErr {
+			if (err != nil) != (tt.wantErr != nil) {
+				t.Errorf("Register() error = %v, wantErr %v", err, tt.wantErr)
+			} else if err != nil && !exc.Is(err, tt.wantErr) {
 				t.Errorf("Register() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
