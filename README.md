@@ -1,3 +1,4 @@
+[![Go Coverage](https://github.com/go-park-mail-ru/2024_1_Cyberkotletki/wiki/coverage.svg)](https://raw.githack.com/wiki/go-park-mail-ru/2024_1_Cyberkotletki/coverage.html)
 # 2024_1_Cyberkotletki
 
 
