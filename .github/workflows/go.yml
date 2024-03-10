@@ -1,0 +1,37 @@
+name: BuildAndTest
+
+on:
+  push:
+    branches: [ "dev-deploy" ]
+  pull_request:
+    branches: [ "dev-deploy" ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.22'
+
+    - name: Build
+      run: go build -v ./...
+
+    - name: Test
+      run: go test -v ./...
+
+    - name: Update coverage report
+      uses: ncruces/go-coverage-report@v0
+      with:
+        report: true
+        chart: true
+        amend: true
+      if: |
+        matrix.os == 'ubuntu-latest' &&
+        github.event_name == 'push'  
+      continue-on-error: true
+    
