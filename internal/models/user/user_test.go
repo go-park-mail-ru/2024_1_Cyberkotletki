@@ -6,8 +6,6 @@ import (
 )
 
 func TestValidatePassword(t *testing.T) {
-	var userObj = NewUserEmpty()
-
 	tests := []struct {
 		name     string
 		password string
@@ -32,7 +30,7 @@ func TestValidatePassword(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := userObj.ValidatePassword(tt.password)
+			err := ValidatePassword(tt.password)
 			if (err != nil) != (tt.wantErr != nil) {
 				t.Errorf("ValidatePassword() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -44,8 +42,6 @@ func TestValidatePassword(t *testing.T) {
 }
 
 func TestValidateEmail(t *testing.T) {
-	var userObj = NewUserEmpty()
-
 	tests := []struct {
 		name    string
 		email   string
@@ -85,7 +81,7 @@ func TestValidateEmail(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := userObj.ValidateEmail(tt.email)
+			err := ValidateEmail(tt.email)
 			if (err != nil) != (tt.wantErr != nil) {
 				t.Errorf("ValidateEmail() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -98,7 +94,7 @@ func TestValidateEmail(t *testing.T) {
 
 func TestCheckPassword(t *testing.T) {
 	var userObj = NewUserEmpty()
-	userObj.PasswordHash = HashPassword("12345678")
+	userObj.PasswordSalt, userObj.PasswordHash = HashPassword("12345678")
 
 	tests := []struct {
 		name     string
