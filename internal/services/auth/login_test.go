@@ -11,12 +11,15 @@ func TestLoginData_Login(t *testing.T) {
 	// Инициализация базы данных
 	user.UsersDatabase.InitDB()
 
+	salt, hash := u.HashPassword("correct_password")
+
 	// Добавление пользователя с нужным паролем и хешем
 	user.UsersDatabase.DB[4] = u.User{
 		Id:           4,
 		Name:         "Test",
 		Email:        "test@example.com",
-		PasswordHash: u.HashPassword("correct_password"),
+		PasswordHash: hash,
+		PasswordSalt: salt,
 	}
 
 	tests := []struct {
