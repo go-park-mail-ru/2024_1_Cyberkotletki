@@ -18,7 +18,7 @@ func Init(logger *log.Logger, params config.InitParams) *http.Server {
 
 	// REST API
 	router := mux.NewRouter()
-	rest.RegisterRoutes(router, params)
+	rest.RegisterRoutes(router.PathPrefix("/api/").Subrouter(), params)
 
 	// Swagger
 	if params.GenSwagger {

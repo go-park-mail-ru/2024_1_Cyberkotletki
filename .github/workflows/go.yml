@@ -21,16 +21,7 @@ jobs:
     - name: Create env file
       run: |
           touch .env
-          echo LISTEN_ADDRESS=0.0.0.0 >> .env
-          echo LISTEN_PORT=8080 >> .env
-          echo SERVER_MODE=2 >> .env
-          echo GEN_SWAGGER=true >> .env
-          echo STATIC_DIR= >> .env
-          echo CORS=http://0.0.0.0:8000 >> .env
-          echo SESSION_ALIVE_TIME=86400 >> .env
-          echo COOKIES_SECURE=false >> .env
-          echo GRACEFUL_SHUTDOWN_TIME=30 >> .env
-          cat .env
+          cat example.env >> .env
 
     - name: Tidy
       run: go mod tidy
@@ -43,8 +34,4 @@ jobs:
 
     - name: Update coverage report
       uses: ncruces/go-coverage-report@v0
-      with:
-        report: true
-        chart: true
-        amend: true
     

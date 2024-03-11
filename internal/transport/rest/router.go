@@ -51,5 +51,5 @@ func RegisterRoutes(router *mux.Router, params config.InitParams) {
 	}
 
 	// Swagger
-	router.PathPrefix("/").HandlerFunc(httpSwagger.WrapHandler)
+	router.PathPrefix("/docs/").HandlerFunc(httpSwagger.WrapHandler)
 }
