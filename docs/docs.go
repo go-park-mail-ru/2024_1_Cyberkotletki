@@ -35,16 +35,16 @@ const docTemplate = `{
                     "200": {
                         "description": "OK"
                     },
-                    "403": {
+                    "401": {
                         "description": "Не авторизован",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Внутренняя ошибка сервера",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     }
                 }
@@ -66,7 +66,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.LoginData"
+                            "$ref": "#/definitions/DTO.Login"
                         }
                     }
                 ],
@@ -77,19 +77,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     }
                 }
@@ -134,7 +134,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.RegisterData"
+                            "$ref": "#/definitions/DTO.Register"
                         }
                     }
                 ],
@@ -145,72 +145,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/collections/compilation/genre/{genre}": {
-            "get": {
-                "description": "Возвращает актуальные подборки фильмов по указанному жанру. Если передать cookies с сессией, то подборка будет персонализированной",
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Collections"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "default": "session=xxx",
-                        "description": "session",
-                        "name": "Cookie",
-                        "in": "header"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Название жанра",
-                        "name": "genre",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Список с id фильмов указанного жанра",
-                        "schema": {
-                            "$ref": "#/definitions/collections.CompilationData"
-                        }
-                    },
-                    "400": {
-                        "description": "Требуется указать жанр",
-                        "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Такой жанр не найден",
-                        "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Внутренняя ошибка сервера",
-                        "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     }
                 }
@@ -226,13 +167,13 @@ const docTemplate = `{
                     "200": {
                         "description": "Список с id фильмов указанного жанра",
                         "schema": {
-                            "$ref": "#/definitions/collections.GenresData"
+                            "$ref": "#/definitions/DTO.Genres"
                         }
                     },
                     "500": {
                         "description": "Внутренняя ошибка сервера",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     }
                 }
@@ -257,25 +198,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Список с id фильмов указанного жанра",
                         "schema": {
-                            "$ref": "#/definitions/content.PreviewInfoData"
+                            "$ref": "#/definitions/DTO.PreviewContentCard"
                         }
                     },
                     "400": {
                         "description": "Требуется указать валидный id контента",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Контент с таким id не найден",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Внутренняя ошибка сервера",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     }
                 }
@@ -299,57 +240,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "auth.LoginData": {
-            "type": "object",
-            "properties": {
-                "login": {
-                    "type": "string",
-                    "format": "string",
-                    "example": "email@email.com"
-                },
-                "password": {
-                    "type": "string",
-                    "format": "string",
-                    "example": "SecretPassword1!"
-                }
-            }
-        },
-        "auth.RegisterData": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "format": "string",
-                    "example": "email@email.com"
-                },
-                "password": {
-                    "type": "string",
-                    "format": "string",
-                    "example": "SecretPassword1!"
-                }
-            }
-        },
-        "collections.CompilationData": {
-            "type": "object",
-            "properties": {
-                "genre": {
-                    "type": "string",
-                    "example": "action"
-                },
-                "ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    },
-                    "example": [
-                        1,
-                        2,
-                        3
-                    ]
-                }
-            }
-        },
-        "collections.GenresData": {
+        "DTO.Genres": {
             "type": "object",
             "properties": {
                 "genres": {
@@ -365,7 +256,22 @@ const docTemplate = `{
                 }
             }
         },
-        "content.PreviewInfoData": {
+        "DTO.Login": {
+            "type": "object",
+            "properties": {
+                "login": {
+                    "type": "string",
+                    "format": "string",
+                    "example": "email@email.com"
+                },
+                "password": {
+                    "type": "string",
+                    "format": "string",
+                    "example": "SecretPassword1!"
+                }
+            }
+        },
+        "DTO.PreviewContentCard": {
             "type": "object",
             "properties": {
                 "actors": {
@@ -416,17 +322,25 @@ const docTemplate = `{
                 }
             }
         },
-        "httputil.HTTPError": {
+        "DTO.Register": {
             "type": "object",
             "properties": {
-                "code": {
-                    "type": "integer",
-                    "example": 400
-                },
-                "message": {
+                "email": {
                     "type": "string",
-                    "example": "status bad request"
+                    "format": "string",
+                    "example": "email@email.com"
+                },
+                "password": {
+                    "type": "string",
+                    "format": "string",
+                    "example": "SecretPassword1!"
                 }
+            }
+        },
+        "echo.HTTPError": {
+            "type": "object",
+            "properties": {
+                "message": {}
             }
         }
     }

@@ -1,42 +1,6 @@
 basePath: /api
 definitions:
-  auth.LoginData:
-    properties:
-      login:
-        example: email@email.com
-        format: string
-        type: string
-      password:
-        example: SecretPassword1!
-        format: string
-        type: string
-    type: object
-  auth.RegisterData:
-    properties:
-      email:
-        example: email@email.com
-        format: string
-        type: string
-      password:
-        example: SecretPassword1!
-        format: string
-        type: string
-    type: object
-  collections.CompilationData:
-    properties:
-      genre:
-        example: action
-        type: string
-      ids:
-        example:
-        - 1
-        - 2
-        - 3
-        items:
-          type: integer
-        type: array
-    type: object
-  collections.GenresData:
+  DTO.Genres:
     properties:
       genres:
         example:
@@ -47,7 +11,18 @@ definitions:
           type: string
         type: array
     type: object
-  content.PreviewInfoData:
+  DTO.Login:
+    properties:
+      login:
+        example: email@email.com
+        format: string
+        type: string
+      password:
+        example: SecretPassword1!
+        format: string
+        type: string
+    type: object
+  DTO.PreviewContentCard:
     properties:
       actors:
         example:
@@ -84,14 +59,20 @@ definitions:
         example: Бэтмен
         type: string
     type: object
-  httputil.HTTPError:
+  DTO.Register:
     properties:
-      code:
-        example: 400
-        type: integer
-      message:
-        example: status bad request
+      email:
+        example: email@email.com
+        format: string
         type: string
+      password:
+        example: SecretPassword1!
+        format: string
+        type: string
+    type: object
+  echo.HTTPError:
+    properties:
+      message: {}
     type: object
 info:
   contact: {}
@@ -111,14 +92,14 @@ paths:
       responses:
         "200":
           description: OK
-        "403":
+        "401":
           description: Не авторизован
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/echo.HTTPError'
         "500":
           description: Внутренняя ошибка сервера
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/echo.HTTPError'
       tags:
       - Auth
   /auth/login:
@@ -134,22 +115,22 @@ paths:
         name: loginData
         required: true
         schema:
-          $ref: '#/definitions/auth.LoginData'
+          $ref: '#/definitions/DTO.Login'
       responses:
         "200":
           description: OK
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/echo.HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/echo.HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/echo.HTTPError'
       tags:
       - Auth
   /auth/logout:
@@ -178,60 +159,20 @@ paths:
         name: registerData
         required: true
         schema:
-          $ref: '#/definitions/auth.RegisterData'
+          $ref: '#/definitions/DTO.Register'
       responses:
         "200":
           description: OK
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/echo.HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/echo.HTTPError'
       tags:
       - Auth
-  /collections/compilation/genre/{genre}:
-    get:
-      consumes:
-      - application/json
-      description: Возвращает актуальные подборки фильмов по указанному жанру. Если
-        передать cookies с сессией, то подборка будет персонализированной
-      parameters:
-      - default: session=xxx
-        description: session
-        in: header
-        name: Cookie
-        type: string
-      - description: Название жанра
-        in: path
-        name: genre
-        required: true
-        type: string
-      responses:
-        "200":
-          description: Список с id фильмов указанного жанра
-          schema:
-            $ref: '#/definitions/collections.CompilationData'
-        "400":
-          description: Требуется указать жанр
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "404":
-          description: Такой жанр не найден
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "500":
-          description: Внутренняя ошибка сервера
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-      tags:
-      - Collections
   /collections/genres:
     get:
       description: Возвращает список всех доступных жанров фильмов и сериалов
@@ -239,11 +180,11 @@ paths:
         "200":
           description: Список с id фильмов указанного жанра
           schema:
-            $ref: '#/definitions/collections.GenresData'
+            $ref: '#/definitions/DTO.Genres'
         "500":
           description: Внутренняя ошибка сервера
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/echo.HTTPError'
       tags:
       - Collections
   /content/contentPreview:
@@ -259,19 +200,19 @@ paths:
         "200":
           description: Список с id фильмов указанного жанра
           schema:
-            $ref: '#/definitions/content.PreviewInfoData'
+            $ref: '#/definitions/DTO.PreviewContentCard'
         "400":
           description: Требуется указать валидный id контента
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/echo.HTTPError'
         "404":
           description: Контент с таким id не найден
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/echo.HTTPError'
         "500":
           description: Внутренняя ошибка сервера
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/echo.HTTPError'
       tags:
       - Content
   /playground/ping:

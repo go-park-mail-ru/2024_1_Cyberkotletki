@@ -2,68 +2,97 @@ package app
 
 import (
 	"context"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/config"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/db/content"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/db/user"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/transport/rest"
-	"github.com/gorilla/mux"
-	"log"
+	"errors"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/config"
+	delivery "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/tmpDB"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/service"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	echoSwagger "github.com/swaggo/echo-swagger"
 	"net/http"
-	"os"
-	"os/exec"
+	"strings"
 	"time"
 )
 
-func Init(logger *log.Logger, params config.InitParams) *http.Server {
+func Init(params config.Config) *echo.Echo {
+	// Repositories
+	userRepo := tmpDB.NewUserRepository()
+	contentRepo := tmpDB.NewContentRepository()
+	sessionRepo := tmpDB.NewSessionRepository()
+
+	// Use Cases
+	authUseCase := service.NewAuthService(userRepo, sessionRepo)
+	contentUseCase := service.NewContentService(contentRepo)
+	collectionsUseCase := service.NewCollectionsService(contentRepo)
+
+	// Delivery
+	authDelivery := delivery.NewAuthEndpoints(authUseCase)
+	contentDelivery := delivery.NewContentEndpoints(contentUseCase)
+	collectionsDelivery := delivery.NewCollectionsEndpoints(collectionsUseCase)
+	playgroundDelivery := delivery.NewPlaygroundEndpoints()
 
 	// REST API
-	router := mux.NewRouter()
-	rest.RegisterRoutes(router.PathPrefix("/api/").Subrouter(), params)
-
-	// Swagger
-	if params.GenSwagger {
-		cmd := exec.Command("swag", "init", "--dir", "cmd/app,internal/transport/rest", "--parseDependency")
-		if out, err := cmd.Output(); err != nil {
-			logger.Fatalf("Не удалось сгенерировать документацию сваггер по причине: %s", out)
-		} else {
-			logger.Printf("Логи swagger кодогена:\n%s", out)
+	e := echo.New()
+	e.Server.ReadTimeout = time.Duration(params.HTTP.Server.ReadTimeout) * time.Second
+	e.Server.ReadHeaderTimeout = time.Duration(params.HTTP.Server.ReadTimeout) * time.Second
+	e.Server.WriteTimeout = time.Duration(params.HTTP.Server.WriteTimeout) * time.Second
+	e.Server.IdleTimeout = time.Duration(params.HTTP.Server.ReadTimeout) * time.Second
+	// статика
+	e.Static("/static/", params.HTTP.StaticFolder)
+	// middleware
+	// config
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.Set("params", params)
+			return next(c)
 		}
-	}
+	})
+	// CORS
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: strings.Split(params.HTTP.CORSAllowedOrigins, ","),
+		AllowHeaders: []string{
+			echo.HeaderOrigin,
+			echo.HeaderAccept,
+			echo.HeaderXRequestedWith,
+			echo.HeaderAccessControlRequestMethod,
+			echo.HeaderAccessControlRequestHeaders,
+			echo.HeaderCookie,
+		},
+		AllowCredentials: true,
+		MaxAge:           86400,
+	}))
+	// Endpoints
+	api := e.Group("/api")
+	// docs
+	api.GET("/docs*", echoSwagger.WrapHandler)
 
-	// DB
-	user.UsersDatabase.InitDB()
-	content.FilmsDatabase.InitDB()
+	// playground
+	playgroundAPI := api.Group("/playground")
+	playgroundAPI.GET("/ping", playgroundDelivery.Ping)
+	// content
+	contentAPI := api.Group("/content")
+	contentAPI.GET("/contentPreview", contentDelivery.GetContentPreview)
+	// collections
+	collectionsAPI := api.Group("/collections")
+	collectionsAPI.GET("/genres", collectionsDelivery.GetGenres)
+	// auth
+	authAPI := api.Group("/auth")
+	authAPI.POST("/register", authDelivery.Register)
+	authAPI.POST("/login", authDelivery.Login)
+	authAPI.GET("/isAuth", authDelivery.IsAuth)
+	authAPI.POST("/logout", authDelivery.Logout)
+	return e
+}
 
-	return &http.Server{
-		Addr:         params.Addr,
-		Handler:      router,
-		ErrorLog:     logger,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  15 * time.Second,
+func Run(server *echo.Echo, params config.Config) {
+	if err := server.Start(params.GetServerAddr()); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		server.Logger.Fatalf("Сервер завершил свою работу по причине: %v\n", err)
 	}
 }
 
-func Run(server *http.Server, params config.InitParams) error {
-	if params.Mode == config.DevMode {
-		return server.ListenAndServe()
-	} else {
-		// для secure-соединения лучше использовать nginx
-		// return server.ListenAndServeTLS()
-		return nil
-	}
-}
-
-func Shutdown(server *http.Server, logger *log.Logger, quit <-chan os.Signal, done chan<- bool, params config.InitParams) {
-	<-quit
-	logger.Println("Завершение работы сервера...")
-
-	ctx, cancel := context.WithTimeout(context.Background(), params.GracefulShutdownTime)
-	defer cancel()
-
-	server.SetKeepAlivesEnabled(false)
+func Shutdown(server *echo.Echo, ctx context.Context) {
 	if err := server.Shutdown(ctx); err != nil {
-		logger.Fatalf("Не удалось завершить работу http-сервера: %v\n", err)
+		server.Logger.Fatalf("Во время выключения сервера возникла ошибка: %s\n", err)
 	}
-	close(done)
 }

@@ -1,4 +1,4 @@
-[![Go Coverage](https://github.com/go-park-mail-ru/2024_1_Cyberkotletki/wiki/coverage.svg)](https://raw.githack.com/wiki/go-park-mail-ru/2024_1_Cyberkotletki/coverage.html)
+![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/go-park-mail-ru/2024_1_Cyberkotletki/BRANCH/coverage.json)
 # 2024_1_Cyberkotletki
 
 
