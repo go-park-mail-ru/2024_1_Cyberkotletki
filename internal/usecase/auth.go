@@ -8,6 +8,6 @@ import (
 type Auth interface {
 	Register(DTO.Register) (string, error)
 	Login(DTO.Login) (string, error)
-	IsAuth(string) bool
+	IsAuth(string) (bool, error)
 	Logout(string) error
 }

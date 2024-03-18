@@ -10,9 +10,9 @@
 package mock_repository
 
 import (
-	user "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	reflect "reflect"
 
+	entity "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -40,10 +40,10 @@ func (m *MockUser) EXPECT() *MockUserMockRecorder {
 }
 
 // AddUser mocks base method.
-func (m *MockUser) AddUser(arg0 user.User) (*user.User, error) {
+func (m *MockUser) AddUser(arg0 entity.User) (*entity.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddUser", arg0)
-	ret0, _ := ret[0].(*user.User)
+	ret0, _ := ret[0].(*entity.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -55,10 +55,10 @@ func (mr *MockUserMockRecorder) AddUser(arg0 any) *gomock.Call {
 }
 
 // GetUserByEmail mocks base method.
-func (m *MockUser) GetUserByEmail(arg0 string) (*user.User, error) {
+func (m *MockUser) GetUserByEmail(arg0 string) (*entity.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserByEmail", arg0)
-	ret0, _ := ret[0].(*user.User)
+	ret0, _ := ret[0].(*entity.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -70,7 +70,7 @@ func (mr *MockUserMockRecorder) GetUserByEmail(arg0 any) *gomock.Call {
 }
 
 // HasUser mocks base method.
-func (m *MockUser) HasUser(arg0 user.User) bool {
+func (m *MockUser) HasUser(arg0 entity.User) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "HasUser", arg0)
 	ret0, _ := ret[0].(bool)

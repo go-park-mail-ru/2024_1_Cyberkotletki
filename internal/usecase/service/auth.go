@@ -34,9 +34,12 @@ func (a AuthService) Register(regDTO DTO.Register) (string, error) {
 	us, err := a.userRepo.AddUser(*us)
 	if err != nil {
 		return "", err
-	} else {
-		return a.sessionRepo.NewSession(us.Id), nil
 	}
+	session, err := a.sessionRepo.NewSession(us.Id)
+	if err != nil {
+		return "", err
+	}
+	return session, nil
 }
 
 func (a AuthService) Login(login DTO.Login) (string, error) {
@@ -47,16 +50,24 @@ func (a AuthService) Login(login DTO.Login) (string, error) {
 	if !us.CheckPassword(login.Password) {
 		return "", entity.NewClientError("неверный пароль", entity.ErrBadRequest)
 	}
-	return a.sessionRepo.NewSession(us.Id), nil
+	session, err := a.sessionRepo.NewSession(us.Id)
+	if err != nil {
+		return "", err
+	}
+	return session, nil
 }
 
-func (a AuthService) IsAuth(s string) bool {
-	return a.sessionRepo.CheckSession(s)
+func (a AuthService) IsAuth(s string) (bool, error) {
+	isAuth, err := a.sessionRepo.CheckSession(s)
+	if err != nil {
+		return false, err
+	}
+	return isAuth, nil
 }
 
 func (a AuthService) Logout(s string) error {
-	if ok := a.sessionRepo.DeleteSession(s); ok {
-		return nil
+	if _, err := a.sessionRepo.DeleteSession(s); err != nil {
+		return err
 	}
-	return entity.NewClientError("сессия недействительна")
+	return nil
 }

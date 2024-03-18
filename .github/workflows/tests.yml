@@ -2,7 +2,7 @@ name: BuildAndTest
 
 on:
   push:
-    branches: [ "*" ]
+    branches: [ "dev-deploy" ]
 
 jobs:
 
