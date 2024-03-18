@@ -39,11 +39,12 @@ func (m *MockSession) EXPECT() *MockSessionMockRecorder {
 }
 
 // CheckSession mocks base method.
-func (m *MockSession) CheckSession(session string) bool {
+func (m *MockSession) CheckSession(session string) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CheckSession", session)
 	ret0, _ := ret[0].(bool)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // CheckSession indicates an expected call of CheckSession.
@@ -53,11 +54,12 @@ func (mr *MockSessionMockRecorder) CheckSession(session any) *gomock.Call {
 }
 
 // DeleteSession mocks base method.
-func (m *MockSession) DeleteSession(session string) bool {
+func (m *MockSession) DeleteSession(session string) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteSession", session)
 	ret0, _ := ret[0].(bool)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // DeleteSession indicates an expected call of DeleteSession.
@@ -67,11 +69,12 @@ func (mr *MockSessionMockRecorder) DeleteSession(session any) *gomock.Call {
 }
 
 // NewSession mocks base method.
-func (m *MockSession) NewSession(id int) string {
+func (m *MockSession) NewSession(id int) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewSession", id)
 	ret0, _ := ret[0].(string)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // NewSession indicates an expected call of NewSession.

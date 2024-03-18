@@ -113,7 +113,11 @@ func (h *AuthEndpoints) IsAuth(c echo.Context) error {
 		// нет cookies == не авторизован
 		return echoutil.NewError(c, http.StatusUnauthorized, entity.NewClientError("не авторизован"))
 	}
-	if !h.useCase.IsAuth(session.Value) {
+	isAuth, err := h.useCase.IsAuth(session.Value)
+	if err != nil {
+		return echoutil.NewError(c, http.StatusInternalServerError, err)
+	}
+	if !isAuth {
 		return echoutil.NewError(c, http.StatusUnauthorized, entity.NewClientError("не авторизован"))
 	}
 	c.Response().WriteHeader(http.StatusOK)
