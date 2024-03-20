@@ -19,14 +19,14 @@ func NewCollectionsService(contentRepo repository.Content) usecase.Collections {
 
 func (c CollectionsService) GetCompilation(genre string) (*DTO.Compilation, error) {
 	var genreId int
-	switch genre {
-	case "drama":
-		genreId = 1
-	case "action":
-		genreId = 2
-	case "comedian":
-		genreId = 3
-	default:
+	genres := map[string]int{
+		"drama":    1,
+		"action":   2,
+		"comedian": 3,
+	}
+	if id, ok := genres[genre]; ok {
+		genreId = id
+	} else {
 		return nil, entity.NewClientError("такого жанра не существует", entity.ErrNotFound)
 	}
 	if films, err := c.contentRepo.GetFilmsByGenre(genreId); err != nil {

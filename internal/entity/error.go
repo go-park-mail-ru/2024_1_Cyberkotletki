@@ -40,4 +40,5 @@ var (
 	ErrForbidden     = errors.New("forbidden")
 	ErrAlreadyExists = errors.New("already exists")
 	ErrRedis         = errors.New("redis error")
+	ErrPSQL          = errors.New("postgres error")
 )

@@ -137,8 +137,9 @@ func (h *AuthEndpoints) Logout(c echo.Context) error {
 		c.Response().WriteHeader(http.StatusOK)
 		return nil
 	}
-	// если сессии не было в базе сессий, то это не имеет значения - пользователь в любом случае вышел
-	_ = h.useCase.Logout(cookie.Value)
+	// если сессии не было в базе сессий, то это не имеет значения - пользователь в любом случае вышел, поэтому
+	// ошибку игнорируем
+	err = h.useCase.Logout(cookie.Value)
 	cookies := http.Cookie{
 		Name:     "session",
 		Value:    "",

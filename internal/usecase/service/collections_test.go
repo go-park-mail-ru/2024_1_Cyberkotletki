@@ -52,3 +52,16 @@ func TestCollections_GetCompilation(t *testing.T) {
 		})
 	}
 }
+
+func TestCollections_GetGenres(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockContentRepo := mockrepo.NewMockContent(ctrl)
+	collectionsService := CollectionsService{
+		contentRepo: mockContentRepo,
+	}
+	genres, err := collectionsService.GetGenres()
+	require.NoError(t, err)
+	require.NotEmpty(t, genres)
+}

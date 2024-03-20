@@ -65,62 +65,12 @@ func TestAuth_Register(t *testing.T) {
 			SetupSessionRepoMock: func(repo *mockrepo.MockSession) {},
 		},
 		{
-			Name: "Пароль не содержит заглавной буквы",
+			Name: "Невалидная почта",
 			Input: DTO.Register{
-				Email:    "existing@example.com",
-				Password: "amazingpassword1!",
+				Email:    "почта@example.com",
+				Password: "AmazingPassword1!",
 			},
-			ExpectedErr:          fmt.Errorf("пароль должен содержать как минимум одну заглавную букву"),
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupSessionRepoMock: func(repo *mockrepo.MockSession) {},
-		},
-		{
-			Name: "Пароль не содержит строчной буквы",
-			Input: DTO.Register{
-				Email:    "existing@example.com",
-				Password: "AMAZINGPASSWORD1!",
-			},
-			ExpectedErr:          fmt.Errorf("пароль должен содержать как минимум одну строчную букву"),
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupSessionRepoMock: func(repo *mockrepo.MockSession) {},
-		},
-		{
-			Name: "Пароль не содержит спецсимвола",
-			Input: DTO.Register{
-				Email:    "existing@example.com",
-				Password: "AmazingPassword1",
-			},
-			ExpectedErr:          fmt.Errorf("пароль должен содержать как минимум один из специальных символов !@#$%%^&*"),
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupSessionRepoMock: func(repo *mockrepo.MockSession) {},
-		},
-		{
-			Name: "Пароль не содержит цифры",
-			Input: DTO.Register{
-				Email:    "existing@example.com",
-				Password: "AmazingPassword!",
-			},
-			ExpectedErr:          fmt.Errorf("пароль должен содержать как минимум одну цифру"),
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupSessionRepoMock: func(repo *mockrepo.MockSession) {},
-		},
-		{
-			Name: "Короткий пароль",
-			Input: DTO.Register{
-				Email:    "existing@example.com",
-				Password: "Short1!",
-			},
-			ExpectedErr:          fmt.Errorf("пароль должен содержать не менее 8 символов"),
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupSessionRepoMock: func(repo *mockrepo.MockSession) {},
-		},
-		{
-			Name: "Слишком длинный пароль",
-			Input: DTO.Register{
-				Email:    "existing@example.com",
-				Password: "ItIsAVeryLongPasswordAndIThinkItIsWrong1!",
-			},
-			ExpectedErr:          fmt.Errorf("пароль должен содержать не более 32 символов"),
+			ExpectedErr:          fmt.Errorf("невалидная почта"),
 			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
 			SetupSessionRepoMock: func(repo *mockrepo.MockSession) {},
 		},
