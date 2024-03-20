@@ -20,7 +20,11 @@ type Config struct {
 	} `yaml:"http"`
 	Auth struct {
 		SessionAliveTime int `yaml:"session_alive_time" default:"86400"`
-		// Server           Server
+		Redis            struct {
+			Addr     string `yaml:"addr" default:"localhost:6379"`
+			Password string `yaml:"password" default:""`
+			DB       int    `yaml:"db" default:"0"`
+		} `yaml:"redis"`
 	} `yaml:"auth"`
 }
 

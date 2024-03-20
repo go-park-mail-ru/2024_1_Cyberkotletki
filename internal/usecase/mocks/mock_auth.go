@@ -40,11 +40,12 @@ func (m *MockAuth) EXPECT() *MockAuthMockRecorder {
 }
 
 // IsAuth mocks base method.
-func (m *MockAuth) IsAuth(arg0 string) bool {
+func (m *MockAuth) IsAuth(arg0 string) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsAuth", arg0)
 	ret0, _ := ret[0].(bool)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // IsAuth indicates an expected call of IsAuth.

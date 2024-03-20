@@ -39,7 +39,7 @@ func TestAuth_Register(t *testing.T) {
 				repo.EXPECT().AddUser(gomock.Any()).Return(&entity.User{}, nil)
 			},
 			SetupSessionRepoMock: func(repo *mockrepo.MockSession) {
-				repo.EXPECT().NewSession(gomock.Any()).Return("session").AnyTimes()
+				repo.EXPECT().NewSession(gomock.Any()).Return("session", nil).AnyTimes()
 			},
 		},
 		{
@@ -169,7 +169,7 @@ func TestAuth_Login(t *testing.T) {
 				repo.EXPECT().GetUserByEmail(gomock.Any()).Return(&entity.User{Email: "test@example.com", PasswordSalt: salt, PasswordHash: hashed}, nil)
 			},
 			SetupSessionRepoMock: func(repo *mockrepo.MockSession) {
-				repo.EXPECT().NewSession(gomock.Any()).Return("session")
+				repo.EXPECT().NewSession(gomock.Any()).Return("session", nil)
 			},
 		},
 		{
@@ -235,7 +235,7 @@ func TestAuth_IsAuth(t *testing.T) {
 			Input:    "session",
 			Expected: true,
 			SetupSessionRepoMock: func(repo *mockrepo.MockSession) {
-				repo.EXPECT().CheckSession("session").Return(true)
+				repo.EXPECT().CheckSession("session").Return(true, nil)
 			},
 		},
 		{
@@ -243,7 +243,7 @@ func TestAuth_IsAuth(t *testing.T) {
 			Input:    "session",
 			Expected: false,
 			SetupSessionRepoMock: func(repo *mockrepo.MockSession) {
-				repo.EXPECT().CheckSession("session").Return(false)
+				repo.EXPECT().CheckSession("session").Return(false, nil)
 			},
 		},
 	}
@@ -251,7 +251,8 @@ func TestAuth_IsAuth(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
 			tc.SetupSessionRepoMock(mockSessionRepo)
-			require.Equal(t, tc.Expected, authService.IsAuth(tc.Input))
+			isAuth, _ := authService.IsAuth(tc.Input)
+			require.Equal(t, tc.Expected, isAuth)
 		})
 	}
 }
@@ -278,15 +279,15 @@ func TestAuth_Logout(t *testing.T) {
 			Input:       "session",
 			ExpectedErr: nil,
 			SetupSessionRepoMock: func(repo *mockrepo.MockSession) {
-				repo.EXPECT().DeleteSession("session").Return(true)
+				repo.EXPECT().DeleteSession("session").Return(true, nil)
 			},
 		},
 		{
 			Name:        "Несуществующая сессия",
 			Input:       "session",
-			ExpectedErr: fmt.Errorf("сессия недействительна"),
+			ExpectedErr: fmt.Errorf("не удалось удалить сессию"),
 			SetupSessionRepoMock: func(repo *mockrepo.MockSession) {
-				repo.EXPECT().DeleteSession("session").Return(false)
+				repo.EXPECT().DeleteSession("session").Return(false, fmt.Errorf("не удалось удалить сессию"))
 			},
 		},
 	}

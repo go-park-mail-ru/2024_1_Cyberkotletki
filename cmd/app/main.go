@@ -8,9 +8,9 @@ import (
 	_ "github.com/go-park-mail-ru/2024_1_Cyberkotletki/docs"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/app"
 	_ "github.com/joho/godotenv"
+	"github.com/labstack/gommon/log"
 	"github.com/mcuadros/go-defaults"
 	"gopkg.in/yaml.v3"
-	"log"
 	"os"
 	"os/signal"
 	"time"
@@ -76,11 +76,12 @@ func main() {
 		GenerateExampleConfig()
 		return
 	}
-	logger := log.New(os.Stdout, "server: ", log.LstdFlags)
+
+	logger := log.New("server: ")
 	params := ParseParams(logger)
 	logger.Printf("Параметры запуска сервера: %v \n", params)
 
-	echoServer := app.Init(params)
+	echoServer := app.Init(logger, params)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
 	defer stop()
 	go app.Run(echoServer, params)

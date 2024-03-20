@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/config"
 	delivery "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/redis"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/tmpDB"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/service"
 	"github.com/labstack/echo/v4"
@@ -15,11 +16,11 @@ import (
 	"time"
 )
 
-func Init(params config.Config) *echo.Echo {
+func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	// Repositories
 	userRepo := tmpDB.NewUserRepository()
 	contentRepo := tmpDB.NewContentRepository()
-	sessionRepo := tmpDB.NewSessionRepository()
+	sessionRepo := redis.NewSessionRepository(logger, params)
 
 	// Use Cases
 	authUseCase := service.NewAuthService(userRepo, sessionRepo)

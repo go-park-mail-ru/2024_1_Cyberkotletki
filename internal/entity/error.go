@@ -39,4 +39,5 @@ var (
 	ErrBadRequest    = errors.New("bad request")
 	ErrForbidden     = errors.New("forbidden")
 	ErrAlreadyExists = errors.New("already exists")
+	ErrRedis         = errors.New("redis error")
 )

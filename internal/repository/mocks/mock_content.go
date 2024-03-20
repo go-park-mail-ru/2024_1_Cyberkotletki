@@ -10,9 +10,9 @@
 package mock_repository
 
 import (
-	content "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	reflect "reflect"
 
+	entity "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -40,10 +40,10 @@ func (m *MockContent) EXPECT() *MockContentMockRecorder {
 }
 
 // GetFilm mocks base method.
-func (m *MockContent) GetFilm(id int) (*content.Film, error) {
+func (m *MockContent) GetFilm(id int) (*entity.Film, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetFilm", id)
-	ret0, _ := ret[0].(*content.Film)
+	ret0, _ := ret[0].(*entity.Film)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -55,10 +55,10 @@ func (mr *MockContentMockRecorder) GetFilm(id any) *gomock.Call {
 }
 
 // GetFilmsByGenre mocks base method.
-func (m *MockContent) GetFilmsByGenre(genreId int) ([]content.Film, error) {
+func (m *MockContent) GetFilmsByGenre(genreId int) ([]entity.Film, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetFilmsByGenre", genreId)
-	ret0, _ := ret[0].([]content.Film)
+	ret0, _ := ret[0].([]entity.Film)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
