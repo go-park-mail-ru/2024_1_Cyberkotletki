@@ -9,7 +9,6 @@ import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/tmpDB"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/service"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"net/http"
 	"strings"
@@ -49,20 +48,30 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 			return next(c)
 		}
 	})
-	// CORS
-	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: strings.Split(params.HTTP.CORSAllowedOrigins, ","),
-		AllowHeaders: []string{
-			echo.HeaderOrigin,
-			echo.HeaderAccept,
-			echo.HeaderXRequestedWith,
-			echo.HeaderAccessControlRequestMethod,
-			echo.HeaderAccessControlRequestHeaders,
-			echo.HeaderCookie,
-		},
-		AllowCredentials: true,
-		MaxAge:           86400,
-	}))
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, params.HTTP.CORSAllowedOrigins)
+			c.Response().Header().Set(echo.HeaderAccessControlAllowMethods, strings.Join([]string{
+				http.MethodGet,
+				http.MethodPut,
+				http.MethodPost,
+				http.MethodDelete,
+				http.MethodOptions,
+			}, ","))
+			c.Response().Header().Set(echo.HeaderAccessControlAllowHeaders, strings.Join([]string{
+				echo.HeaderOrigin,
+				echo.HeaderAccept,
+				echo.HeaderXRequestedWith,
+				echo.HeaderContentType,
+				echo.HeaderAccessControlRequestMethod,
+				echo.HeaderAccessControlRequestHeaders,
+				echo.HeaderCookie,
+			}, ","))
+			c.Response().Header().Set(echo.HeaderAccessControlAllowCredentials, "true")
+			c.Response().Header().Set(echo.HeaderAccessControlMaxAge, "86400")
+			return next(c)
+		}
+	})
 	// Endpoints
 	api := e.Group("/api")
 	// docs

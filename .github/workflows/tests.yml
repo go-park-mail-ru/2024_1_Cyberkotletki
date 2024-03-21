@@ -24,7 +24,7 @@ jobs:
           go test -coverprofile=test.coverage.tmp ./internal/...
           cat test.coverage.tmp | grep -v 'mocks' > test.coverage
 
-    - name: Update coverage badge
+    - name: Print coverage
       run: |
         coverage=$(go tool cover -func test.coverage | tail -n 1 | awk '{print $3}')
         echo $coverage

@@ -1,8 +1,6 @@
 package http
 
 import (
-	"encoding/json"
-	"errors"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/config"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/DTO"
@@ -32,16 +30,15 @@ func NewAuthEndpoints(useCase usecase.Auth) AuthEndpoints {
 // @Failure		500	{object}	echo.HTTPError
 // @Router /auth/register [post]
 func (h *AuthEndpoints) Register(c echo.Context) error {
-	decoder := json.NewDecoder(c.Request().Body)
 	registerData := new(DTO.Register)
-	if err := decoder.Decode(registerData); err != nil {
+	if err := c.Bind(registerData); err != nil {
 		return echoutil.NewError(c, http.StatusBadRequest, echoutil.BadJSON)
 	}
 	key, err := h.useCase.Register(*registerData)
 	if err != nil {
 		switch {
 		// будем считать, что ErrAlreadyExists это тоже BadRequest
-		case errors.Is(err, entity.ErrBadRequest) || errors.Is(err, entity.ErrAlreadyExists):
+		case entity.Contains(err, entity.ErrBadRequest) || entity.Contains(err, entity.ErrAlreadyExists):
 			return echoutil.NewError(c, http.StatusBadRequest, err)
 		default:
 			return echoutil.NewError(c, http.StatusInternalServerError, err)
@@ -71,17 +68,16 @@ func (h *AuthEndpoints) Register(c echo.Context) error {
 // @Failure		500	{object}	echo.HTTPError
 // @Router /auth/login [post]
 func (h *AuthEndpoints) Login(c echo.Context) error {
-	decoder := json.NewDecoder(c.Request().Body)
 	loginData := new(DTO.Login)
-	if err := decoder.Decode(loginData); err != nil {
+	if err := c.Bind(loginData); err != nil {
 		return echoutil.NewError(c, http.StatusBadRequest, echoutil.BadJSON)
 	}
 	key, err := h.useCase.Login(*loginData)
 	if err != nil {
 		switch {
-		case errors.Is(err, entity.ErrNotFound):
+		case entity.Contains(err, entity.ErrNotFound):
 			return echoutil.NewError(c, http.StatusNotFound, err)
-		case errors.Is(err, entity.ErrBadRequest):
+		case entity.Contains(err, entity.ErrBadRequest):
 			return echoutil.NewError(c, http.StatusBadRequest, err)
 		default:
 			return echoutil.NewError(c, http.StatusInternalServerError, err)
