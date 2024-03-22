@@ -58,6 +58,7 @@ func TestValidatePassword(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
 			err := ValidatePassword(tc.Input)
 			if err != nil {
 				require.EqualError(t, err, err.Error())
@@ -92,6 +93,7 @@ func TestValidateEmail(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
 			err := ValidatePassword(tc.Input)
 			if err != nil {
 				require.EqualError(t, err, err.Error())
@@ -101,16 +103,18 @@ func TestValidateEmail(t *testing.T) {
 }
 
 func TestHashPassword(t *testing.T) {
-	salt, hash := HashPassword("AmazingPassword1!")
+	salt, hash, err := HashPassword("AmazingPassword1!")
+	require.NoError(t, err)
 	require.Equal(t, 8, len(salt))
 	require.Equal(t, 32, len(hash))
 }
 
 func TestCheckPassword(t *testing.T) {
 	user := NewUserEmpty()
-	salt, hash := HashPassword("AmazingPassword1!")
+	salt, hash, err := HashPassword("AmazingPassword1!")
 	user.PasswordSalt = salt
 	user.PasswordHash = hash
+	require.NoError(t, err)
 	require.Equal(t, user.CheckPassword("AmazingPassword1!"), true)
 	require.Equal(t, user.CheckPassword("AmazingPassword!"), false)
 }

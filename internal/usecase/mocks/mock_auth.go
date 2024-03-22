@@ -12,7 +12,7 @@ package mock_usecase
 import (
 	reflect "reflect"
 
-	DTO "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/DTO"
+	dto "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -55,7 +55,7 @@ func (mr *MockAuthMockRecorder) IsAuth(arg0 any) *gomock.Call {
 }
 
 // Login mocks base method.
-func (m *MockAuth) Login(arg0 DTO.Login) (string, error) {
+func (m *MockAuth) Login(arg0 *dto.Login) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Login", arg0)
 	ret0, _ := ret[0].(string)
@@ -84,7 +84,7 @@ func (mr *MockAuthMockRecorder) Logout(arg0 any) *gomock.Call {
 }
 
 // Register mocks base method.
-func (m *MockAuth) Register(arg0 DTO.Register) (string, error) {
+func (m *MockAuth) Register(arg0 *dto.Register) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Register", arg0)
 	ret0, _ := ret[0].(string)

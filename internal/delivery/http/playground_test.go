@@ -26,6 +26,7 @@ func TestPlaygroundEndpoints_Ping(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
 			req := httptest.NewRequest(http.MethodGet, "/playground/ping", nil)
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)

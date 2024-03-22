@@ -52,7 +52,7 @@ const docTemplate = `{
         },
         "/auth/login": {
             "post": {
-                "description": "Авторизация пользователя. При успешной авторизации отправляет куки с сессией. Если пользователь уже авторизован, то прежний cookies с сессией перезаписывается",
+                "description": "Авторизация пользователя. При успешной авторизации отправляет куки с сессией. Если пользователь уже",
                 "consumes": [
                     "application/json"
                 ],
@@ -66,7 +66,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/DTO.Login"
+                            "$ref": "#/definitions/dto.Login"
                         }
                     }
                 ],
@@ -134,7 +134,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/DTO.Register"
+                            "$ref": "#/definitions/dto.Register"
                         }
                     }
                 ],
@@ -144,6 +144,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
                             "$ref": "#/definitions/echo.HTTPError"
                         }
@@ -167,7 +173,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Список с id фильмов указанного жанра",
                         "schema": {
-                            "$ref": "#/definitions/DTO.Genres"
+                            "$ref": "#/definitions/dto.Genres"
                         }
                     },
                     "500": {
@@ -198,7 +204,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Список с id фильмов указанного жанра",
                         "schema": {
-                            "$ref": "#/definitions/DTO.PreviewContentCard"
+                            "$ref": "#/definitions/dto.PreviewContentCard"
                         }
                     },
                     "400": {
@@ -240,7 +246,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "DTO.Genres": {
+        "dto.Genres": {
             "type": "object",
             "properties": {
                 "genres": {
@@ -256,7 +262,7 @@ const docTemplate = `{
                 }
             }
         },
-        "DTO.Login": {
+        "dto.Login": {
             "type": "object",
             "properties": {
                 "login": {
@@ -271,7 +277,7 @@ const docTemplate = `{
                 }
             }
         },
-        "DTO.PreviewContentCard": {
+        "dto.PreviewContentCard": {
             "type": "object",
             "properties": {
                 "actors": {
@@ -322,7 +328,7 @@ const docTemplate = `{
                 }
             }
         },
-        "DTO.Register": {
+        "dto.Register": {
             "type": "object",
             "properties": {
                 "email": {

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/config"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/DTO"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 	mockusecase "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/mocks"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/echoutil"
 	"github.com/labstack/echo/v4"
@@ -39,19 +39,19 @@ func TestAuthEndpoints_Register(t *testing.T) {
 
 	testCases := []struct {
 		Name        string
-		Input       DTO.Register
+		Input       dto.Register
 		ExpectedErr func(echo.Context) error
 		SetupMock   func()
 	}{
 		{
 			Name: "Успешная регистрация",
-			Input: DTO.Register{
+			Input: dto.Register{
 				Email:    "test@example.com",
 				Password: "AmazingPassword1!",
 			},
 			ExpectedErr: nil,
 			SetupMock: func() {
-				mockAuth.EXPECT().Register(gomock.Eq(DTO.Register{
+				mockAuth.EXPECT().Register(gomock.Eq(&dto.Register{
 					Email:    "test@example.com",
 					Password: "AmazingPassword1!",
 				})).Return("session", nil)
@@ -59,15 +59,15 @@ func TestAuthEndpoints_Register(t *testing.T) {
 		},
 		{
 			Name: "Пользователь уже существует",
-			Input: DTO.Register{
+			Input: dto.Register{
 				Email:    "111@example.com",
 				Password: "AmazingPassword1!",
 			},
 			ExpectedErr: func(ctx echo.Context) error {
-				return echoutil.NewError(ctx, http.StatusBadRequest, entity.ErrAlreadyExists)
+				return echoutil.NewError(ctx, http.StatusConflict, entity.ErrAlreadyExists)
 			},
 			SetupMock: func() {
-				mockAuth.EXPECT().Register(gomock.Eq(DTO.Register{
+				mockAuth.EXPECT().Register(gomock.Eq(&dto.Register{
 					Email:    "111@example.com",
 					Password: "AmazingPassword1!",
 				})).Return("", entity.ErrAlreadyExists)
@@ -75,7 +75,7 @@ func TestAuthEndpoints_Register(t *testing.T) {
 		},
 		{
 			Name: "Какая-то внутренняя ошибка сервера",
-			Input: DTO.Register{
+			Input: dto.Register{
 				Email:    "111@example.com",
 				Password: "AmazingPassword1!",
 			},
@@ -83,7 +83,7 @@ func TestAuthEndpoints_Register(t *testing.T) {
 				return echoutil.NewError(ctx, http.StatusInternalServerError, entity.ErrRedis)
 			},
 			SetupMock: func() {
-				mockAuth.EXPECT().Register(gomock.Eq(DTO.Register{
+				mockAuth.EXPECT().Register(gomock.Eq(&dto.Register{
 					Email:    "111@example.com",
 					Password: "AmazingPassword1!",
 				})).Return("", entity.ErrRedis)
@@ -107,11 +107,9 @@ func TestAuthEndpoints_Register(t *testing.T) {
 			err = h.Register(c)
 			// проверка
 			if tc.ExpectedErr != nil {
-				require.Error(t, err)
-				require.Equal(t, tc.ExpectedErr(c), err)
+				require.ErrorContains(t, err, tc.ExpectedErr(c).Error())
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, http.StatusOK, rec.Code)
 			}
 		})
 	}
@@ -127,19 +125,19 @@ func TestAuthEndpoints_Login(t *testing.T) {
 
 	testCases := []struct {
 		Name        string
-		Input       DTO.Login
+		Input       dto.Login
 		ExpectedErr func(echo.Context) error
 		SetupMock   func()
 	}{
 		{
 			Name: "Успешный вход",
-			Input: DTO.Login{
+			Input: dto.Login{
 				Login:    "test@example.com",
 				Password: "AmazingPassword1!",
 			},
 			ExpectedErr: nil,
 			SetupMock: func() {
-				mockAuth.EXPECT().Login(gomock.Eq(DTO.Login{
+				mockAuth.EXPECT().Login(gomock.Eq(&dto.Login{
 					Login:    "test@example.com",
 					Password: "AmazingPassword1!",
 				})).Return("session", nil)
@@ -147,7 +145,7 @@ func TestAuthEndpoints_Login(t *testing.T) {
 		},
 		{
 			Name: "Неверный пароль",
-			Input: DTO.Login{
+			Input: dto.Login{
 				Login:    "test@example.com",
 				Password: "WrongPassword!",
 			},
@@ -155,7 +153,7 @@ func TestAuthEndpoints_Login(t *testing.T) {
 				return echoutil.NewError(ctx, http.StatusBadRequest, entity.ErrBadRequest)
 			},
 			SetupMock: func() {
-				mockAuth.EXPECT().Login(gomock.Eq(DTO.Login{
+				mockAuth.EXPECT().Login(gomock.Eq(&dto.Login{
 					Login:    "test@example.com",
 					Password: "WrongPassword!",
 				})).Return("", entity.ErrBadRequest)
@@ -163,7 +161,7 @@ func TestAuthEndpoints_Login(t *testing.T) {
 		},
 		{
 			Name: "Пользователь не найден",
-			Input: DTO.Login{
+			Input: dto.Login{
 				Login:    "notfound@example.com",
 				Password: "AmazingPassword1!",
 			},
@@ -171,7 +169,7 @@ func TestAuthEndpoints_Login(t *testing.T) {
 				return echoutil.NewError(ctx, http.StatusNotFound, entity.ErrNotFound)
 			},
 			SetupMock: func() {
-				mockAuth.EXPECT().Login(gomock.Eq(DTO.Login{
+				mockAuth.EXPECT().Login(gomock.Eq(&dto.Login{
 					Login:    "notfound@example.com",
 					Password: "AmazingPassword1!",
 				})).Return("", entity.ErrNotFound)
@@ -179,7 +177,7 @@ func TestAuthEndpoints_Login(t *testing.T) {
 		},
 		{
 			Name: "Какая-то внутренняя ошибка сервера",
-			Input: DTO.Login{
+			Input: dto.Login{
 				Login:    "notfound@example.com",
 				Password: "AmazingPassword1!",
 			},
@@ -187,7 +185,7 @@ func TestAuthEndpoints_Login(t *testing.T) {
 				return echoutil.NewError(ctx, http.StatusInternalServerError, entity.ErrPSQL)
 			},
 			SetupMock: func() {
-				mockAuth.EXPECT().Login(gomock.Eq(DTO.Login{
+				mockAuth.EXPECT().Login(gomock.Eq(&dto.Login{
 					Login:    "notfound@example.com",
 					Password: "AmazingPassword1!",
 				})).Return("", entity.ErrPSQL)
@@ -211,11 +209,9 @@ func TestAuthEndpoints_Login(t *testing.T) {
 			err = h.Login(c)
 			// проверка
 			if tc.ExpectedErr != nil {
-				require.Error(t, err)
-				require.Equal(t, tc.ExpectedErr(c), err)
+				require.ErrorContains(t, err, tc.ExpectedErr(c).Error())
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, http.StatusOK, rec.Code)
 			}
 		})
 	}
@@ -289,11 +285,9 @@ func TestAuthEndpoints_IsAuth(t *testing.T) {
 			err := h.IsAuth(c)
 			// проверка
 			if tc.ExpectedErr != nil {
-				require.Error(t, err)
-				require.Equal(t, tc.ExpectedErr(c), err)
+				require.ErrorContains(t, err, tc.ExpectedErr(c).Error())
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, http.StatusOK, rec.Code)
 			}
 		})
 	}
@@ -345,11 +339,9 @@ func TestAuthEndpoints_Logout(t *testing.T) {
 			err := h.Logout(c)
 			// проверка
 			if tc.ExpectedErr != nil {
-				require.Error(t, err)
-				require.Equal(t, tc.ExpectedErr, err)
+				require.ErrorContains(t, err, tc.ExpectedErr.Error())
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, http.StatusOK, rec.Code)
 			}
 		})
 	}

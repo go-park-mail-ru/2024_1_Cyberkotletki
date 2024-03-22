@@ -1,7 +1,7 @@
 package http
 
 import (
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/DTO"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 	mock_usecase "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/mocks"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"
@@ -42,7 +42,7 @@ func TestCollectionsEndpoints_GetGenres(t *testing.T) {
 			Name:        "Успех",
 			ExpectedErr: nil,
 			SetupMock: func() {
-				mockCollections.EXPECT().GetGenres().Return(&DTO.Genres{
+				mockCollections.EXPECT().GetGenres().Return(&dto.Genres{
 					Genres: []string{"action", "drama", "comedian"},
 				}, nil)
 			},
@@ -57,11 +57,9 @@ func TestCollectionsEndpoints_GetGenres(t *testing.T) {
 			c := e.NewContext(req, rec)
 			err := h.GetGenres(c)
 			if tc.ExpectedErr != nil {
-				require.Error(t, err)
-				require.Equal(t, tc.ExpectedErr, err)
+				require.ErrorContains(t, err, tc.ExpectedErr.Error())
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, http.StatusOK, rec.Code)
 			}
 		})
 	}

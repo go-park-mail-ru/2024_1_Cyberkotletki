@@ -18,7 +18,7 @@ func NewCollectionsEndpoints(useCase usecase.Collections) CollectionsEndpoints {
 // GetGenres
 // @Tags Collections
 // @Description Возвращает список всех доступных жанров фильмов и сериалов
-// @Success		200	{object}	DTO.Genres	"Список с id фильмов указанного жанра"
+// @Success		200	{object}	dto.Genres	"Список с id фильмов указанного жанра"
 // @Failure		500	{object}	echo.HTTPError	"Внутренняя ошибка сервера"
 // @Router /collections/genres [get]
 func (h *CollectionsEndpoints) GetGenres(c echo.Context) error {

@@ -15,7 +15,7 @@ const (
 )
 
 type User struct {
-	Id               int       `json:"id"`    // Уникальный идентификатор
+	ID               int       `json:"id"`    // Уникальный идентификатор
 	Name             string    `json:"name"`  // Имя пользователя
 	Email            string    `json:"email"` // Электронная почта
 	PasswordHash     string    // Хэш пароля пользователя
@@ -48,15 +48,15 @@ func ValidatePassword(password string) error {
 		return NewClientError("пароль должен содержать не менее 8 символов", ErrBadRequest)
 	case len(password) > 32:
 		return NewClientError("пароль должен содержать не более 32 символов", ErrBadRequest)
-	case !regexp.MustCompile("^[!@#$%^&*\\w]+$").MatchString(password):
+	case !regexp.MustCompile(`^[!@#$%^&*\w]+$`).MatchString(password):
 		return NewClientError("пароль должен состоять из латинских букв, цифр и специальных символов !@#$%^&*", ErrBadRequest)
-	case !regexp.MustCompile("[A-Z]").MatchString(password):
+	case !regexp.MustCompile(`[A-Z]`).MatchString(password):
 		return NewClientError("пароль должен содержать как минимум одну заглавную букву", ErrBadRequest)
-	case !regexp.MustCompile("[a-z]").MatchString(password):
+	case !regexp.MustCompile(`[a-z]`).MatchString(password):
 		return NewClientError("пароль должен содержать как минимум одну строчную букву", ErrBadRequest)
-	case !regexp.MustCompile("\\d").MatchString(password):
+	case !regexp.MustCompile(`\d`).MatchString(password):
 		return NewClientError("пароль должен содержать как минимум одну цифру", ErrBadRequest)
-	case !regexp.MustCompile("[!@#$%^&*]").MatchString(password):
+	case !regexp.MustCompile(`[!@#$%^&*]`).MatchString(password):
 		return NewClientError("пароль должен содержать как минимум один из специальных символов !@#$%^&*", ErrBadRequest)
 	default:
 		return nil
@@ -71,11 +71,12 @@ func ValidatePassword(password string) error {
 // отправка письма на ящик. Данный метод проводит лишь первичную проверку, а потому адрес нельзя считать достоверным.
 // Поэтому первичная валидация происходит на соответствие regexp:
 //
-// /^([a-z0-9!#$%&'*+\\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)$/
+// `/^([a-z0-9!#$%&'*+\\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+
+// [a-z0-9](?:[a-z0-9-]*[a-z0-9])?)$/`
 //
 // Также проверяется длина почты: не более 256 символов
 func ValidateEmail(email string) error {
-	re := regexp.MustCompile("^([a-z0-9!#$%&'*+\\\\/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+\\\\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)$")
+	re := regexp.MustCompile("^([a-z0-9!#$%&'*+\\\\/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+\\\\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)$") // nolint: lll
 	// т.к. почта состоит из ascii символов, то можно использовать len()
 	if !re.MatchString(email) {
 		return NewClientError("невалидная почта", ErrBadRequest)
@@ -88,13 +89,30 @@ func ValidateEmail(email string) error {
 
 // HashPassword генерирует соль длинной в 8 символов и хэширует пароль с этой солью.
 // Первым параметром возвращает полученную соль, вторым параметром возвращает хеш
-func HashPassword(password string) (salt string, hash string) {
-	salt = random.String(8)
-	hash = string(argon2.IDKey([]byte(password), []byte(salt), PasswordHashTime, PasswordHashKibMemory, PasswordHashThreads, 32))
-	return salt, hash
+func HashPassword(password string) (salt string, hash string, err error) {
+	salt, err = random.String(8)
+	if err != nil {
+		return "", "", NewClientError("произошла непредвиденная ошибка", ErrInternal)
+	}
+	hash = string(argon2.IDKey(
+		[]byte(password),
+		[]byte(salt),
+		PasswordHashTime,
+		PasswordHashKibMemory,
+		PasswordHashThreads,
+		32,
+	))
+	return salt, hash, nil
 }
 
 // CheckPassword принимает пароль и хэширует его с подмешиванием соли пользователя. При совпадении хешей возвращает true
 func (u *User) CheckPassword(password string) bool {
-	return string(argon2.IDKey([]byte(password), []byte(u.PasswordSalt), PasswordHashTime, PasswordHashKibMemory, PasswordHashThreads, 32)) == u.PasswordHash
+	return string(argon2.IDKey(
+		[]byte(password),
+		[]byte(u.PasswordSalt),
+		PasswordHashTime,
+		PasswordHashKibMemory,
+		PasswordHashThreads,
+		32,
+	)) == u.PasswordHash
 }

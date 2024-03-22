@@ -2,7 +2,7 @@ package service
 
 import (
 	"fmt"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/DTO"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
 )
@@ -17,8 +17,8 @@ func NewContentService(contentRepo repository.Content) usecase.Content {
 	}
 }
 
-func (c ContentService) GetContentPreviewCard(contentId int) (*DTO.PreviewContentCard, error) {
-	film, err := c.contentRepo.GetFilm(contentId)
+func (c ContentService) GetContentPreviewCard(contentID int) (*dto.PreviewContentCard, error) {
+	film, err := c.contentRepo.GetFilm(contentID)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (c ContentService) GetContentPreviewCard(contentId int) (*DTO.PreviewConten
 	} else {
 		actors = []string{}
 	}
-	return &DTO.PreviewContentCard{
+	return &dto.PreviewContentCard{
 		Title:         film.Title,
 		OriginalTitle: film.OriginalTitle,
 		ReleaseYear:   film.Release.Year(),

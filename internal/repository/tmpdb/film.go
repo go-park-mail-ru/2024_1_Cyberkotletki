@@ -1,19 +1,18 @@
-package tmpDB
+package tmpdb
 
 import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
-	contentrepo "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/content"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
 	"sync"
-	"sync/atomic"
 )
 
 type ContentDB struct {
 	sync.RWMutex
-	DB          map[int]entity.Film
-	filmsLastId atomic.Int64
+	DB map[int]entity.Film
+	// filmsLastId atomic.Int64
 }
 
-func NewContentRepository() contentrepo.Film {
+func NewContentRepository() repository.Film {
 	f := &ContentDB{
 		DB: make(map[int]entity.Film),
 	}
@@ -30,14 +29,14 @@ func (f *ContentDB) GetFilm(id int) (*entity.Film, error) {
 }
 
 // GetFilmsByGenre возвращает фильмы определенного жанра
-func (f *ContentDB) GetFilmsByGenre(genreId int) ([]entity.Film, error) {
+func (f *ContentDB) GetFilmsByGenre(genreID int) ([]entity.Film, error) {
 	f.Lock()
 	defer f.Unlock()
 
 	var films []entity.Film
 	for _, film := range f.DB {
 		for _, genreObj := range film.Content.Genres {
-			if genreObj.Id == genreId {
+			if genreObj.ID == genreID {
 				films = append(films, film)
 				break
 			}

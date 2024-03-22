@@ -12,7 +12,7 @@ package mock_usecase
 import (
 	reflect "reflect"
 
-	DTO "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/DTO"
+	dto "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -40,10 +40,10 @@ func (m *MockContent) EXPECT() *MockContentMockRecorder {
 }
 
 // GetContentPreviewCard mocks base method.
-func (m *MockContent) GetContentPreviewCard(arg0 int) (*DTO.PreviewContentCard, error) {
+func (m *MockContent) GetContentPreviewCard(arg0 int) (*dto.PreviewContentCard, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetContentPreviewCard", arg0)
-	ret0, _ := ret[0].(*DTO.PreviewContentCard)
+	ret0, _ := ret[0].(*dto.PreviewContentCard)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -1,23 +1,23 @@
 package random
 
 import (
-	"math/rand"
-	"time"
+	"crypto/rand"
 )
-
-var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-func stringWithCharset(length int, charset string) string {
-	b := make([]byte, length)
-	for i := range b {
-		b[i] = charset[seededRand.Intn(len(charset))]
+func stringWithCharset(length int, charset string) (string, error) {
+	bytes := make([]byte, length)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
 	}
-	return string(b)
+	for i := range bytes {
+		bytes[i] = charset[int(bytes[i])%len(charset)]
+	}
+	return string(bytes), nil
 }
 
 // String генерирует случайную строку длиной length из символов английского алфавита и цифр
-func String(length int) string {
+func String(length int) (string, error) {
 	return stringWithCharset(length, charset)
 }

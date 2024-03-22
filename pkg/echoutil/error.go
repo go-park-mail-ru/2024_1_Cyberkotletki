@@ -13,7 +13,7 @@ import (
 // ошибка содержит в себе entity.ClientError, то использует его в качестве сообщения об ошибке, в противном
 // случае приводит стандартное описание ошибки по её коду для избежания возможных утечек.
 // Попутно логируются все пятисотки
-func NewError(c echo.Context, status int, err error) *echo.HTTPError {
+func NewError(ctx echo.Context, status int, err error) *echo.HTTPError {
 	httpError := &echo.HTTPError{Code: status}
 	var e entity.ClientError
 	if errors.As(err, &e) {
@@ -23,7 +23,7 @@ func NewError(c echo.Context, status int, err error) *echo.HTTPError {
 		httpError.Message = http.StatusText(status)
 	}
 	if status >= 500 {
-		c.Logger().Error(GetErrMsgFromContext(c))
+		ctx.Logger().Error(GetErrMsgFromContext(ctx))
 	}
 	return httpError
 }
@@ -39,22 +39,22 @@ type ServerErrorMsg struct {
 	RequestBody string
 }
 
-func GetErrMsgFromContext(c echo.Context) ServerErrorMsg {
+func GetErrMsgFromContext(ctx echo.Context) ServerErrorMsg {
 	// todo: гипотетически тело запроса может быть большим, лучше заасинхронить чтение
-	body, err := io.ReadAll(c.Request().Body)
+	body, err := io.ReadAll(ctx.Request().Body)
 	if err != nil {
 		body = []byte("не удалось получить тело запроса")
 	}
 
 	return ServerErrorMsg{
-		URL:         *c.Request().URL,
-		UserAgent:   c.Request().UserAgent(),
-		Header:      c.Request().Header,
-		Method:      c.Request().Method,
-		QueryParams: c.QueryParams(),
-		ClientIP:    c.RealIP(),
+		URL:         *ctx.Request().URL,
+		UserAgent:   ctx.Request().UserAgent(),
+		Header:      ctx.Request().Header,
+		Method:      ctx.Request().Method,
+		QueryParams: ctx.QueryParams(),
+		ClientIP:    ctx.RealIP(),
 		RequestBody: string(body),
 	}
 }
 
-var BadJSON = errors.New("невалидный JSON")
+var ErrBadJSON = errors.New("невалидный JSON")

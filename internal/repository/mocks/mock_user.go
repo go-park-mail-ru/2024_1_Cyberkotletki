@@ -40,7 +40,7 @@ func (m *MockUser) EXPECT() *MockUserMockRecorder {
 }
 
 // AddUser mocks base method.
-func (m *MockUser) AddUser(arg0 entity.User) (*entity.User, error) {
+func (m *MockUser) AddUser(arg0 *entity.User) (*entity.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddUser", arg0)
 	ret0, _ := ret[0].(*entity.User)
@@ -70,7 +70,7 @@ func (mr *MockUserMockRecorder) GetUserByEmail(arg0 any) *gomock.Call {
 }
 
 // HasUser mocks base method.
-func (m *MockUser) HasUser(arg0 entity.User) bool {
+func (m *MockUser) HasUser(arg0 *entity.User) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "HasUser", arg0)
 	ret0, _ := ret[0].(bool)

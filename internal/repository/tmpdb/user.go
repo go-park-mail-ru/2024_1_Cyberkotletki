@@ -1,4 +1,4 @@
-package tmpDB
+package tmpdb
 
 import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
@@ -10,7 +10,7 @@ import (
 type UsersDB struct {
 	sync.RWMutex
 	DB          map[int]entity.User
-	usersLastId atomic.Int64
+	usersLastID atomic.Int64
 }
 
 func NewUserRepository() repository.User {
@@ -19,7 +19,7 @@ func NewUserRepository() repository.User {
 	}
 }
 
-func (u *UsersDB) HasUser(user entity.User) bool {
+func (u *UsersDB) HasUser(user *entity.User) bool {
 	for _, c := range u.DB {
 		if user.Email == c.Email {
 			return true
@@ -28,16 +28,16 @@ func (u *UsersDB) HasUser(user entity.User) bool {
 	return false
 }
 
-func (u *UsersDB) AddUser(user entity.User) (*entity.User, error) {
+func (u *UsersDB) AddUser(user *entity.User) (*entity.User, error) {
 	u.Lock()
 	defer u.Unlock()
 	if u.HasUser(user) {
 		return nil, entity.NewClientError("пользователь с таким email уже существует", entity.ErrBadRequest)
 	}
-	u.usersLastId.CompareAndSwap(u.usersLastId.Load(), u.usersLastId.Load()+1)
-	user.Id = int(u.usersLastId.Load())
-	u.DB[user.Id] = user
-	return &user, nil
+	u.usersLastID.CompareAndSwap(u.usersLastID.Load(), u.usersLastID.Load()+1)
+	user.ID = int(u.usersLastID.Load())
+	u.DB[user.ID] = *user
+	return user, nil
 }
 
 func (u *UsersDB) GetUserByEmail(email string) (*entity.User, error) {

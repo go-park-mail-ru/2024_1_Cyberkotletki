@@ -43,8 +43,8 @@ func TestContent_GetContentPreviewCard(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
 			tc.SetupContentRepoMock(mockContentRepo)
-
 			_, err := contentService.GetContentPreviewCard(tc.Input)
 			if tc.ExpectedErr != nil {
 				require.EqualError(t, err, tc.ExpectedErr.Error())

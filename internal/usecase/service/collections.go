@@ -2,7 +2,7 @@ package service
 
 import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/DTO"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
 )
@@ -17,34 +17,34 @@ func NewCollectionsService(contentRepo repository.Content) usecase.Collections {
 	}
 }
 
-func (c CollectionsService) GetCompilation(genre string) (*DTO.Compilation, error) {
-	var genreId int
+func (c CollectionsService) GetCompilation(genre string) (*dto.Compilation, error) {
+	var genreID int
 	genres := map[string]int{
 		"drama":    1,
 		"action":   2,
 		"comedian": 3,
 	}
 	if id, ok := genres[genre]; ok {
-		genreId = id
+		genreID = id
 	} else {
 		return nil, entity.NewClientError("такого жанра не существует", entity.ErrNotFound)
 	}
-	if films, err := c.contentRepo.GetFilmsByGenre(genreId); err != nil {
+	films, err := c.contentRepo.GetFilmsByGenre(genreID)
+	if err != nil {
 		return nil, err
-	} else {
-		var filmsIds []int
-		for _, film := range films {
-			filmsIds = append(filmsIds, film.Id)
-		}
-		return &DTO.Compilation{
-			Genre:              genre,
-			ContentIdentifiers: filmsIds,
-		}, nil
 	}
+	filmsIDs := make([]int, 0, len(films))
+	for _, film := range films {
+		filmsIDs = append(filmsIDs, film.ID)
+	}
+	return &dto.Compilation{
+		Genre:              genre,
+		ContentIdentifiers: filmsIDs,
+	}, nil
 }
 
-func (c CollectionsService) GetGenres() (*DTO.Genres, error) {
-	return &DTO.Genres{
+func (c CollectionsService) GetGenres() (*dto.Genres, error) {
+	return &dto.Genres{
 		Genres: []string{"action", "drama", "comedian"},
 	}, nil
 }

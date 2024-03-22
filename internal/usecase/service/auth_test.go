@@ -3,7 +3,7 @@ package service
 import (
 	"fmt"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/DTO"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 	mockrepo "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/mocks"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -23,20 +23,20 @@ func TestAuth_Register(t *testing.T) {
 
 	testCases := []struct {
 		Name                 string
-		Input                DTO.Register
+		Input                *dto.Register
 		ExpectedErr          error
-		SetupUserRepoMock    func(repo *mockrepo.MockUser)
+		SetupUserRepoMock    func(repo *mockrepo.MockUser, regDTO *dto.Register)
 		SetupSessionRepoMock func(repo *mockrepo.MockSession)
 	}{
 		{
 			Name: "Успешная регистрация",
-			Input: DTO.Register{
+			Input: &dto.Register{
 				Email:    "test@example.com",
 				Password: "AmazingPassword1!",
 			},
 			ExpectedErr: nil,
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {
-				repo.EXPECT().AddUser(gomock.Any()).Return(&entity.User{}, nil)
+			SetupUserRepoMock: func(repo *mockrepo.MockUser, regDTO *dto.Register) {
+				repo.EXPECT().AddUser(gomock.Cond(func(u any) bool { return u.(*entity.User).Email == regDTO.Email })).Return(&entity.User{}, nil)
 			},
 			SetupSessionRepoMock: func(repo *mockrepo.MockSession) {
 				repo.EXPECT().NewSession(gomock.Any()).Return("session", nil).AnyTimes()
@@ -44,41 +44,42 @@ func TestAuth_Register(t *testing.T) {
 		},
 		{
 			Name: "Пользователь уже существует",
-			Input: DTO.Register{
+			Input: &dto.Register{
 				Email:    "existing@example.com",
 				Password: "AmazingPassword1!",
 			},
-			ExpectedErr: entity.ErrBadRequest,
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {
-				repo.EXPECT().AddUser(gomock.Any()).Return(nil, entity.ErrBadRequest).AnyTimes()
+			ExpectedErr: entity.ErrAlreadyExists,
+			SetupUserRepoMock: func(repo *mockrepo.MockUser, regDTO *dto.Register) {
+				repo.EXPECT().AddUser(gomock.Cond(func(u any) bool { return u.(*entity.User).Email == regDTO.Email })).Return(nil, entity.ErrAlreadyExists)
 			},
 			SetupSessionRepoMock: func(repo *mockrepo.MockSession) {},
 		},
 		{
 			Name: "Пароль содержит недопустимые символы",
-			Input: DTO.Register{
-				Email:    "existing@example.com",
+			Input: &dto.Register{
+				Email:    "existing2@example.com",
 				Password: "Албурабызлык",
 			},
 			ExpectedErr:          fmt.Errorf("пароль должен состоять из латинских букв, цифр и специальных символов !@#$%%^&*"),
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
+			SetupUserRepoMock:    func(repo *mockrepo.MockUser, regDTO *dto.Register) {},
 			SetupSessionRepoMock: func(repo *mockrepo.MockSession) {},
 		},
 		{
 			Name: "Невалидная почта",
-			Input: DTO.Register{
+			Input: &dto.Register{
 				Email:    "почта@example.com",
 				Password: "AmazingPassword1!",
 			},
 			ExpectedErr:          fmt.Errorf("невалидная почта"),
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
+			SetupUserRepoMock:    func(repo *mockrepo.MockUser, regDTO *dto.Register) {},
 			SetupSessionRepoMock: func(repo *mockrepo.MockSession) {},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			tc.SetupUserRepoMock(mockUserRepo)
+			t.Parallel()
+			tc.SetupUserRepoMock(mockUserRepo, tc.Input)
 			tc.SetupSessionRepoMock(mockSessionRepo)
 
 			_, err := authService.Register(tc.Input)
@@ -102,21 +103,21 @@ func TestAuth_Login(t *testing.T) {
 
 	testCases := []struct {
 		Name                 string
-		Input                DTO.Login
+		Input                *dto.Login
 		ExpectedErr          error
-		SetupUserRepoMock    func(repo *mockrepo.MockUser)
+		SetupUserRepoMock    func(repo *mockrepo.MockUser, logDTO *dto.Login)
 		SetupSessionRepoMock func(repo *mockrepo.MockSession)
 	}{
 		{
 			Name: "Успешная авторизация",
-			Input: DTO.Login{
+			Input: &dto.Login{
 				Login:    "test@example.com",
 				Password: "AmazingPassword1!",
 			},
 			ExpectedErr: nil,
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {
-				salt, hashed := entity.HashPassword("AmazingPassword1!")
-				repo.EXPECT().GetUserByEmail(gomock.Any()).Return(&entity.User{Email: "test@example.com", PasswordSalt: salt, PasswordHash: hashed}, nil)
+			SetupUserRepoMock: func(repo *mockrepo.MockUser, logDTO *dto.Login) {
+				salt, hashed, _ := entity.HashPassword("AmazingPassword1!")
+				repo.EXPECT().GetUserByEmail(gomock.Cond(func(u any) bool { return u == logDTO.Login })).Return(&entity.User{Email: "test@example.com", PasswordSalt: salt, PasswordHash: hashed}, nil)
 			},
 			SetupSessionRepoMock: func(repo *mockrepo.MockSession) {
 				repo.EXPECT().NewSession(gomock.Any()).Return("session", nil)
@@ -124,25 +125,25 @@ func TestAuth_Login(t *testing.T) {
 		},
 		{
 			Name: "Несуществующий пользователь",
-			Input: DTO.Login{
+			Input: &dto.Login{
 				Login:    "test123@example.com",
 				Password: "AmazingPassword1!",
 			},
 			ExpectedErr: entity.ErrNotFound,
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {
-				repo.EXPECT().GetUserByEmail(gomock.Any()).Return(nil, entity.ErrNotFound)
+			SetupUserRepoMock: func(repo *mockrepo.MockUser, logDTO *dto.Login) {
+				repo.EXPECT().GetUserByEmail(gomock.Cond(func(u any) bool { return u == logDTO.Login })).Return(nil, entity.ErrNotFound)
 			},
 			SetupSessionRepoMock: func(repo *mockrepo.MockSession) {},
 		},
 		{
 			Name: "Неверный пароль",
-			Input: DTO.Login{
+			Input: &dto.Login{
 				Login:    "test@example.com",
 				Password: "BadPassword1!",
 			},
 			ExpectedErr: fmt.Errorf("неверный пароль"),
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {
-				repo.EXPECT().GetUserByEmail(gomock.Any()).Return(&entity.User{}, nil)
+			SetupUserRepoMock: func(repo *mockrepo.MockUser, logDTO *dto.Login) {
+				repo.EXPECT().GetUserByEmail(gomock.Cond(func(u any) bool { return u == logDTO.Login })).Return(&entity.User{}, nil)
 			},
 			SetupSessionRepoMock: func(repo *mockrepo.MockSession) {},
 		},
@@ -150,7 +151,8 @@ func TestAuth_Login(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			tc.SetupUserRepoMock(mockUserRepo)
+			t.Parallel()
+			tc.SetupUserRepoMock(mockUserRepo, tc.Input)
 			tc.SetupSessionRepoMock(mockSessionRepo)
 
 			_, err := authService.Login(tc.Input)
@@ -182,24 +184,25 @@ func TestAuth_IsAuth(t *testing.T) {
 	}{
 		{
 			Name:     "Существующая сессия",
-			Input:    "session",
+			Input:    "session1",
 			Expected: true,
 			SetupSessionRepoMock: func(repo *mockrepo.MockSession) {
-				repo.EXPECT().CheckSession("session").Return(true, nil)
+				repo.EXPECT().CheckSession("session1").Return(true, nil)
 			},
 		},
 		{
 			Name:     "Несуществующая сессия",
-			Input:    "session",
+			Input:    "session2",
 			Expected: false,
 			SetupSessionRepoMock: func(repo *mockrepo.MockSession) {
-				repo.EXPECT().CheckSession("session").Return(false, nil)
+				repo.EXPECT().CheckSession("session2").Return(false, nil)
 			},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
 			tc.SetupSessionRepoMock(mockSessionRepo)
 			isAuth, _ := authService.IsAuth(tc.Input)
 			require.Equal(t, tc.Expected, isAuth)
@@ -226,24 +229,25 @@ func TestAuth_Logout(t *testing.T) {
 	}{
 		{
 			Name:        "Существующая сессия",
-			Input:       "session",
+			Input:       "session1",
 			ExpectedErr: nil,
 			SetupSessionRepoMock: func(repo *mockrepo.MockSession) {
-				repo.EXPECT().DeleteSession("session").Return(true, nil)
+				repo.EXPECT().DeleteSession("session1").Return(true, nil)
 			},
 		},
 		{
 			Name:        "Несуществующая сессия",
-			Input:       "session",
+			Input:       "session2",
 			ExpectedErr: fmt.Errorf("не удалось удалить сессию"),
 			SetupSessionRepoMock: func(repo *mockrepo.MockSession) {
-				repo.EXPECT().DeleteSession("session").Return(false, fmt.Errorf("не удалось удалить сессию"))
+				repo.EXPECT().DeleteSession("session2").Return(false, fmt.Errorf("не удалось удалить сессию"))
 			},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
 			tc.SetupSessionRepoMock(mockSessionRepo)
 			err := authService.Logout(tc.Input)
 			if tc.ExpectedErr != nil {

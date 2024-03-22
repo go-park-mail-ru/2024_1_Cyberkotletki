@@ -13,7 +13,7 @@ type ClientError struct {
 
 func (err ClientError) Error() string {
 	// Отображаем только сообщение, которое можно видеть клиенту, Additional исключительно для внутренних нужд!
-	return fmt.Sprintf("%s", err.Msg)
+	return fmt.Sprint(err.Msg)
 }
 
 // NewClientError генерирует ошибку, содержащую сообщение для клиента и вспомогательные ошибки
@@ -41,4 +41,5 @@ var (
 	ErrAlreadyExists = errors.New("already exists")
 	ErrRedis         = errors.New("redis error")
 	ErrPSQL          = errors.New("postgres error")
+	ErrInternal      = errors.New("internal server error")
 )

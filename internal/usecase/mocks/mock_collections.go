@@ -12,7 +12,7 @@ package mock_usecase
 import (
 	reflect "reflect"
 
-	DTO "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/DTO"
+	dto "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -40,10 +40,10 @@ func (m *MockCollections) EXPECT() *MockCollectionsMockRecorder {
 }
 
 // GetCompilation mocks base method.
-func (m *MockCollections) GetCompilation(genre string) (*DTO.Compilation, error) {
+func (m *MockCollections) GetCompilation(genre string) (*dto.Compilation, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCompilation", genre)
-	ret0, _ := ret[0].(*DTO.Compilation)
+	ret0, _ := ret[0].(*dto.Compilation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -55,10 +55,10 @@ func (mr *MockCollectionsMockRecorder) GetCompilation(genre any) *gomock.Call {
 }
 
 // GetGenres mocks base method.
-func (m *MockCollections) GetGenres() (*DTO.Genres, error) {
+func (m *MockCollections) GetGenres() (*dto.Genres, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetGenres")
-	ret0, _ := ret[0].(*DTO.Genres)
+	ret0, _ := ret[0].(*dto.Genres)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -45,7 +45,7 @@ func GenerateExampleConfig() {
 	fmt.Println("Конфигурационный файл успешно создан.")
 }
 
-func ParseParams(logger *log.Logger) config.Config {
+func ParseParams() config.Config {
 	yamlFile, err := os.ReadFile("config.yaml")
 	if err != nil {
 		log.Fatalf("Ошибка при чтении конфига сервера: %v", err)
@@ -78,7 +78,7 @@ func main() {
 	}
 
 	logger := log.New("server: ")
-	params := ParseParams(logger)
+	params := ParseParams()
 	logger.Printf("Параметры запуска сервера: %v \n", params)
 
 	echoServer := app.Init(logger, params)
@@ -87,7 +87,10 @@ func main() {
 	go app.Run(echoServer, params)
 
 	<-ctx.Done()
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(params.HTTP.Server.GracefulShutdownTimeout)*time.Second)
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		time.Duration(params.HTTP.Server.GracefulShutdownTimeout)*time.Second,
+	)
 	defer cancel()
-	app.Shutdown(echoServer, ctx)
+	app.Shutdown(ctx, echoServer)
 }

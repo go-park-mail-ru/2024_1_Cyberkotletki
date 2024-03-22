@@ -42,6 +42,7 @@ func TestCollections_GetCompilation(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
 			tc.SetupContentRepoMock(mockContentRepo)
 			_, err := collectionsService.GetCompilation(tc.Input)
 			if tc.ExpectedErr != nil {

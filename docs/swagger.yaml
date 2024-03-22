@@ -1,6 +1,6 @@
 basePath: /api
 definitions:
-  DTO.Genres:
+  dto.Genres:
     properties:
       genres:
         example:
@@ -11,7 +11,7 @@ definitions:
           type: string
         type: array
     type: object
-  DTO.Login:
+  dto.Login:
     properties:
       login:
         example: email@email.com
@@ -22,7 +22,7 @@ definitions:
         format: string
         type: string
     type: object
-  DTO.PreviewContentCard:
+  dto.PreviewContentCard:
     properties:
       actors:
         example:
@@ -59,7 +59,7 @@ definitions:
         example: Бэтмен
         type: string
     type: object
-  DTO.Register:
+  dto.Register:
     properties:
       email:
         example: email@email.com
@@ -107,15 +107,14 @@ paths:
       consumes:
       - application/json
       description: Авторизация пользователя. При успешной авторизации отправляет куки
-        с сессией. Если пользователь уже авторизован, то прежний cookies с сессией
-        перезаписывается
+        с сессией. Если пользователь уже
       parameters:
       - description: Данные для входа
         in: body
         name: loginData
         required: true
         schema:
-          $ref: '#/definitions/DTO.Login'
+          $ref: '#/definitions/dto.Login'
       responses:
         "200":
           description: OK
@@ -159,12 +158,16 @@ paths:
         name: registerData
         required: true
         schema:
-          $ref: '#/definitions/DTO.Register'
+          $ref: '#/definitions/dto.Register'
       responses:
         "200":
           description: OK
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "409":
+          description: Conflict
           schema:
             $ref: '#/definitions/echo.HTTPError'
         "500":
@@ -180,7 +183,7 @@ paths:
         "200":
           description: Список с id фильмов указанного жанра
           schema:
-            $ref: '#/definitions/DTO.Genres'
+            $ref: '#/definitions/dto.Genres'
         "500":
           description: Внутренняя ошибка сервера
           schema:
@@ -200,7 +203,7 @@ paths:
         "200":
           description: Список с id фильмов указанного жанра
           schema:
-            $ref: '#/definitions/DTO.PreviewContentCard'
+            $ref: '#/definitions/dto.PreviewContentCard'
         "400":
           description: Требуется указать валидный id контента
           schema:

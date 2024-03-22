@@ -6,7 +6,7 @@ import (
 
 // Content представляет основную структуру для хранения информации о контенте.
 type Content struct {
-	Id               int         `json:"id"`               // Уникальный идентификатор
+	ID               int         `json:"id"`               // Уникальный идентификатор
 	Title            string      `json:"title"`            // Название
 	OriginalTitle    string      `json:"original_title"`   // Название
 	Country          []Country   `json:"country"`          // Страны, где был произведен контент

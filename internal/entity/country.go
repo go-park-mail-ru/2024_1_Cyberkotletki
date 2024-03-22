@@ -2,6 +2,6 @@ package entity
 
 // Country представляет страну.
 type Country struct {
-	Id   int    `json:"Id"`
-	Name string `json:"Name"` // Название страны
+	ID   int    `json:"id"`
+	Name string `json:"name"` // Название страны
 }

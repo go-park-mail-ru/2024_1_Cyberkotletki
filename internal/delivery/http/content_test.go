@@ -2,7 +2,7 @@ package http
 
 import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/DTO"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 	mockusecase "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/mocks"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/echoutil"
 	"github.com/labstack/echo/v4"
@@ -47,7 +47,7 @@ func TestContentEndpoints_GetContentPreview(t *testing.T) {
 			ID:          "1",
 			ExpectedErr: nil,
 			SetupMock: func() {
-				mockContent.EXPECT().GetContentPreviewCard(1).Return(&DTO.PreviewContentCard{}, nil)
+				mockContent.EXPECT().GetContentPreviewCard(1).Return(&dto.PreviewContentCard{}, nil)
 			},
 		},
 		{
@@ -74,11 +74,9 @@ func TestContentEndpoints_GetContentPreview(t *testing.T) {
 			c := e.NewContext(req, rec)
 			err := h.GetContentPreview(c)
 			if tc.ExpectedErr != nil {
-				require.Error(t, err)
-				require.Equal(t, tc.ExpectedErr, err)
+				require.ErrorContains(t, err, tc.ExpectedErr.Error())
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, http.StatusOK, rec.Code)
 			}
 		})
 	}

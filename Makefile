@@ -27,3 +27,7 @@ run-session-storage-container:
 	if ! docker inspect -f '{{.State.Running}}' session-storage 2>/dev/null ; then \
 		docker run --publish=6379:6379 --name session-storage -d redis redis-server --maxmemory 1gb; \
     fi
+
+.PHONY: run-linter
+run-linter:
+	golangci-lint run

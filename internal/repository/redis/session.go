@@ -37,20 +37,20 @@ func NewSessionRepository(logger echo.Logger, config config.Config) repository.S
 }
 
 func (SDB *sessionsDB) NewSession(id int) (string, error) {
-	sessionId := uuid.NewString()
+	sessionID := uuid.NewString()
 	// сначала нужно убедиться, что сессии с таким ключом нет
 	for {
 		_, err := SDB.rdb.Get(SDB.ctx, strconv.Itoa(id)).Result()
 		if errors.Is(err, redis.Nil) {
 			break
 		}
-		sessionId = uuid.NewString()
+		sessionID = uuid.NewString()
 	}
-	err := SDB.rdb.Set(SDB.ctx, sessionId, id, time.Duration(SDB.sessionAliveTime)*time.Second).Err()
+	err := SDB.rdb.Set(SDB.ctx, sessionID, id, time.Duration(SDB.sessionAliveTime)*time.Second).Err()
 	if err != nil {
 		return "", entity.NewClientError("не удалось создать сессию", err, entity.ErrRedis)
 	}
-	return sessionId, nil
+	return sessionID, nil
 }
 
 func (SDB *sessionsDB) CheckSession(session string) (bool, error) {
