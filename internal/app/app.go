@@ -118,6 +118,7 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	// collections
 	collectionsAPI := api.Group("/collections")
 	collectionsAPI.GET("/genres", collectionsDelivery.GetGenres)
+	collectionsAPI.GET("/compilation", collectionsDelivery.GetCompilationByGenre)
 	// auth
 	authAPI := api.Group("/auth")
 	authAPI.POST("/register", authDelivery.Register)

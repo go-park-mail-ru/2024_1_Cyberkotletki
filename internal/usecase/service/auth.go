@@ -51,7 +51,7 @@ func (a AuthService) Login(login *dto.Login) (string, error) {
 		return "", err
 	}
 	if !user.CheckPassword(login.Password) {
-		return "", entity.NewClientError("неверный пароль", entity.ErrBadRequest)
+		return "", entity.NewClientError("неверный пароль", entity.ErrForbidden)
 	}
 	session, err := a.sessionRepo.NewSession(user.ID)
 	if err != nil {

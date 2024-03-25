@@ -67,6 +67,7 @@ func (h *AuthEndpoints) Register(ctx echo.Context) error {
 // @Param 	loginData	body	dto.Login	true	"Данные для входа"
 // @Success     200
 // @Failure		400	{object}	echo.HTTPError
+// @Failure		403	{object}	echo.HTTPError
 // @Failure		404	{object}	echo.HTTPError
 // @Failure		500	{object}	echo.HTTPError
 // @Router /auth/login [post]
@@ -80,8 +81,8 @@ func (h *AuthEndpoints) Login(ctx echo.Context) error {
 		switch {
 		case entity.Contains(err, entity.ErrNotFound):
 			return echoutil.NewError(ctx, http.StatusNotFound, err)
-		case entity.Contains(err, entity.ErrBadRequest):
-			return echoutil.NewError(ctx, http.StatusBadRequest, err)
+		case entity.Contains(err, entity.ErrForbidden):
+			return echoutil.NewError(ctx, http.StatusForbidden, err)
 		default:
 			return echoutil.NewError(ctx, http.StatusInternalServerError, err)
 		}

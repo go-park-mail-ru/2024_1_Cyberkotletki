@@ -1,5 +1,19 @@
 basePath: /api
 definitions:
+  dto.Compilation:
+    properties:
+      genre:
+        example: action
+        type: string
+      ids:
+        example:
+        - 1
+        - 2
+        - 3
+        items:
+          type: integer
+        type: array
+    type: object
   dto.Genres:
     properties:
       genres:
@@ -43,7 +57,7 @@ definitions:
       genre:
         example: Боевик
         type: string
-      original_title:
+      originalTitle:
         example: Batman
         type: string
       poster:
@@ -52,7 +66,7 @@ definitions:
       rating:
         example: 9.1
         type: number
-      release_year:
+      releaseYear:
         example: 2020
         type: integer
       title:
@@ -122,6 +136,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/echo.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
         "404":
           description: Not Found
           schema:
@@ -176,6 +194,24 @@ paths:
             $ref: '#/definitions/echo.HTTPError'
       tags:
       - Auth
+  /collections/compilation:
+    get:
+      description: Возвращает список всех доступных жанров фильмов и сериалов
+      responses:
+        "200":
+          description: Список с id фильмов указанного жанра
+          schema:
+            $ref: '#/definitions/dto.Compilation'
+        "404":
+          description: Такого жанра не существует
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      tags:
+      - Collections
   /collections/genres:
     get:
       description: Возвращает список всех доступных жанров фильмов и сериалов

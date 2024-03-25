@@ -8,6 +8,7 @@ import (
 )
 
 func TestPlaygroundEndpoints_Ping(t *testing.T) {
+	t.Parallel()
 	h := NewPlaygroundEndpoints()
 
 	e := echo.New()
@@ -25,6 +26,7 @@ func TestPlaygroundEndpoints_Ping(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			req := httptest.NewRequest(http.MethodGet, "/playground/ping", nil)

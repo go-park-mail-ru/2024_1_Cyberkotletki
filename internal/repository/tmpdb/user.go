@@ -32,7 +32,7 @@ func (u *UsersDB) AddUser(user *entity.User) (*entity.User, error) {
 	u.Lock()
 	defer u.Unlock()
 	if u.HasUser(user) {
-		return nil, entity.NewClientError("пользователь с таким email уже существует", entity.ErrBadRequest)
+		return nil, entity.NewClientError("пользователь с таким email уже существует", entity.ErrAlreadyExists)
 	}
 	u.usersLastID.CompareAndSwap(u.usersLastID.Load(), u.usersLastID.Load()+1)
 	user.ID = int(u.usersLastID.Load())

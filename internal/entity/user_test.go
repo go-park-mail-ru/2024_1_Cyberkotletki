@@ -8,6 +8,7 @@ import (
 )
 
 func TestValidatePassword(t *testing.T) {
+	t.Parallel()
 
 	testCases := []struct {
 		Name   string
@@ -57,6 +58,7 @@ func TestValidatePassword(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			err := ValidatePassword(tc.Input)
@@ -68,6 +70,7 @@ func TestValidatePassword(t *testing.T) {
 }
 
 func TestValidateEmail(t *testing.T) {
+	t.Parallel()
 
 	testCases := []struct {
 		Name   string
@@ -92,6 +95,7 @@ func TestValidateEmail(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			err := ValidatePassword(tc.Input)
@@ -103,6 +107,7 @@ func TestValidateEmail(t *testing.T) {
 }
 
 func TestHashPassword(t *testing.T) {
+	t.Parallel()
 	salt, hash, err := HashPassword("AmazingPassword1!")
 	require.NoError(t, err)
 	require.Equal(t, 8, len(salt))
@@ -110,6 +115,7 @@ func TestHashPassword(t *testing.T) {
 }
 
 func TestCheckPassword(t *testing.T) {
+	t.Parallel()
 	user := NewUserEmpty()
 	salt, hash, err := HashPassword("AmazingPassword1!")
 	user.PasswordSalt = salt

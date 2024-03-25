@@ -17,11 +17,10 @@ import (
 )
 
 func TestAuthEndpoints_NewAuthEndpoints(t *testing.T) {
+	t.Parallel()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-
 	mockAuth := mockusecase.NewMockAuth(ctrl)
-
 	h := NewAuthEndpoints(mockAuth)
 
 	if h.useCase != mockAuth {
@@ -30,18 +29,14 @@ func TestAuthEndpoints_NewAuthEndpoints(t *testing.T) {
 }
 
 func TestAuthEndpoints_Register(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockAuth := mockusecase.NewMockAuth(ctrl)
-	h := NewAuthEndpoints(mockAuth)
-
+	t.Parallel()
 	e := echo.New()
 
 	testCases := []struct {
 		Name        string
 		Input       dto.Register
 		ExpectedErr func(echo.Context) error
-		SetupMock   func()
+		SetupMock   func(*mockusecase.MockAuth)
 	}{
 		{
 			Name: "Успешная регистрация",
@@ -50,7 +45,7 @@ func TestAuthEndpoints_Register(t *testing.T) {
 				Password: "AmazingPassword1!",
 			},
 			ExpectedErr: nil,
-			SetupMock: func() {
+			SetupMock: func(mockAuth *mockusecase.MockAuth) {
 				mockAuth.EXPECT().Register(gomock.Eq(&dto.Register{
 					Email:    "test@example.com",
 					Password: "AmazingPassword1!",
@@ -66,7 +61,7 @@ func TestAuthEndpoints_Register(t *testing.T) {
 			ExpectedErr: func(ctx echo.Context) error {
 				return echoutil.NewError(ctx, http.StatusConflict, entity.ErrAlreadyExists)
 			},
-			SetupMock: func() {
+			SetupMock: func(mockAuth *mockusecase.MockAuth) {
 				mockAuth.EXPECT().Register(gomock.Eq(&dto.Register{
 					Email:    "111@example.com",
 					Password: "AmazingPassword1!",
@@ -82,7 +77,7 @@ func TestAuthEndpoints_Register(t *testing.T) {
 			ExpectedErr: func(ctx echo.Context) error {
 				return echoutil.NewError(ctx, http.StatusInternalServerError, entity.ErrRedis)
 			},
-			SetupMock: func() {
+			SetupMock: func(mockAuth *mockusecase.MockAuth) {
 				mockAuth.EXPECT().Register(gomock.Eq(&dto.Register{
 					Email:    "111@example.com",
 					Password: "AmazingPassword1!",
@@ -92,8 +87,15 @@ func TestAuthEndpoints_Register(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
-			tc.SetupMock()
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			mockAuth := mockusecase.NewMockAuth(ctrl)
+			h := NewAuthEndpoints(mockAuth)
+			tc.SetupMock(mockAuth)
+
 			// запрос
 			reqBody, err := json.Marshal(tc.Input)
 			require.NoError(t, err)
@@ -116,18 +118,14 @@ func TestAuthEndpoints_Register(t *testing.T) {
 }
 
 func TestAuthEndpoints_Login(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockAuth := mockusecase.NewMockAuth(ctrl)
-	h := NewAuthEndpoints(mockAuth)
-
+	t.Parallel()
 	e := echo.New()
 
 	testCases := []struct {
 		Name        string
 		Input       dto.Login
 		ExpectedErr func(echo.Context) error
-		SetupMock   func()
+		SetupMock   func(*mockusecase.MockAuth)
 	}{
 		{
 			Name: "Успешный вход",
@@ -136,7 +134,7 @@ func TestAuthEndpoints_Login(t *testing.T) {
 				Password: "AmazingPassword1!",
 			},
 			ExpectedErr: nil,
-			SetupMock: func() {
+			SetupMock: func(mockAuth *mockusecase.MockAuth) {
 				mockAuth.EXPECT().Login(gomock.Eq(&dto.Login{
 					Login:    "test@example.com",
 					Password: "AmazingPassword1!",
@@ -150,13 +148,13 @@ func TestAuthEndpoints_Login(t *testing.T) {
 				Password: "WrongPassword!",
 			},
 			ExpectedErr: func(ctx echo.Context) error {
-				return echoutil.NewError(ctx, http.StatusBadRequest, entity.ErrBadRequest)
+				return echoutil.NewError(ctx, http.StatusForbidden, entity.ErrForbidden)
 			},
-			SetupMock: func() {
+			SetupMock: func(mockAuth *mockusecase.MockAuth) {
 				mockAuth.EXPECT().Login(gomock.Eq(&dto.Login{
 					Login:    "test@example.com",
 					Password: "WrongPassword!",
-				})).Return("", entity.ErrBadRequest)
+				})).Return("", entity.ErrForbidden)
 			},
 		},
 		{
@@ -168,7 +166,7 @@ func TestAuthEndpoints_Login(t *testing.T) {
 			ExpectedErr: func(ctx echo.Context) error {
 				return echoutil.NewError(ctx, http.StatusNotFound, entity.ErrNotFound)
 			},
-			SetupMock: func() {
+			SetupMock: func(mockAuth *mockusecase.MockAuth) {
 				mockAuth.EXPECT().Login(gomock.Eq(&dto.Login{
 					Login:    "notfound@example.com",
 					Password: "AmazingPassword1!",
@@ -184,7 +182,7 @@ func TestAuthEndpoints_Login(t *testing.T) {
 			ExpectedErr: func(ctx echo.Context) error {
 				return echoutil.NewError(ctx, http.StatusInternalServerError, entity.ErrPSQL)
 			},
-			SetupMock: func() {
+			SetupMock: func(mockAuth *mockusecase.MockAuth) {
 				mockAuth.EXPECT().Login(gomock.Eq(&dto.Login{
 					Login:    "notfound@example.com",
 					Password: "AmazingPassword1!",
@@ -194,8 +192,14 @@ func TestAuthEndpoints_Login(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
-			tc.SetupMock()
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			mockAuth := mockusecase.NewMockAuth(ctrl)
+			h := NewAuthEndpoints(mockAuth)
+			tc.SetupMock(mockAuth)
 			// запрос
 			reqBody, err := json.Marshal(tc.Input)
 			require.NoError(t, err)
@@ -218,18 +222,14 @@ func TestAuthEndpoints_Login(t *testing.T) {
 }
 
 func TestAuthEndpoints_IsAuth(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockAuth := mockusecase.NewMockAuth(ctrl)
-	h := NewAuthEndpoints(mockAuth)
-
+	t.Parallel()
 	e := echo.New()
 
 	testCases := []struct {
 		Name        string
 		Cookie      *http.Cookie
 		ExpectedErr func(echo.Context) error
-		SetupMock   func()
+		SetupMock   func(*mockusecase.MockAuth)
 	}{
 		{
 			Name:   "Не авторизован (нет cookie)",
@@ -237,7 +237,7 @@ func TestAuthEndpoints_IsAuth(t *testing.T) {
 			ExpectedErr: func(ctx echo.Context) error {
 				return echoutil.NewError(ctx, http.StatusUnauthorized, entity.NewClientError("не авторизован"))
 			},
-			SetupMock: func() {}, //ошибка до мока - мок не нужен
+			SetupMock: func(*mockusecase.MockAuth) {}, //ошибка до мока - мок не нужен
 		},
 		{
 			Name:   "Не авторизован (неверное значение cookie)",
@@ -245,7 +245,7 @@ func TestAuthEndpoints_IsAuth(t *testing.T) {
 			ExpectedErr: func(ctx echo.Context) error {
 				return echoutil.NewError(ctx, http.StatusUnauthorized, entity.NewClientError("не авторизован"))
 			},
-			SetupMock: func() {
+			SetupMock: func(mockAuth *mockusecase.MockAuth) {
 				mockAuth.EXPECT().IsAuth("invalid").Return(false, nil)
 			},
 		},
@@ -253,7 +253,7 @@ func TestAuthEndpoints_IsAuth(t *testing.T) {
 			Name:        "Успех",
 			Cookie:      &http.Cookie{Name: "session", Value: "valid"},
 			ExpectedErr: nil,
-			SetupMock: func() {
+			SetupMock: func(mockAuth *mockusecase.MockAuth) {
 				mockAuth.EXPECT().IsAuth("valid").Return(true, nil)
 			},
 		},
@@ -263,15 +263,21 @@ func TestAuthEndpoints_IsAuth(t *testing.T) {
 			ExpectedErr: func(ctx echo.Context) error {
 				return echoutil.NewError(ctx, http.StatusInternalServerError, entity.ErrRedis)
 			},
-			SetupMock: func() {
+			SetupMock: func(mockAuth *mockusecase.MockAuth) {
 				mockAuth.EXPECT().IsAuth("valid").Return(false, entity.ErrRedis)
 			},
 		},
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
-			tc.SetupMock()
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			mockAuth := mockusecase.NewMockAuth(ctrl)
+			h := NewAuthEndpoints(mockAuth)
+			tc.SetupMock(mockAuth)
 			// запрос
 			req := httptest.NewRequest(http.MethodGet, "/isAuth", nil)
 			if tc.Cookie != nil {
@@ -294,30 +300,26 @@ func TestAuthEndpoints_IsAuth(t *testing.T) {
 }
 
 func TestAuthEndpoints_Logout(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockAuth := mockusecase.NewMockAuth(ctrl)
-	h := NewAuthEndpoints(mockAuth)
-
+	t.Parallel()
 	e := echo.New()
 
 	testCases := []struct {
 		Name        string
 		Cookie      *http.Cookie
 		ExpectedErr error
-		SetupMock   func()
+		SetupMock   func(*mockusecase.MockAuth)
 	}{
 		{
 			Name:        "Не авторизован (нет cookie)",
 			Cookie:      nil, // нет кук
 			ExpectedErr: nil,
-			SetupMock:   func() {},
+			SetupMock:   func(*mockusecase.MockAuth) {},
 		},
 		{
 			Name:        "Успешный выход",
 			Cookie:      &http.Cookie{Name: "session", Value: "valid"},
 			ExpectedErr: nil,
-			SetupMock: func() {
+			SetupMock: func(mockAuth *mockusecase.MockAuth) {
 				mockAuth.EXPECT().Logout("valid")
 			},
 		},
@@ -325,7 +327,12 @@ func TestAuthEndpoints_Logout(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			tc.SetupMock()
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			mockAuth := mockusecase.NewMockAuth(ctrl)
+			h := NewAuthEndpoints(mockAuth)
+			tc.SetupMock(mockAuth)
 			// запрос
 			req := httptest.NewRequest(http.MethodPost, "/auth/logout", nil)
 			if tc.Cookie != nil {

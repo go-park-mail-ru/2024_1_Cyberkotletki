@@ -15,11 +15,10 @@ import (
 )
 
 func TestContentEndpoints_NewContentEndpoints(t *testing.T) {
+	t.Parallel()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-
 	mockContent := mockusecase.NewMockContent(ctrl)
-
 	h := NewContentEndpoints(mockContent)
 
 	if h.useCase != mockContent {
@@ -28,25 +27,20 @@ func TestContentEndpoints_NewContentEndpoints(t *testing.T) {
 }
 
 func TestContentEndpoints_GetContentPreview(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockContent := mockusecase.NewMockContent(ctrl)
-	h := NewContentEndpoints(mockContent)
-
+	t.Parallel()
 	e := echo.New()
 
 	testCases := []struct {
 		Name        string
 		ID          string
 		ExpectedErr error
-		SetupMock   func()
+		SetupMock   func(*mockusecase.MockContent)
 	}{
 		{
 			Name:        "Успех",
 			ID:          "1",
 			ExpectedErr: nil,
-			SetupMock: func() {
+			SetupMock: func(mockContent *mockusecase.MockContent) {
 				mockContent.EXPECT().GetContentPreviewCard(1).Return(&dto.PreviewContentCard{}, nil)
 			},
 		},
@@ -54,21 +48,28 @@ func TestContentEndpoints_GetContentPreview(t *testing.T) {
 			Name:        "Ошибка преобразования ID",
 			ID:          "-",
 			ExpectedErr: echoutil.NewError(nil, http.StatusBadRequest, strconv.ErrSyntax),
-			SetupMock:   func() {},
+			SetupMock:   func(*mockusecase.MockContent) {},
 		},
 		{
 			Name:        "Контент не найден",
 			ID:          "2",
 			ExpectedErr: echoutil.NewError(nil, http.StatusNotFound, entity.ErrNotFound),
-			SetupMock: func() {
+			SetupMock: func(mockContent *mockusecase.MockContent) {
 				mockContent.EXPECT().GetContentPreviewCard(2).Return(nil, entity.ErrNotFound)
 			},
 		},
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
-			tc.SetupMock()
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			mockContent := mockusecase.NewMockContent(ctrl)
+			h := NewContentEndpoints(mockContent)
+			tc.SetupMock(mockContent)
+
 			req := httptest.NewRequest(http.MethodGet, "/content?id="+tc.ID, nil)
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)

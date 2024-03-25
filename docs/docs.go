@@ -80,6 +80,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/echo.HTTPError"
                         }
                     },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -156,6 +162,34 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/collections/compilation": {
+            "get": {
+                "description": "Возвращает список всех доступных жанров фильмов и сериалов",
+                "tags": [
+                    "Collections"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Список с id фильмов указанного жанра",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Compilation"
+                        }
+                    },
+                    "404": {
+                        "description": "Такого жанра не существует",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
                         "schema": {
                             "$ref": "#/definitions/echo.HTTPError"
                         }
@@ -246,6 +280,26 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "dto.Compilation": {
+            "type": "object",
+            "properties": {
+                "genre": {
+                    "type": "string",
+                    "example": "action"
+                },
+                "ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    },
+                    "example": [
+                        1,
+                        2,
+                        3
+                    ]
+                }
+            }
+        },
         "dto.Genres": {
             "type": "object",
             "properties": {
@@ -306,7 +360,7 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Боевик"
                 },
-                "original_title": {
+                "originalTitle": {
                     "type": "string",
                     "example": "Batman"
                 },
@@ -318,7 +372,7 @@ const docTemplate = `{
                     "type": "number",
                     "example": 9.1
                 },
-                "release_year": {
+                "releaseYear": {
                     "type": "integer",
                     "example": 2020
                 },
