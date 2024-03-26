@@ -280,7 +280,7 @@ erDiagram
 
 ```mermaid
 erDiagram
-    USER {
+    USERS {
         INT ID PK "Уникальный идентификатор пользователя"
         STRING NAME "Имя пользователя"
         STRING EMAIL "Электронная почта пользователя"
