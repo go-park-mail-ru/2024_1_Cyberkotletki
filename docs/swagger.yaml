@@ -1,27 +1,6 @@
+basePath: /api
 definitions:
-  auth.LoginData:
-    properties:
-      login:
-        example: email@email.com
-        format: string
-        type: string
-      password:
-        example: SecretPassword1!
-        format: string
-        type: string
-    type: object
-  auth.RegisterData:
-    properties:
-      email:
-        example: email@email.com
-        format: string
-        type: string
-      password:
-        example: SecretPassword1!
-        format: string
-        type: string
-    type: object
-  collections.CompilationData:
+  dto.Compilation:
     properties:
       genre:
         example: action
@@ -35,7 +14,7 @@ definitions:
           type: integer
         type: array
     type: object
-  collections.GenresData:
+  dto.Genres:
     properties:
       genres:
         example:
@@ -46,7 +25,18 @@ definitions:
           type: string
         type: array
     type: object
-  content.PreviewInfoData:
+  dto.Login:
+    properties:
+      login:
+        example: email@email.com
+        format: string
+        type: string
+      password:
+        example: SecretPassword1!
+        format: string
+        type: string
+    type: object
+  dto.PreviewContentCard:
     properties:
       actors:
         example:
@@ -67,7 +57,7 @@ definitions:
       genre:
         example: Боевик
         type: string
-      original_title:
+      originalTitle:
         example: Batman
         type: string
       poster:
@@ -76,21 +66,27 @@ definitions:
       rating:
         example: 9.1
         type: number
-      release_year:
+      releaseYear:
         example: 2020
         type: integer
       title:
         example: Бэтмен
         type: string
     type: object
-  httputil.HTTPError:
+  dto.Register:
     properties:
-      code:
-        example: 400
-        type: integer
-      message:
-        example: status bad request
+      email:
+        example: email@email.com
+        format: string
         type: string
+      password:
+        example: SecretPassword1!
+        format: string
+        type: string
+    type: object
+  echo.HTTPError:
+    properties:
+      message: {}
     type: object
 info:
   contact: {}
@@ -110,14 +106,14 @@ paths:
       responses:
         "200":
           description: OK
-        "403":
+        "401":
           description: Не авторизован
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/echo.HTTPError'
         "500":
           description: Внутренняя ошибка сервера
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/echo.HTTPError'
       tags:
       - Auth
   /auth/login:
@@ -125,30 +121,33 @@ paths:
       consumes:
       - application/json
       description: Авторизация пользователя. При успешной авторизации отправляет куки
-        с сессией. Если пользователь уже авторизован, то прежний cookies с сессией
-        перезаписывается
+        с сессией. Если пользователь уже
       parameters:
       - description: Данные для входа
         in: body
         name: loginData
         required: true
         schema:
-          $ref: '#/definitions/auth.LoginData'
+          $ref: '#/definitions/dto.Login'
       responses:
         "200":
           description: OK
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/echo.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/echo.HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/echo.HTTPError'
       tags:
       - Auth
   /auth/logout:
@@ -164,10 +163,6 @@ paths:
       responses:
         "200":
           description: OK
-        "405":
-          description: Не авторизован
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
       tags:
       - Auth
   /auth/register:
@@ -181,58 +176,40 @@ paths:
         name: registerData
         required: true
         schema:
-          $ref: '#/definitions/auth.RegisterData'
+          $ref: '#/definitions/dto.Register'
       responses:
         "200":
           description: OK
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "404":
-          description: Not Found
+            $ref: '#/definitions/echo.HTTPError'
+        "409":
+          description: Conflict
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/echo.HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/echo.HTTPError'
       tags:
       - Auth
-  /collections/compilation/{genre}:
+  /collections/compilation:
     get:
-      consumes:
-      - application/json
-      description: Возвращает актуальные подборки фильмов по указанному жанру. Если
-        передать cookies с сессией, то подборка будет персонализированной
-      parameters:
-      - default: session=xxx
-        description: session
-        in: header
-        name: Cookie
-        type: string
-      - description: Название жанра
-        in: path
-        name: genre
-        required: true
-        type: string
+      description: Возвращает список всех доступных жанров фильмов и сериалов
       responses:
         "200":
           description: Список с id фильмов указанного жанра
           schema:
-            $ref: '#/definitions/collections.CompilationData'
-        "400":
-          description: Требуется указать жанр
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/dto.Compilation'
         "404":
-          description: Такой жанр не найден
+          description: Такого жанра не существует
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/echo.HTTPError'
         "500":
           description: Внутренняя ошибка сервера
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/echo.HTTPError'
       tags:
       - Collections
   /collections/genres:
@@ -242,11 +219,11 @@ paths:
         "200":
           description: Список с id фильмов указанного жанра
           schema:
-            $ref: '#/definitions/collections.GenresData'
+            $ref: '#/definitions/dto.Genres'
         "500":
           description: Внутренняя ошибка сервера
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/echo.HTTPError'
       tags:
       - Collections
   /content/contentPreview:
@@ -262,19 +239,19 @@ paths:
         "200":
           description: Список с id фильмов указанного жанра
           schema:
-            $ref: '#/definitions/content.PreviewInfoData'
+            $ref: '#/definitions/dto.PreviewContentCard'
         "400":
           description: Требуется указать валидный id контента
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/echo.HTTPError'
         "404":
           description: Контент с таким id не найден
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/echo.HTTPError'
         "500":
           description: Внутренняя ошибка сервера
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/echo.HTTPError'
       tags:
       - Content
   /playground/ping:

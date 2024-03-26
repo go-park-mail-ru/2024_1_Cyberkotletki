@@ -1,0 +1,40 @@
+linters:
+  disable-all: true
+  enable:
+    - govet
+    - revive
+    - gocyclo
+    - dupl
+    - goconst
+    - misspell
+    - lll
+    - unused
+    - unparam
+    - nakedret
+    - prealloc
+    - errcheck
+    - gosec
+    - gosimple
+    - ineffassign
+    - staticcheck
+    - nestif
+    - paralleltest
+    - stylecheck
+    - tagalign
+    - varnamelen
+
+linters-settings:
+  varnamelen:
+    min-name-length: 2
+  tagalign:
+    sort: false
+
+run:
+  timeout: 5m
+
+issues:
+  exclude-files:
+    - ".*/mock_.*\\.go"
+    - "_test\\.go"
+  exclude-dirs:
+    - docs

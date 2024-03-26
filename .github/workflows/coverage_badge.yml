@@ -1,0 +1,43 @@
+name: CoverageBadge
+
+on:
+  push:
+    branches: [ "dev-deploy", "master" ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.22'
+
+    - name: Tidy
+      run: go mod tidy
+
+    - name: Test
+      run: |
+          go test -coverprofile=test.coverage.tmp ./internal/...
+          cat test.coverage.tmp | grep -v 'mocks' > test.coverage
+
+    - name: Update coverage badge
+      run: |
+        coverage=$(go tool cover -func test.coverage | tail -n 1 | awk '{print $3}')
+        color="brightgreen"
+        echo -e "{\n  \"schemaVersion\": 1,\n  \"label\": \"coverage\",\n  \"message\": \"$coverage\",\n  \"color\": \"$color\"\n}" > coverage.json
+
+    - name: Update README
+      run: |
+        coverageBadgeUrl="![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/go-park-mail-ru/2024_1_Cyberkotletki/${GITHUB_REF#refs/heads/}/coverage.json)"
+        sed -i "s|.*Coverage.*|$coverageBadgeUrl|" README.md
+
+    - name: Commit and push if diff changed
+      run: |
+        git config --global user.email "actions@github.com"
+        git config --global user.name "GitHub Actions"
+        git add -A
+        git diff --quiet && git diff --staged --quiet || (git commit -m "Update coverage badge"; git push)

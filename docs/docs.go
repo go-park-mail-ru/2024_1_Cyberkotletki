@@ -35,16 +35,16 @@ const docTemplate = `{
                     "200": {
                         "description": "OK"
                     },
-                    "403": {
+                    "401": {
                         "description": "Не авторизован",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Внутренняя ошибка сервера",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     }
                 }
@@ -52,7 +52,7 @@ const docTemplate = `{
         },
         "/auth/login": {
             "post": {
-                "description": "Авторизация пользователя. При успешной авторизации отправляет куки с сессией. Если пользователь уже авторизован, то прежний cookies с сессией перезаписывается",
+                "description": "Авторизация пользователя. При успешной авторизации отправляет куки с сессией. Если пользователь уже",
                 "consumes": [
                     "application/json"
                 ],
@@ -66,7 +66,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.LoginData"
+                            "$ref": "#/definitions/dto.Login"
                         }
                     }
                 ],
@@ -77,19 +77,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     }
                 }
@@ -114,12 +120,6 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK"
-                    },
-                    "405": {
-                        "description": "Не авторизован",
-                        "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
-                        }
                     }
                 }
             }
@@ -140,7 +140,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.RegisterData"
+                            "$ref": "#/definitions/dto.Register"
                         }
                     }
                 ],
@@ -151,72 +151,47 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     }
                 }
             }
         },
-        "/collections/compilation/{genre}": {
+        "/collections/compilation": {
             "get": {
-                "description": "Возвращает актуальные подборки фильмов по указанному жанру. Если передать cookies с сессией, то подборка будет персонализированной",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Возвращает список всех доступных жанров фильмов и сериалов",
                 "tags": [
                     "Collections"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "default": "session=xxx",
-                        "description": "session",
-                        "name": "Cookie",
-                        "in": "header"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Название жанра",
-                        "name": "genre",
-                        "in": "path",
-                        "required": true
-                    }
                 ],
                 "responses": {
                     "200": {
                         "description": "Список с id фильмов указанного жанра",
                         "schema": {
-                            "$ref": "#/definitions/collections.CompilationData"
-                        }
-                    },
-                    "400": {
-                        "description": "Требуется указать жанр",
-                        "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/dto.Compilation"
                         }
                     },
                     "404": {
-                        "description": "Такой жанр не найден",
+                        "description": "Такого жанра не существует",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Внутренняя ошибка сервера",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     }
                 }
@@ -232,13 +207,13 @@ const docTemplate = `{
                     "200": {
                         "description": "Список с id фильмов указанного жанра",
                         "schema": {
-                            "$ref": "#/definitions/collections.GenresData"
+                            "$ref": "#/definitions/dto.Genres"
                         }
                     },
                     "500": {
                         "description": "Внутренняя ошибка сервера",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     }
                 }
@@ -263,25 +238,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Список с id фильмов указанного жанра",
                         "schema": {
-                            "$ref": "#/definitions/content.PreviewInfoData"
+                            "$ref": "#/definitions/dto.PreviewContentCard"
                         }
                     },
                     "400": {
                         "description": "Требуется указать валидный id контента",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Контент с таким id не найден",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Внутренняя ошибка сервера",
                         "schema": {
-                            "$ref": "#/definitions/httputil.HTTPError"
+                            "$ref": "#/definitions/echo.HTTPError"
                         }
                     }
                 }
@@ -305,37 +280,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "auth.LoginData": {
-            "type": "object",
-            "properties": {
-                "login": {
-                    "type": "string",
-                    "format": "string",
-                    "example": "email@email.com"
-                },
-                "password": {
-                    "type": "string",
-                    "format": "string",
-                    "example": "SecretPassword1!"
-                }
-            }
-        },
-        "auth.RegisterData": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "format": "string",
-                    "example": "email@email.com"
-                },
-                "password": {
-                    "type": "string",
-                    "format": "string",
-                    "example": "SecretPassword1!"
-                }
-            }
-        },
-        "collections.CompilationData": {
+        "dto.Compilation": {
             "type": "object",
             "properties": {
                 "genre": {
@@ -355,7 +300,7 @@ const docTemplate = `{
                 }
             }
         },
-        "collections.GenresData": {
+        "dto.Genres": {
             "type": "object",
             "properties": {
                 "genres": {
@@ -371,7 +316,22 @@ const docTemplate = `{
                 }
             }
         },
-        "content.PreviewInfoData": {
+        "dto.Login": {
+            "type": "object",
+            "properties": {
+                "login": {
+                    "type": "string",
+                    "format": "string",
+                    "example": "email@email.com"
+                },
+                "password": {
+                    "type": "string",
+                    "format": "string",
+                    "example": "SecretPassword1!"
+                }
+            }
+        },
+        "dto.PreviewContentCard": {
             "type": "object",
             "properties": {
                 "actors": {
@@ -400,7 +360,7 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Боевик"
                 },
-                "original_title": {
+                "originalTitle": {
                     "type": "string",
                     "example": "Batman"
                 },
@@ -412,7 +372,7 @@ const docTemplate = `{
                     "type": "number",
                     "example": 9.1
                 },
-                "release_year": {
+                "releaseYear": {
                     "type": "integer",
                     "example": 2020
                 },
@@ -422,17 +382,25 @@ const docTemplate = `{
                 }
             }
         },
-        "httputil.HTTPError": {
+        "dto.Register": {
             "type": "object",
             "properties": {
-                "code": {
-                    "type": "integer",
-                    "example": 400
-                },
-                "message": {
+                "email": {
                     "type": "string",
-                    "example": "status bad request"
+                    "format": "string",
+                    "example": "email@email.com"
+                },
+                "password": {
+                    "type": "string",
+                    "format": "string",
+                    "example": "SecretPassword1!"
                 }
+            }
+        },
+        "echo.HTTPError": {
+            "type": "object",
+            "properties": {
+                "message": {}
             }
         }
     }
@@ -442,7 +410,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "",
-	BasePath:         "",
+	BasePath:         "/api",
 	Schemes:          []string{},
 	Title:            "API Киноскопа",
 	Description:      "",

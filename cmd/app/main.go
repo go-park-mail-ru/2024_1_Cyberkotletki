@@ -1,73 +1,96 @@
 package main
 
 import (
-	"errors"
+	"context"
+	"flag"
 	"fmt"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/config"
 	_ "github.com/go-park-mail-ru/2024_1_Cyberkotletki/docs"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/app"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/config"
-	"github.com/joho/godotenv"
-	"log"
-	"net/http"
+	_ "github.com/joho/godotenv"
+	"github.com/labstack/gommon/log"
+	"github.com/mcuadros/go-defaults"
+	"gopkg.in/yaml.v3"
 	"os"
 	"os/signal"
-	"path/filepath"
+	"time"
 )
+
+func GenerateExampleConfig() {
+	// Создание экземпляра структуры с использованием значений по умолчанию из тегов default
+	var conf config.Config
+	defaults.SetDefaults(&conf)
+
+	yamlData, err := yaml.Marshal(&conf)
+	if err != nil {
+		fmt.Printf("Ошибка при маршализации YAML: %v\n", err)
+		return
+	}
+	file, err := os.Create("config.yaml")
+	if err != nil {
+		fmt.Printf("Ошибка при создании файла: %v\n", err)
+		return
+	}
+	_, err = file.Write(yamlData)
+	if err != nil {
+		fmt.Printf("Ошибка при записи в файл: %v\n", err)
+		return
+	}
+	err = file.Close()
+	if err != nil {
+		fmt.Printf("Ошибка при записи в файл: %v\n", err)
+		return
+	}
+
+	fmt.Println("Конфигурационный файл успешно создан.")
+}
+
+func ParseParams() config.Config {
+	yamlFile, err := os.ReadFile("config.yaml")
+	if err != nil {
+		log.Fatalf("Ошибка при чтении конфига сервера: %v", err)
+	}
+	var cfg config.Config
+	err = yaml.Unmarshal(yamlFile, &cfg)
+	if err != nil {
+		log.Fatalf("Ошибка при парсинге конфига сервера: %v", err)
+	}
+
+	/*
+		при подключении БД все данные надо будет хранить в .env
+		if err = godotenv.Load(".env"); err != nil {
+			logger.Fatal("Не удалось загрузить .env файл. Убедитесь, что он расположен в корне проекта")
+		}
+	*/
+
+	return cfg
+}
 
 // @title API Киноскопа
 // @version 1.0
+// @BasePath  /api
 func main() {
-	logger := log.New(os.Stdout, "server: ", log.LstdFlags)
-
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("Не удалось загрузить .env файл. Убедитесь, что он расположен в корне проекта")
-	}
-	staticDefaultFolder, _ := os.Getwd()
-	listenAddress := os.Getenv("LISTEN_ADDRESS")
-	listenPort := os.Getenv("LISTEN_PORT")
-	serverMode := os.Getenv("SERVER_MODE")
-	switch serverMode {
-	case "PRODUCTION":
-		serverMode = "prod"
-	case "TEST":
-		serverMode = "test"
-	default:
-		serverMode = "dev"
-	}
-	var genSwagger bool
-	if swagger := os.Getenv("GEN_SWAGGER"); swagger == "true" {
-		genSwagger = true
-	} else {
-		genSwagger = false
-	}
-	staticFolder := os.Getenv("STATIC_DIR")
-	if staticFolder == "" {
-		staticFolder = filepath.Join(staticDefaultFolder, "assets", "examples", "static")
-	}
-	cors := os.Getenv("CORS")
-	params := config.InitParams{
-		Addr:         fmt.Sprintf("%s:%s", listenAddress, listenPort),
-		Mode:         config.ServerMode(serverMode),
-		GenSwagger:   genSwagger,
-		StaticFolder: staticFolder,
-		CORS:         cors,
+	genCfg := flag.Bool("generate-example-config", false, "Генерирует пример конфига, с которым умеет работать сервер")
+	flag.Parse()
+	if *genCfg {
+		GenerateExampleConfig()
+		return
 	}
 
+	logger := log.New("server: ")
+	params := ParseParams()
 	logger.Printf("Параметры запуска сервера: %v \n", params)
 
-	done := make(chan bool, 1)
-	quit := make(chan os.Signal, 1)
+	echoServer := app.Init(logger, params)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
+	defer stop()
+	go app.Run(echoServer, params)
 
-	signal.Notify(quit, os.Interrupt)
-
-	server := app.Init(logger, params)
-	go app.Shutdown(server, logger, quit, done)
-
-	logger.Println("Сервер запущен по адресу", params.Addr)
-	if err := app.Run(server, params); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		logger.Fatalf("Сервер перестал обрабатывать запросы по адресу %s: %v\n", params.Addr, err)
-	}
-
-	<-done
-	logger.Println("Сервер завершил свою работу")
+	<-ctx.Done()
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		time.Duration(params.HTTP.Server.GracefulShutdownTimeout)*time.Second,
+	)
+	defer cancel()
+	app.Shutdown(ctx, echoServer)
 }
