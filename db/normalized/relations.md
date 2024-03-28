@@ -6,8 +6,16 @@
 У одного контента может быть несколько аудиторий в разных странах.
 <p> Функциональные зависимости: <p> 
 
-- `{ID} -> {CONTENT_ID, SIZE_IN_THOUSANDS, COUNTRY, created_at, updated_at}`
+- `{ID} -> {CONTENT_ID, SIZE_IN_THOUSANDS, COUNTRY_ID, created_at}`
 - `{CONTENT_ID} -> CONTENT {ID}`
+
+<p> Нормальные формы: <p> 
+
+- 1 НФ: Атрибуты ID, CONTENT_ID, SIZE_IN_THOUSANDS, COUNTRY_ID, created_at являются атомарными.
+- 2 НФ: Атрибуты CONTENT_ID, SIZE_IN_THOUSANDS, COUNTRY_ID, created_at полностью функционально зависят от первичного ключа ID. 
+- 3 НФ: Атрибуты CONTENT_ID, SIZE_IN_THOUSANDS, COUNTRY_ID, created_at не зависят от других атрибутов.
+- НФБК: 3 НФ + в таблице отсутствуют составные ключи.
+
 
 ```mermaid
 erDiagram
@@ -15,17 +23,23 @@ erDiagram
         INT ID PK "Уникальный идентификатор аудитории"
         INT CONTENT_ID FK "Идентификатор контента, который имеет эту аудиторию"
         INT SIZE_IN_THOUSANDS "Размер аудитории в тысячах"
-        STRING COUNTRY "страна аудитории"
-        TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
+        INT COUNTRY_ID "Идентификатор страны аудитории"
+        TIME created_at "время создания кортежа, для отладки"
     }
 ```
-## Таблица AUDIENCE
+## Таблица COUNTRY
 
 Таблица `COUNTRY` содержит информацию о странах, в которых был снят/произведен контент.
 <p> Функциональные зависимости: </p>
 
-- `{ID} -> {NAME}`
+- `{ID} -> {NAME, created_at}`
+
+<p> Нормальные формы: <p> 
+
+- 1 НФ: Атрибуты ID, NAME, created_at являются атомарными.
+- 2 НФ: Атрибуты NAME, created_at полностью функционально зависят от первичного ключа ID.
+- 3 НФ: Атрибуты NAME, created_at не зависят от других атрибутов.
+- НФБК: 3 НФ + в таблице отсутствуют составные ключи.
 
 
 ```mermaid
@@ -33,8 +47,7 @@ erDiagram
     COUNTRY {
         INT ID PK "Уникальный идентификатор страны"
         STRING NAME "Название страны"
-        TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
+        TIME created_at "время создания кортежа, для отладки"
     }
 ```
 ## Таблица BOXOFFICE
@@ -43,18 +56,25 @@ erDiagram
 У одного контента может быть несколько кассовых сборов в разных странах.
 <p> Функциональные зависимости: </p>
 
-- `{ID} -> {CONTENT_ID, COUNTRY, REVENUE, created_at, updated_at}`
+- `{ID} -> {CONTENT_ID, COUNTRY_ID, REVENUE, created_at}`
 - `{CONTENT_ID} -> CONTENT {ID}`
+- `{COUNTRY_ID} -> COUNTRY {ID}`
+
+<p> Нормальные формы: <p>
+
+- 1 НФ: Атрибуты ID, CONTENT_ID, COUNTRY_ID, REVENUE, created_at являются атомарными.
+- 2 НФ: Атрибуты CONTENT_ID, COUNTRY_ID, REVENUE, created_at полностью функционально зависят от первичного ключа ID.
+- 3 НФ: Атрибуты CONTENT_ID, COUNTRY_ID, REVENUE, created_at не зависят от других атрибутов.
+- НФБК: 3 НФ + в таблице отсутствуют составные ключи.
 
 ```mermaid
 erDiagram
     BOXOFFICE {
         INT ID PK "Уникальный идентификатор кассовых сборов"
         INT CONTENT_ID FK "Идентификатор контента, который имеет этот кассовый сбор"
-        STRING COUNTRY "Страна кассовых сборов"
+        INT COUNTRY_ID "Идентификатор страны кассовых сборов"
         INT REVENUE "Сумма сборов"
-        TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
+        TIME created_at "время создания кортежа, для отладки"
     }
 ```
 
@@ -63,7 +83,14 @@ erDiagram
 Таблица `GENRE` содержит информацию о жанрах контента на русском и английском языках.
 <p> Функциональные зависимости: </p>
 
-- `{ID} -> {NAME, NAME_RU, created_at, updated_at}`
+- `{ID} -> {NAME, NAME_RU, created_at}`
+
+<p> Нормальные формы: <p>
+
+- 1 НФ: Атрибуты ID, NAME, NAME_RU, created_at являются атомарными.
+- 2 НФ: Атрибуты NAME, NAME_RU, created_at полностью функционально зависят от первичного ключа ID.
+- 3 НФ: Атрибуты NAME, NAME_RU, created_at не зависят от других атрибутов.
+- НФБК: 3 НФ + в таблице отсутствуют составные ключи.
 
 ```mermaid
 erDiagram
@@ -71,8 +98,7 @@ erDiagram
         INT ID PK "Уникальный идентификатор жанра"
         STRING NAME "Название жанра на английском"
         STRING NAME_RU "Название жанра на русском"
-        TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
+        TIME created_at "время создания кортежа, для отладки"
     }
 ```
 
@@ -81,7 +107,15 @@ erDiagram
 Таблица `BIRTHPLACE` содержит информацию о месте рождения персоны.
 <p> Функциональные зависимости: </p>
 
-- `{ID} -> {CITY, REGION, COUNTRY, created_at, updated_at}`
+- `{ID} -> {CITY, REGION, COUNTRY_ID, created_at}`
+- `{COUNTRY_ID} -> COUNTRY {ID}`
+
+<p> Нормальные формы: <p>
+
+- 1 НФ: Атрибуты ID, CITY, REGION, COUNTRY_ID, created_at являются атомарными.
+- 2 НФ: Атрибуты CITY, REGION, COUNTRY_ID, created_at полностью функционально зависят от первичного ключа ID.
+- 3 НФ: Атрибуты CITY, REGION, COUNTRY_ID, created_at не зависят от других атрибутов.
+- НФБК: 3 НФ + в таблице отсутствуют составные ключи.
 
 ```mermaid
 erDiagram
@@ -89,9 +123,8 @@ erDiagram
         INT ID PK "Уникальный идентификатор места рождения"
         STRING CITY "Город рождения"
         STRING REGION "Регион рождения"
-        STRING COUNTRY "страна аудитории"
-        TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
+        INT COUNTRY_ID "Идентификатор страны рождения"
+        TIME created_at "время создания кортежа, для отладки"
     }
 ```
 
@@ -100,8 +133,19 @@ erDiagram
 Таблица `PERSON` содержит информацию о персонах, которые участвовали в создании контента.
 <p> Функциональные зависимости: </p>
 
-- `{ID} -> {FIRST_NAME, LAST_NAME, BIRTH_DATE, BIRTHPLACE_ID, DEATH_DATE, START_CAREER, END_СAREER, PHOTO,GENGER, HEIGHT, SPOUSE, CHILDREN, created_at, updated_at}`
+- `{ID} -> {FIRST_NAME, LAST_NAME, BIRTH_DATE, BIRTHPLACE_ID, DEATH_DATE, START_CAREER, END_CAREER, SEX, 
+    PHOTO, HEIGHT, SPOUSE, CHILDREN, created_at, updated_at}`
 - `{BIRTHPLACE_ID} -> BIRTHPLACE {ID}`
+
+<p> Нормальные формы: <p>
+
+- 1 НФ: Атрибуты ID, FIRST_NAME, LAST_NAME, BIRTH_DATE, BIRTHPLACE_ID, DEATH_DATE, START_CAREER, END_CAREER, SEX, 
+    PHOTO, HEIGHT, SPOUSE, CHILDREN, created_at, updated_at являются атомарными.
+- 2 НФ: Атрибуты FIRST_NAME, LAST_NAME, BIRTH_DATE, BIRTHPLACE_ID, DEATH_DATE, START_CAREER, END_CAREER, SEX, 
+    PHOTO, HEIGHT, SPOUSE, CHILDREN, created_at, updated_at полностью функционально зависят от первичного ключа ID.
+- 3 НФ: Атрибуты FIRST_NAME, LAST_NAME, BIRTH_DATE, BIRTHPLACE_ID, DEATH_DATE, START_CAREER, END_CAREER, SEX, 
+    PHOTO, HEIGHT, SPOUSE, CHILDREN, created_at, updated_at не зависят от других атрибутов.
+- НФБК: 3 НФ + в таблице отсутствуют составные ключи.
 
 ```mermaid
 erDiagram
@@ -114,30 +158,36 @@ erDiagram
         TIME DEATH_DATE "Дата смерти персоны"
         TIME START_CAREER "Дата начала карьеры персоны"
         TIME END_CAREER "Дата окончания карьеры персоны"
+        STRING SEX "Пол персоны"
         STRING PHOTO "Фотография персоны"
-        STRING GENDER "Пол - М/Ж"
         INT HEIGHT "Рост персоны"
         STRING SPOUSE "Супруг(а) персоны"
         STRING CHILDREN "Дети персоны"
-        TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
+        TIME created_at "время создания кортежа, для отладки"
+        TIME updated_at "время изменения кортежа, для отладки"
     }
 ```
 
-## Таблица ROLE
+## Таблица ROLES
 
-Таблица `ROLE` содержит информацию о ролях персоны в контенте, наприер, актер, режиссер, дублер и т.д.
+Таблица `ROLES` содержит информацию о ролях персоны в контенте, наприер, актер, режиссер, дублер и т.д.
 <p> Функциональные зависимости: <p> 
 
-- `{ID} -> {NAME, created_at, updated_at}`
+- `{ID} -> {NAME, created_at}`
+
+<p> Нормальные формы: <p>
+
+- 1 НФ: Атрибуты ID, NAME, created_at являются атомарными.
+- 2 НФ: Атрибуты NAME, created_at полностью функционально зависят от первичного ключа ID.
+- 3 НФ: Атрибуты NAME, created_at не зависят от других атрибутов.
+- НФБК: 3 НФ + в таблице отсутствуют составные ключи.
 
 ```mermaid
 erDiagram
-    ROLE{
+    ROLES{
         INT ID PK "Уникальный идентификатор роли персоны в контенте"
         STRING NAME "Название роли (актер, режиссер, дублер и т.д.)"
-        TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
+        TIME created_at "время создания кортежа, для отладки"
     }
 ```
 
@@ -146,8 +196,15 @@ erDiagram
 Таблица `FILM` содержит информацию о фильмах. В фильме есть данные контента и некоторые специфичные для фильма данные.
 <p> Функциональные зависимости: <p> 
 
-- `{ID} -> {CONTENT_ID, YEAR, DURATION, created_at, updated_at}`
+- `{ID} -> {CONTENT_ID, YEAR, created_at, updated_at}`
 - `{CONTENT_ID} -> CONTENT {ID}`
+
+<p> Нормальные формы: <p>
+
+- 1 НФ: Атрибуты ID, CONTENT_ID, YEAR, created_at, updated_at являются атомарными.
+- 2 НФ: Атрибуты CONTENT_ID, YEAR, created_at, updated_at полностью функционально зависят от первичного ключа ID.
+- 3 НФ: Атрибуты CONTENT_ID, YEAR, created_at, updated_at не зависят от других атрибутов.
+- НФБК: 3 НФ + в таблице отсутствуют составные ключи.
 
 ```mermaid
 erDiagram
@@ -155,9 +212,8 @@ erDiagram
         INT ID PK "Уникальный идентификатор фильма"
         INT CONTENT_ID FK "Идентификатор контента, который относится к фильму"
         INT YEAR "Год выпуска фильма"
-        INT DURATION "Продолжительность фильма в минутах"
-        TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
+        TIME created_at "время создания кортежа, для отладки"
+        TIME updated_at "время изменения кортежа, для отладки"
     }
 ```
 
@@ -167,7 +223,18 @@ erDiagram
 информацию, которая может быть общей как для фильмов, так и для сериалов.
 <p> Функциональные зависимости: <p> 
 
-- `{ID} -> {TITLE, ORIGINAL_TITLE, BUDGET, MARKETING, PREMIERE, RELEASE, AGE_RESTRICTION, IMDB, DESCRIPTION, POSTER, PLAYBACK, TYPE, created_at, updated_at}`
+- `{ID} -> {TITLE, ORIGINAL_TITLE, BUDGET, MARKETING_BUDGET, PREMIERE, RELEASE, AGE_RESTRICTION, IMDB, DESCRIPTION, POSTER, 
+    PLAYBACK, DURATION, created_at, updated_at}`
+
+<p> Нормальные формы: <p>
+
+- 1 НФ: Атрибуты ID, TITLE, ORIGINAL_TITLE, BUDGET, MARKETING_BUDGET, PREMIERE, RELEASE, AGE_RESTRICTION, IMDB, DESCRIPTION, POSTER, 
+    PLAYBACK, DURATION, created_at, updated_at являются атомарными.
+- 2 НФ: Атрибуты TITLE, ORIGINAL_TITLE, BUDGET, MARKETING_BUDGET, PREMIERE, RELEASE, AGE_RESTRICTION, IMDB, DESCRIPTION, POSTER, 
+    PLAYBACK, DURATION, created_at, updated_at полностью функционально зависят от первичного ключа ID.
+- 3 НФ: Атрибуты TITLE, ORIGINAL_TITLE, BUDGET, MARKETING_BUDGET, PREMIERE, RELEASE, AGE_RESTRICTION, IMDB, DESCRIPTION, POSTER, 
+    PLAYBACK, DURATION, created_at, updated_at не зависят от других атрибутов.
+- НФБК: 3 НФ + в таблице отсутствуют составные ключи.
 
 ```mermaid
 erDiagram
@@ -176,7 +243,7 @@ erDiagram
         STRING TITLE "Название контента"
         STRING ORIGINAL_TITLE "Оригинальное название контента"
         INT BUDGET "Бюджет контента"
-        INT MARKETING "Маркетинговые затраты на контент"
+        INT MARKETING_BUDGET "Бюджет маркетинга контента"
         TIME PREMIERE "Дата премьеры контента"
         TIME RELEASE "Дата выпуска контента"
         INT AGE_RESTRICTION "Возрастное ограничение контента"
@@ -184,9 +251,9 @@ erDiagram
         STRING DESCRIPTION "Описание контента"
         STRING POSTER "Постер контента"
         STRING PLAYBACK "Воспроизведение на заднем плане небольшого фрагмента видео контента"
-        STRING TYPE "F - Film, S - Season"
-        TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
+        INT DURATION "Продолжительность контента в минутах"
+        TIME created_at "время создания кортежа, для отладки"
+        TIME updated_at "время изменения кортежа, для отладки"
     }
 ```
 
@@ -195,7 +262,14 @@ erDiagram
 Таблица `STATUS` содержит информацию о статусе контента у пользователя. Статус может быть просмотрен, запланирован, пересматривается, добавлен в избранное.
 <p> Функциональные зависимости: <p> 
 
-- `{ID} -> {STATUS, created_at, updated_at}`
+- `{ID} -> {STATUS, created_at,}`
+
+<p> Нормальные формы: <p>
+
+- 1 НФ: Атрибуты ID, STATUS, created_at являются атомарными.
+- 2 НФ: Атрибуты STATUS, created_at полностью функционально зависят от первичного ключа ID.
+- 3 НФ: Атрибуты STATUS, created_at не зависят от других атрибутов.
+- НФБК: 3 НФ + в таблице отсутствуют составные ключи.
 
 ```mermaid
 erDiagram
@@ -203,7 +277,6 @@ erDiagram
         INT ID PK "Уникальный идентификатор статуса"
         STRING STATUS "Статус контента (Viewed, Planned, Reconsidering, Favourites(избранное))"
         TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
     }
 ```
 
@@ -212,8 +285,15 @@ erDiagram
 Таблица `EPISODE` содержит информацию об эпизодах сериала. В сезоне может быть несколько эпизодов.
 <p> Функциональные зависимости: <p> 
 
-- `{ID} -> {SEASON_ID, DESCRIPTION, EPISODE_NUMBER, created_at, updated_at}`
+- `{ID} -> {SEASON_ID, DESCRIPTION, EPISODE_NUMBER, VIEWED, created_at, updated_at}`
 - `{SEASON_ID} -> SEASON {ID}`
+
+<p> Нормальные формы: <p>
+
+- 1 НФ: Атрибуты ID, SEASON_ID, DESCRIPTION, EPISODE_NUMBER, VIEWED, created_at, updated_at являются атомарными.
+- 2 НФ: Атрибуты SEASON_ID, DESCRIPTION, EPISODE_NUMBER, VIEWED, created_at, updated_at полностью функционально зависят от первичного ключа ID.
+- 3 НФ: Атрибуты SEASON_ID, DESCRIPTION, EPISODE_NUMBER, VIEWED, created_at, updated_at не зависят от других атрибутов.
+- НФБК: 3 НФ + в таблице отсутствуют составные ключи.
 
 ```mermaid
 erDiagram
@@ -222,61 +302,80 @@ erDiagram
         INT SEASON_ID FK "Идентификатор сезона, к которому относится эпизод"
         STRING DESCRIPTION "Описание эпизода"
         INT EPISODE_NUMBER "Номер эпизода"
-        TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
+        STRING VIEWED "Просмотрен ли эпизод"
+        TIME created_at "время создания кортежа, для отладки"
+        TIME updated_at "время изменения кортежа, для отладки"
     }
 ```
 
 ## Таблица SEASON
 
-Таблица `SEASON` содержит информацию о сезонах сериала. В сериале может быть несколько сезонов. В сезоне есть данные контента 
-и некоторые специфичные для сезона данные (год начала, год окончания, количество эпизодов).
+Таблица `SEASON` содержит информацию о сезонах сериала. В сериале может быть несколько сезонов.
 <p> Функциональные зависимости: <p> 
 
-- `{ID} -> {CONTENT_ID, SERIES_ID, YEAR_START, YEAR_END, COUNT_EPISODES, created_at, updated_at}`
-- `{CONTENT_ID} -> CONTENT {ID}`
+- `{ID} -> {SERIES_ID, YEAR_START, YEAR_END, created_at, updated_at}`
 - `{SERIES_ID} -> SERIES {ID}`
+
+<p> Нормальные формы: <p>
+
+- 1 НФ: Атрибуты ID, SERIES_ID, YEAR_START, YEAR_END, created_at, updated_at являются атомарными.
+- 2 НФ: Атрибуты SERIES_ID, YEAR_START, YEAR_END, created_at, updated_at полностью функционально зависят от первичного ключа ID.
+- 3 НФ: Атрибуты SERIES_ID, YEAR_START, YEAR_END, created_at, updated_at не зависят от других атрибутов.
+- НФБК: 3 НФ + в таблице отсутствуют составные ключи.
 
 ```mermaid
 erDiagram
     SEASON {
         INT ID PK "Уникальный идентификатор сезона"
-        INT CONTENT_ID FK "Идентификатор контента, который относится к  сезону"
         INT SERIES_ID FK "Идентификатор сериала, к которому относится сезон"
         INT YEAR_START "Год начала сезона"
         INT YEAR_END "Год окончания сезона"
-        INT COUNT_EPISODES "Число эпизодов в сезоне (выпущено или запланировано)"
-        TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
+        TIME created_at "время создания кортежа, для отладки"
+        TIME updated_at "время изменения кортежа, для отладки"
     }
 ```
 
 ## Таблица SERIES
 
-Таблица `SERIES` содержит информацию о сериалах.
+Таблица `SERIES` содержит информацию о сериалах. Сериал содержит данные контента и некоторые специфичные для сериала данные.
 <p> Функциональные зависимости: <p> 
 
-- `{ID} -> {TITLE, YEAR_START, YEAR_END, created_at, updated_at}`
+- `{ID} -> {CONTENT_ID, TITLE, YEAR_START, YEAR_END, created_at, updated_at}`
+- `{CONTENT_ID} -> CONTENT {ID}`
+
+<p> Нормальные формы: <p>
+
+- 1 НФ: Атрибуты ID, CONTENT_ID, TITLE, YEAR_START, YEAR_END, created_at, updated_at являются атомарными.
+- 2 НФ: Атрибуты CONTENT_ID, TITLE, YEAR_START, YEAR_END, created_at, updated_at полностью функционально зависят от первичного ключа ID.
+- 3 НФ: Атрибуты CONTENT_ID, TITLE, YEAR_START, YEAR_END, created_at, updated_at не зависят от других атрибутов.
+- НФБК: 3 НФ + в таблице отсутствуют составные ключи.
 
 ```mermaid
 erDiagram
     SERIES {
         INT ID PK "Уникальный идентификатор сериала"
+        INT CONTENT_ID FK "Идентификатор контента, который относится к  сериалу"
         STRING TITLE "Название сериала"
         INT YEAR_START "Год начала сериала"
         INT YEAR_END "Год окончания сериала"
-        TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
+        TIME created_at "время создания кортежа, для отладки"
+        TIME updated_at "время изменения кортежа, для отладки"
     }
 ```
 
-## Таблица USER
+## Таблица USERS
 
-Таблица `USER` содержит информацию о пользователях. Пользователь может оставлять комментарии, ставить оценки, сохранять контент и персон.
+Таблица `USERS` содержит информацию о пользователях. Пользователь может оставлять комментарии, ставить оценки, сохранять контент и персон.
 <p> Функциональные зависимости: <p> 
 
-- `{ID} -> {NAME, EMAIL, PASSWORD_HASHED, SALT_PASSWORD, BIRTH_DATE, DATE_REGISTERED, created_at, updated_at}`
-- `{EMAIL} -> {NAME, PASSWORD_HASHED, SALT_PASSWORD, BIRTH_DATE, DATE_REGISTERED, created_at, updated_at}`
+- `{ID} -> {NAME, EMAIL, PASSWORD_HASHED, SALT_PASSWORD, BIRTH_DATE, created_at, updated_at}`
+
+<p> Нормальные формы: <p>
+
+- 1 НФ: Атрибуты ID, NAME, EMAIL, PASSWORD_HASHED, SALT_PASSWORD, BIRTH_DATE, created_at, updated_at являются атомарными.
+- 2 НФ: Атрибуты NAME, EMAIL, PASSWORD_HASHED, SALT_PASSWORD, BIRTH_DATE, created_at, updated_at полностью функционально зависят от первичного ключа ID.
+- 3 НФ: Атрибуты NAME, EMAIL, PASSWORD_HASHED, SALT_PASSWORD, BIRTH_DATE, created_at, updated_at не зависят от других атрибутов.
+- НФБК: 3 НФ + в таблице отсутствуют составные ключи.
 
 ```mermaid
 erDiagram
@@ -287,33 +386,38 @@ erDiagram
         STRING PASSWORD_HASHED "Хэш пароля пользователя"
         STRING SALT_PASSWORD "Соль для генерации хэша пароля"
         TIME BIRTH_DATE "День рождения пользователя"
-        TIME DATE_REGISTERED "Дата регистрации пользователя"
-        TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
+        TIME created_at "время создания кортежа, для отладки"
+        TIME updated_at "время изменения кортежа, для отладки"
     }
 ```
 
-## Таблица COMMENT
+## Таблица REVIEW
 
-Таблица `COMMENT` содержит информацию о комментариях пользователей к контенту. Комментарий содержит заголовок, текст, оценку контента пользователем, 
-оставившим комментарий.
+Таблица `REVIEW` содержит информацию о рецензиях на контент. Пользователь может оставить рецензию на контент.
 <p> Функциональные зависимости: <p> 
 
-- `{ID} -> {USER_ID, CONTENT_ID, TITLE, TEXT, RATING_USER, created_at, updated_at}`
-- `{USER_ID} -> USER {ID}`
+- `{ID} -> {USERS_ID, CONTENT_ID, TITLE, TEXT, RATING_UUSERS, created_at, updated_at}`
+- `{USERS_ID} -> USERS {ID}`
 - `{CONTENT_ID} -> CONTENT {ID}`
+
+<p> Нормальные формы: <p>
+
+- 1 НФ: Атрибуты ID, USERS_ID, CONTENT_ID, TITLE, TEXT, RATING_USERS, created_at, updated_at являются атомарными.
+- 2 НФ: Атрибуты USERS_ID, CONTENT_ID, TITLE, TEXT, RATING_USERS, created_at, updated_at полностью функционально зависят от первичного ключа ID.
+- 3 НФ: Атрибуты USERS_ID, CONTENT_ID, TITLE, TEXT, RATING_USERS, created_at, updated_at не зависят от других атрибутов.
+- НФБК: 3 НФ + в таблице отсутствуют составные ключи.
 
 ```mermaid
 erDiagram
-    COMMENT {
+    REVIEW {
         INT ID PK "Уникальный идентификатор комментария"
-        INT USER_ID FK "Идентификатор пользователя, оставившего комментарий"
+        INT USERS_ID FK "Идентификатор пользователя, оставившего комментарий"
         INT CONTENT_ID FK "Идентификатор контента, к которому относится комментарий"
         STRING TITLE "Заголовок комментария"
         STRING TEXT "Текст комментария"
-        INT RATING_USER "Оценка контента пользователем, оставившим комментарий"
-        TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
+        INT RATING_UUSERS "Оценка контента пользователем, оставившим комментарий"
+        TIME created_at "время создания кортежа, для отладки"
+        TIME updated_at "время изменения кортежа, для отладки"
     }
 ```
 
@@ -323,10 +427,17 @@ erDiagram
 Номинацию получают либо персона (за контент), либо контент.
 <p> Функциональные зависимости: <p> 
 
-- `{ID} -> {TITLE, CONTENT_ID, PERSON_ID, AWARD_ID, created_at, updated_at}`
+- `{ID} -> {TITLE, CONTENT_ID, PERSON_ID, AWARD_ID, created_at}`
 - `{CONTENT_ID} -> CONTENT {ID}`
 - `{PERSON_ID} -> PERSON {ID}`
 - `{AWARD_ID} -> AWARD {ID}`
+
+<p> Нормальные формы: <p>
+
+- 1 НФ: Атрибуты ID, TITLE, CONTENT_ID, PERSON_ID, AWARD_ID, created_at являются атомарными.
+- 2 НФ: Атрибуты TITLE, CONTENT_ID, PERSON_ID, AWARD_ID, created_at полностью функционально зависят от первичного ключа ID.
+- 3 НФ: Атрибуты TITLE, CONTENT_ID, PERSON_ID, AWARD_ID, created_at не зависят от других атрибутов.
+- НФБК: 3 НФ + в таблице отсутствуют составные ключи.
 
 ```mermaid
 erDiagram
@@ -336,8 +447,7 @@ erDiagram
         INT CONTENT_ID FK "Идентификатор контента, за который дана номинация"
         INT PERSON_ID FK  "Идентификатор персоны, которой присвоена номинация"
         INT AWARD_ID FK  "Идентификатор награды"
-        TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
+        TIME created_at "время создания кортежа, для отладки"
     }
 ```
 
@@ -346,7 +456,14 @@ erDiagram
 Таблица `AWARD` содержит информацию о наградах. 
 <p> Функциональные зависимости: <p> 
 
-- `{ID} -> {YEAR, NAME, created_at, updated_at}`
+- `{ID} -> {YEAR, NAME, created_at}`
+
+<p> Нормальные формы: <p>
+
+- 1 НФ: Атрибуты ID, YEAR, NAME, created_at являются атомарными.
+- 2 НФ: Атрибуты YEAR, NAME, created_at полностью функционально зависят от первичного ключа ID.
+- 3 НФ: Атрибуты YEAR, NAME, created_at не зависят от других атрибутов.
+- НФБК: 3 НФ + в таблице отсутствуют составные ключи.
 
 ```mermaid
 erDiagram
@@ -354,70 +471,83 @@ erDiagram
         INT ID PK "Уникальный идентификатор награды"
         INT YEAR "Год присуждения награды"
         STRING NAME "Тип награды"
-        TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
+        TIME created_at "время создания кортежа, для отладки"
     }
 ```
 
-## Таблица RATING
+## Таблица RATING_OF_CONTENT
 
-Таблица `RATING` содержит информацию о рейтингах контента и персон.
+Таблица `RATING_OF_CONTENT` содержит информацию о рейтингах контента.
 <p> Функциональные зависимости: <p> 
 
-- `{ID} -> {USER_ID, VALUE, TYPE, created_at, updated_at}`
-- `{USER_ID} -> USER {ID}`
+- `{ID} -> {CONTENT_ID, USERS_ID, VALUE, created_at}`
+- `{CONTENT_ID} -> CONTENT {ID}`
+- `{USERS_ID} -> USERS {ID}`
+
+<p> Нормальные формы: <p>
+
+- 1 НФ: Атрибуты ID, CONTENT_ID, USERS_ID, VALUE, created_at являются атомарными.
+- 2 НФ: Атрибуты CONTENT_ID, USERS_ID, VALUE, created_at полностью функционально зависят от первичного ключа ID.
+- 3 НФ: Атрибуты CONTENT_ID, USERS_ID, VALUE, created_at не зависят от других атрибутов.
+  - НФБК: 3 НФ + в таблице отсутствуют составные ключи.
 
 ```mermaid
 erDiagram
-    RATING {
-        INT ID PK  "Уникальный идентификатор рейтинга"
-        INT USER_ID FK "Идентификатор пользователя, оставившего рейтинг"
-        INT VALUE "Значение рейтинга"
-        STRING TYPE "C - content, P - person"
-        TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
+    RATING_OF_CONTENT {
+        INT ID PK "Уникальный идентификатор рейтинга контента"
+        INT CONTENT_ID FK "Идентификатор контента, который имеет этот рейтинг"
+        INT USERS_ID FK "Идентификатор пользователя, который оценил контент"
+        INT VALUE "Рейтинг контента"
+        TIME created_at "время создания кортежа, для отладки"
+    }
+```
+
+## Таблица RATING_OF_PERSON
+
+Таблица `RATING_OF_PERSON` содержит информацию о рейтингах персон.
+<p> Функциональные зависимости: <p> 
+
+- `{ID} -> {PERSON_ID, USERS_ID, VALUE, created_at}`
+- `{PERSON_ID} -> PERSON {ID}`
+- `{USERS_ID} -> USERS {ID}`
+
+<p> Нормальные формы: <p>
+
+- 1 НФ: Атрибуты ID, PERSON_ID, USERS_ID, VALUE, created_at являются атомарными.
+- 2 НФ: Атрибуты PERSON_ID, USERS_ID, VALUE, created_at полностью функционально зависят от первичного ключа ID.
+- 3 НФ: Атрибуты PERSON_ID, USERS_ID, VALUE, created_at не зависят от других атрибутов.
+- НФБК: 3 НФ + в таблице отсутствуют составные ключи.
+
+```mermaid
+erDiagram
+    RATING_OF_PERSON {
+        INT ID PK "Уникальный идентификатор рейтинга персоны"
+        INT PERSON_ID FK "Идентификатор персоны, которая имеет этот рейтинг"
+        INT USERS_ID FK "Идентификатор пользователя, который оценил персону"
+        INT VALUE "Рейтинг персоны"
+        TIME created_at "время создания кортежа, для отладки"
     }
 ```
 
 # Вспомогательные таблицы
 
-## Таблица RATING_TYPE
+## Таблица REVIEW_LIKES
 
-Таблица `RATING_TYPE` содержит информацию о типах рейтингов. Рейтинг может быть оставлен пользователем контенту или персоне.
-Таблица реализует связь между рейтингом и контентом/персоной.
-<p> Функциональные зависимости: <p> 
-
-- `{RATING_ID} -> RATING {ID}`
-- `{ENTITY_ID} -> CONTENT {ID} + PERSON {ID}`
-
-```mermaid
-erDiagram
-    RATING_TYPE{
-        INT RATING_ID FK  "Идентификатор рейтинга"
-        INT ENTITY_ID FK  "Идентификатор контента или персоны, которому присвоен рейтинг"
-        TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
-    }
-```
-
-## Таблица COMMENT_LIKES
-
-Таблица `COMMENT_LIKES` содержит информацию о лайках/дизлайках комментариев. Она реализует связь между комментарием и пользователем, 
+Таблица `REVIEW_LIKES` содержит информацию о лайках/дизлайках комментариев. Она реализует связь между комментарием и пользователем, 
 который оценил чужой комментарий.
 <p> Функциональные зависимости: <p> 
 
 - `{COMMENT_ID} -> COMMENT {ID}`
 - `{USER_ID} -> USER {ID}`
-- `{COMMENT_ID, USER_ID} -> {VALUE, created_at, updated_at}`
+- `{COMMENT_ID, USER_ID} -> {VALUE, created_at}`
 
 ```mermaid
 erDiagram
-    COMMENT_LIKES{
-        INT COMMENT_ID FK "Идентификатор комментария"
-        INT USER_ID FK "Идентификатор пользователя, оценившего комментарий"
+    REVIEW_LIKES{
+        INT REVIEW_ID FK "Идентификатор комментария"
+        INT USERS_ID FK "Идентификатор пользователя, оценившего комментарий"
         INT VALUE "Значение оценки комментария (1 или -1, например)"
-        TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
+        TIME created_at "время создания кортежа, для отладки"
     }
 ```
 
@@ -428,37 +558,35 @@ erDiagram
 
 - `{PERSON_ID} -> PERSON {ID}`
 - `{USER_ID} -> USER {ID}`
-- `{PERSON_ID, USER_ID} -> {created_at, updated_at}`
+- `{PERSON_ID, USER_ID} -> {created_at}`
 
 ```mermaid
 erDiagram
     SAVED_PERSON{
         INT PERSON_ID FK "Идентификатор сохраненного персону"
-        INT USER_ID FK "Идентификатор пользователя, сохранившего персону"
-        TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
+        INT USERS_ID FK "Идентификатор пользователя, сохранившего персону"
+        TIME created_at "время создания кортежа, для отладки"
     }
 ```
 
-## Таблица SAVED_CONTENT
+## Таблица CONTENT_STATUS
 
-Таблица `SAVED_CONTENT` содержит информацию о контенте, которому пользователем был поставлен определенный статус.
+Таблица `CONTENT_STATUS` содержит информацию о контенте, которому пользователем был поставлен определенный статус.
 Она реализует связь М:N между пользователями и контентом.
 <p> Функциональные зависимости: <p> 
 
 - `{CONTENT_ID} -> CONTENT {ID}`
 - `{USER_ID} -> USER {ID}`
 - `{STATUS_ID} -> STATUS {ID}`
-- `{CONTENT_ID, USER_ID, STATUS_ID} -> {created_at, updated_at}`
+- `{CONTENT_ID, USER_ID, STATUS_ID} -> {created_at}`
 
 ```mermaid
 erDiagram
     CONTENT_STATUS{
         INT CONTENT_ID FK "Идентификатор контента"
-        INT USER_ID FK "Идентификатор пользователя"
+        INT USERS_ID FK "Идентификатор пользователя"
         INT STATUS_ID FK "Статус контента (Viewed, Planned, Reconsidering, Favourites(избранное))"
-        TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
+        TIME created_at "время создания кортежа, для отладки"
     }
 ```
 
@@ -469,15 +597,14 @@ erDiagram
 
 - `{GENRE_ID} -> GENRE {ID}`
 - `{CONTENT_ID} -> CONTENT {ID}`
-- `{GENRE_ID, CONTENT_ID} -> {created_at, updated_at}`
+- `{GENRE_ID, CONTENT_ID} -> {created_at}`
 
 ```mermaid
 erDiagram
     GENRE_CONTENT{
         INT GENRE_ID FK "Идентификатор жанра"
         INT CONTENT_ID FK "Идентификатор контента"
-        TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
+        TIME created_at "время создания кортежа, для отладки"
     }
 ```
 
@@ -488,15 +615,14 @@ erDiagram
 
 - `{COUNTRY_ID} -> COUNTRY {ID}`
 - `{CONTENT_ID} -> CONTENT {ID}`
-- `{COUNTRY_ID, CONTENT_ID} -> {created_at, updated_at}`
+- `{COUNTRY_ID, CONTENT_ID} -> {created_at}`
 
 ```mermaid
 erDiagram
     COUNTRY_CONTENT{
         INT COUNTRY_ID FK "Идентификатор страны"
         INT CONTENT_ID FK "Идентификатор контента"
-        TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
+        TIME created_at "время создания кортежа, для отладки"
     }
 ```
 
@@ -508,15 +634,14 @@ erDiagram
 - `{PERSON_ID} -> PERSON {ID}`
 - `{ROLE_ID} -> ROLE {ID}`
 - `{CONTENT_ID} -> CONTENT {ID}`
-- `{PERSON_ID, ROLE_ID, CONTENT_ID} -> {created_at, updated_at}`
+- `{PERSON_ID, ROLE_ID, CONTENT_ID} -> {created_at}`
 
 ```mermaid
 erDiagram
     CONTENT_PERSON{
         INT CONTENT_ID FK "Идентификатор контента"
         INT PERSON_ID FK "Идентификатор персоны"
-        INT ROLE_ID FK "Роль персоны в контенте"
-        TIME created_at "временная метка создания кортежа"
-        TIME updated_at "временная метка обновления кортежа"
+        INT ROLES_ID FK "Роль персоны в контенте"
+        TIME created_at "время создания кортежа, для отладки"
     }
 ```
