@@ -23,8 +23,8 @@ func TestAuthEndpoints_NewAuthEndpoints(t *testing.T) {
 	mockAuth := mockusecase.NewMockAuth(ctrl)
 	h := NewAuthEndpoints(mockAuth)
 
-	if h.useCase != mockAuth {
-		t.Errorf("NewAuthEndpoints() = %v, want %v", h.useCase, mockAuth)
+	if h.authUC != mockAuth {
+		t.Errorf("NewAuthEndpoints() = %v, want %v", h.authUC, mockAuth)
 	}
 }
 

@@ -11,6 +11,17 @@ type Server struct {
 	GracefulShutdownTimeout int    `yaml:"graceful_shutdown_timeout" default:"60"`
 }
 
+type RedisDatabase struct {
+	Addr     string `yaml:"addr"     default:"localhost:6379"`
+	Password string `yaml:"password" default:""`
+	DB       int    `yaml:"db"       default:"0"`
+}
+
+type PostgresDatabase struct {
+	// nolint
+	ConnectURL string `yaml:"connect_url" default:"postgres://kinoskop_admin:admin_secret_password@localhost:5432/kinoskop?sslmode=disable"`
+}
+
 type Config struct {
 	HTTP struct {
 		StaticFolder       string `yaml:"static_folder"        default:"assets/examples/static"`
@@ -19,13 +30,17 @@ type Config struct {
 		Server             Server `yaml:"server"`
 	} `yaml:"http"`
 	Auth struct {
-		SessionAliveTime int `yaml:"session_alive_time" default:"86400"`
-		Redis            struct {
-			Addr     string `yaml:"addr"     default:"localhost:6379"`
-			Password string `yaml:"password" default:""`
-			DB       int    `yaml:"db"       default:"0"`
-		} `yaml:"redis"`
-	} `yaml:"auth"`
+		SessionAliveTime int           `yaml:"session_alive_time" default:"86400"`
+		Redis            RedisDatabase `yaml:"redis"`
+	} `yaml:"auth_service"`
+	User struct {
+		Postgres PostgresDatabase `yaml:"postgres"`
+	} `yaml:"user_service"`
+	Static struct {
+		MaxFileSize int64            `yaml:"max_file_size" default:"10485760"`
+		Path        string           `yaml:"path"          default:"assets/examples/static"`
+		Postgres    PostgresDatabase `yaml:"postgres"`
+	} `yaml:"static_service"`
 }
 
 func (cfg *Config) GetServerAddr() string {

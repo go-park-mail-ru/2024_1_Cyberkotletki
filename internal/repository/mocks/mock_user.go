@@ -54,31 +54,46 @@ func (mr *MockUserMockRecorder) AddUser(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddUser", reflect.TypeOf((*MockUser)(nil).AddUser), arg0)
 }
 
-// GetUserByEmail mocks base method.
-func (m *MockUser) GetUserByEmail(arg0 string) (*entity.User, error) {
+// GetUser mocks base method.
+func (m *MockUser) GetUser(arg0 map[string]any) (*entity.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserByEmail", arg0)
+	ret := m.ctrl.Call(m, "GetUser", arg0)
 	ret0, _ := ret[0].(*entity.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetUserByEmail indicates an expected call of GetUserByEmail.
-func (mr *MockUserMockRecorder) GetUserByEmail(arg0 any) *gomock.Call {
+// GetUser indicates an expected call of GetUser.
+func (mr *MockUserMockRecorder) GetUser(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByEmail", reflect.TypeOf((*MockUser)(nil).GetUserByEmail), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockUser)(nil).GetUser), arg0)
 }
 
 // HasUser mocks base method.
-func (m *MockUser) HasUser(arg0 *entity.User) bool {
+func (m *MockUser) HasUser(arg0 *entity.User) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "HasUser", arg0)
 	ret0, _ := ret[0].(bool)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // HasUser indicates an expected call of HasUser.
 func (mr *MockUserMockRecorder) HasUser(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasUser", reflect.TypeOf((*MockUser)(nil).HasUser), arg0)
+}
+
+// UpdateUser mocks base method.
+func (m *MockUser) UpdateUser(params, values map[string]any) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateUser", params, values)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateUser indicates an expected call of UpdateUser.
+func (mr *MockUserMockRecorder) UpdateUser(params, values any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockUser)(nil).UpdateUser), params, values)
 }

@@ -175,6 +175,15 @@ const docTemplate = `{
                 "tags": [
                     "Collections"
                 ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Жанр для составления подборки",
+                        "name": "genre",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Список с id фильмов указанного жанра",

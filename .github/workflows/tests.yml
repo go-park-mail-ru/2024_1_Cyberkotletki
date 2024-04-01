@@ -1,29 +1,51 @@
-name: BasicTest
+name: Tests
 
 on:
   push:
     branches: [ "*" ]
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-
+    # ставим Go
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
         go-version: '1.22'
-
+    # кешируем зависимости
+    - name: Cache Go dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    # устанавливаем golangci-lint
+    - name: Install golangci-lint
+      run: |
+        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.57.1
+    # кешируем golangci-lint
+    - name: Cache golangci-lint
+      uses: actions/cache@v3
+      with:
+        path: ~/go/bin/golangci-lint
+        key: ${{ runner.os }}-golangci-lint-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-golangci-lint-
+    # go mod tidy
     - name: Tidy
       run: go mod tidy
-
+    # запускаем линтер
+    - name: Lint
+      run: golangci-lint run
+    # запускаем тесты
     - name: Test
       run: |
           go test -coverprofile=test.coverage.tmp ./internal/...
           cat test.coverage.tmp | grep -v 'mocks' > test.coverage
-
+    # выводим покрытие
     - name: Print coverage
       run: |
         coverage=$(go tool cover -func test.coverage | tail -n 1 | awk '{print $3}')

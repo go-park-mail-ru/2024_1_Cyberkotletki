@@ -9,3 +9,8 @@ type Login struct {
 	Login    string `json:"login"    example:"email@email.com"  format:"string"`
 	Password string `json:"password" example:"SecretPassword1!" format:"string"`
 }
+
+type UpdatePassword struct {
+	OldPassword string `json:"oldPassword" example:"OldPassword1!" format:"string"`
+	NewPassword string `json:"newPassword" example:"NewPassword1!" format:"string"`
+}

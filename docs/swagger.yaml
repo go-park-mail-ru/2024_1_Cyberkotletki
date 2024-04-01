@@ -197,6 +197,12 @@ paths:
   /collections/compilation:
     get:
       description: Возвращает список всех доступных жанров фильмов и сериалов
+      parameters:
+      - description: Жанр для составления подборки
+        in: query
+        name: genre
+        required: true
+        type: string
       responses:
         "200":
           description: Список с id фильмов указанного жанра
