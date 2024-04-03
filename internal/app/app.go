@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/config"
 	delivery "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
@@ -30,16 +31,22 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	if err != nil {
 		logger.Fatalf("Ошибка при создании репозитория сессий: %v", err)
 	}
+	staticRepo, err := postgres.NewStaticRepository(params.Static.Postgres, params.Static.Path, params.Static.MaxFileSize)
+	if err != nil {
+		logger.Fatalf("Ошибка при создании репозитория статики: %v", err)
+	}
 
 	// Use Cases
+	staticUseCase := service.NewStaticService(staticRepo)
 	authUseCase := service.NewAuthService(sessionRepo)
 	userUseCase := service.NewUserService(userRepo)
 	contentUseCase := service.NewContentService(contentRepo)
 	collectionsUseCase := service.NewCollectionsService(contentRepo)
 
 	// Delivery
+	staticDelivery := delivery.NewStaticEndpoints(staticUseCase)
 	authDelivery := delivery.NewAuthEndpoints(authUseCase)
-	userDelivery := delivery.NewUserEndpoints(userUseCase, authUseCase)
+	userDelivery := delivery.NewUserEndpoints(userUseCase, authUseCase, staticUseCase)
 	contentDelivery := delivery.NewContentEndpoints(contentUseCase)
 	collectionsDelivery := delivery.NewCollectionsEndpoints(collectionsUseCase)
 	playgroundDelivery := delivery.NewPlaygroundEndpoints()
@@ -103,11 +110,13 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 					if reqID == nil {
 						reqID = "unknown"
 					}
-					ctx.Logger().Errorf(
-						"Внутренняя ошибка сервера: %v\nRequestID: %v\nStack Trace:\n%s",
+					log := fmt.Errorf(
+						"внутренняя ошибка сервера: %v\nRequestID: %v\nStack Trace:\n%s",
 						recErr, reqID, debug.Stack(),
 					)
+					ctx.Logger().Error(log)
 					ctx.Error(entity.ErrInternal)
+					fmt.Println(log)
 				}
 			}()
 			return next(ctx)
@@ -117,6 +126,9 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	api := echoServer.Group("/api")
 	// docs
 	api.GET("/docs*", echoSwagger.WrapHandler)
+	// static
+	staticAPI := api.Group("/static")
+	staticDelivery.Configure(staticAPI)
 	// playground
 	playgroundAPI := api.Group("/playground")
 	playgroundAPI.GET("/ping", playgroundDelivery.Ping)
@@ -129,17 +141,10 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	collectionsAPI.GET("/compilation", collectionsDelivery.GetCompilationByGenre)
 	// user
 	userAPI := api.Group("/user")
-	userAPI.POST("/register", userDelivery.Register)
-	userAPI.POST("/login", userDelivery.Login)
-	userAPI.PUT("/password", userDelivery.UpdatePassword)
-	// userAPI.GET("/profile", userDelivery.GetProfile)
-	// userAPI.PUT("/profile", userDelivery.UpdateProfile)
-
+	userDelivery.Configure(userAPI)
 	// auth
 	authAPI := api.Group("/auth")
-	authAPI.GET("/isAuth", authDelivery.IsAuth)
-	authAPI.POST("/logout", authDelivery.Logout)
-	authAPI.POST("/logoutAll", authDelivery.LogoutAll)
+	authDelivery.Configure(authAPI)
 	return echoServer
 }
 

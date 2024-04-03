@@ -28,7 +28,7 @@ func TestContent_GetContentPreviewCard(t *testing.T) {
 			Input:       1,
 			ExpectedErr: nil,
 			SetupContentRepoMock: func(repo *mockrepo.MockContent) {
-				repo.EXPECT().GetFilm(1).Return(&entity.Movie{}, nil)
+				repo.EXPECT().GetFilm(1).Return(&entity.Film{}, nil)
 			},
 		},
 		{

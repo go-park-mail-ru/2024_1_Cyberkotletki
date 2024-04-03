@@ -1,10 +1,10 @@
 package http
 
 import (
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http/utils"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 	mockusecase "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/mocks"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/echoutil"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -47,13 +47,13 @@ func TestContentEndpoints_GetContentPreview(t *testing.T) {
 		{
 			Name:        "Ошибка преобразования ID",
 			ID:          "-",
-			ExpectedErr: echoutil.NewError(nil, http.StatusBadRequest, strconv.ErrSyntax),
+			ExpectedErr: utils.NewError(nil, http.StatusBadRequest, strconv.ErrSyntax),
 			SetupMock:   func(*mockusecase.MockContent) {},
 		},
 		{
 			Name:        "Контент не найден",
 			ID:          "2",
-			ExpectedErr: echoutil.NewError(nil, http.StatusNotFound, entity.ErrNotFound),
+			ExpectedErr: utils.NewError(nil, http.StatusNotFound, entity.ErrNotFound),
 			SetupMock: func(mockContent *mockusecase.MockContent) {
 				mockContent.EXPECT().GetContentPreviewCard(2).Return(nil, entity.ErrNotFound)
 			},

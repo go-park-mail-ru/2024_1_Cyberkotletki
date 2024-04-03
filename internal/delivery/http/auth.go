@@ -4,7 +4,6 @@ import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http/utils"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/echoutil"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"time"
@@ -16,6 +15,12 @@ type AuthEndpoints struct {
 
 func NewAuthEndpoints(authUC usecase.Auth) AuthEndpoints {
 	return AuthEndpoints{authUC: authUC}
+}
+
+func (h *AuthEndpoints) Configure(e *echo.Group) {
+	e.GET("/isAuth", h.IsAuth)
+	e.POST("/logout", h.Logout)
+	e.POST("/logoutAll", h.LogoutAll)
 }
 
 // IsAuth
@@ -30,15 +35,15 @@ func (h *AuthEndpoints) IsAuth(ctx echo.Context) error {
 	session, err := ctx.Cookie("session")
 	if err != nil {
 		// нет cookies == не авторизован
-		return echoutil.NewError(ctx, http.StatusUnauthorized, entity.NewClientError("не авторизован"))
+		return utils.NewError(ctx, http.StatusUnauthorized, entity.NewClientError("не авторизован"))
 	}
 	_, err = h.authUC.GetUserIDBySession(session.Value)
 	if err != nil {
 		switch {
 		case entity.Contains(err, entity.ErrNotFound):
-			return echoutil.NewError(ctx, http.StatusUnauthorized, entity.NewClientError("не авторизован"))
+			return utils.NewError(ctx, http.StatusUnauthorized, entity.NewClientError("не авторизован"))
 		default:
-			return echoutil.NewError(ctx, http.StatusInternalServerError, err)
+			return utils.NewError(ctx, http.StatusInternalServerError, err)
 		}
 	}
 	ctx.Response().WriteHeader(http.StatusOK)
@@ -82,10 +87,10 @@ func (h *AuthEndpoints) LogoutAll(ctx echo.Context) error {
 	}
 	userId, err := h.authUC.GetUserIDBySession(cookie.Value)
 	if err != nil {
-		return echoutil.NewError(ctx, http.StatusInternalServerError, err)
+		return utils.NewError(ctx, http.StatusInternalServerError, err)
 	}
 	if err := h.authUC.LogoutAll(userId); err != nil {
-		return echoutil.NewError(ctx, http.StatusInternalServerError, err)
+		return utils.NewError(ctx, http.StatusInternalServerError, err)
 	}
 	utils.SessionSet(ctx, "", time.Unix(0, 0))
 	return nil

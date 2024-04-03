@@ -1,4 +1,4 @@
-package echoutil
+package utils
 
 import (
 	"github.com/labstack/echo/v4"

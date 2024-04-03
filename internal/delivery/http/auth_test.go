@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/config"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http/utils"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 	mockusecase "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/mocks"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/echoutil"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -59,7 +59,7 @@ func TestAuthEndpoints_Register(t *testing.T) {
 				Password: "AmazingPassword1!",
 			},
 			ExpectedErr: func(ctx echo.Context) error {
-				return echoutil.NewError(ctx, http.StatusConflict, entity.ErrAlreadyExists)
+				return utils.NewError(ctx, http.StatusConflict, entity.ErrAlreadyExists)
 			},
 			SetupMock: func(mockAuth *mockusecase.MockAuth) {
 				mockAuth.EXPECT().Register(gomock.Eq(&dto.Register{
@@ -75,7 +75,7 @@ func TestAuthEndpoints_Register(t *testing.T) {
 				Password: "AmazingPassword1!",
 			},
 			ExpectedErr: func(ctx echo.Context) error {
-				return echoutil.NewError(ctx, http.StatusInternalServerError, entity.ErrRedis)
+				return utils.NewError(ctx, http.StatusInternalServerError, entity.ErrRedis)
 			},
 			SetupMock: func(mockAuth *mockusecase.MockAuth) {
 				mockAuth.EXPECT().Register(gomock.Eq(&dto.Register{
@@ -148,7 +148,7 @@ func TestAuthEndpoints_Login(t *testing.T) {
 				Password: "WrongPassword!",
 			},
 			ExpectedErr: func(ctx echo.Context) error {
-				return echoutil.NewError(ctx, http.StatusForbidden, entity.ErrForbidden)
+				return utils.NewError(ctx, http.StatusForbidden, entity.ErrForbidden)
 			},
 			SetupMock: func(mockAuth *mockusecase.MockAuth) {
 				mockAuth.EXPECT().Login(gomock.Eq(&dto.Login{
@@ -164,7 +164,7 @@ func TestAuthEndpoints_Login(t *testing.T) {
 				Password: "AmazingPassword1!",
 			},
 			ExpectedErr: func(ctx echo.Context) error {
-				return echoutil.NewError(ctx, http.StatusNotFound, entity.ErrNotFound)
+				return utils.NewError(ctx, http.StatusNotFound, entity.ErrNotFound)
 			},
 			SetupMock: func(mockAuth *mockusecase.MockAuth) {
 				mockAuth.EXPECT().Login(gomock.Eq(&dto.Login{
@@ -180,7 +180,7 @@ func TestAuthEndpoints_Login(t *testing.T) {
 				Password: "AmazingPassword1!",
 			},
 			ExpectedErr: func(ctx echo.Context) error {
-				return echoutil.NewError(ctx, http.StatusInternalServerError, entity.ErrPSQL)
+				return utils.NewError(ctx, http.StatusInternalServerError, entity.ErrPSQL)
 			},
 			SetupMock: func(mockAuth *mockusecase.MockAuth) {
 				mockAuth.EXPECT().Login(gomock.Eq(&dto.Login{
@@ -235,7 +235,7 @@ func TestAuthEndpoints_IsAuth(t *testing.T) {
 			Name:   "Не авторизован (нет cookie)",
 			Cookie: nil,
 			ExpectedErr: func(ctx echo.Context) error {
-				return echoutil.NewError(ctx, http.StatusUnauthorized, entity.NewClientError("не авторизован"))
+				return utils.NewError(ctx, http.StatusUnauthorized, entity.NewClientError("не авторизован"))
 			},
 			SetupMock: func(*mockusecase.MockAuth) {}, //ошибка до мока - мок не нужен
 		},
@@ -243,7 +243,7 @@ func TestAuthEndpoints_IsAuth(t *testing.T) {
 			Name:   "Не авторизован (неверное значение cookie)",
 			Cookie: &http.Cookie{Name: "session", Value: "invalid"},
 			ExpectedErr: func(ctx echo.Context) error {
-				return echoutil.NewError(ctx, http.StatusUnauthorized, entity.NewClientError("не авторизован"))
+				return utils.NewError(ctx, http.StatusUnauthorized, entity.NewClientError("не авторизован"))
 			},
 			SetupMock: func(mockAuth *mockusecase.MockAuth) {
 				mockAuth.EXPECT().IsAuth("invalid").Return(false, nil)
@@ -261,7 +261,7 @@ func TestAuthEndpoints_IsAuth(t *testing.T) {
 			Name:   "Какая-то внутренняя ошибка сервера",
 			Cookie: &http.Cookie{Name: "session", Value: "valid"},
 			ExpectedErr: func(ctx echo.Context) error {
-				return echoutil.NewError(ctx, http.StatusInternalServerError, entity.ErrRedis)
+				return utils.NewError(ctx, http.StatusInternalServerError, entity.ErrRedis)
 			},
 			SetupMock: func(mockAuth *mockusecase.MockAuth) {
 				mockAuth.EXPECT().IsAuth("valid").Return(false, entity.ErrRedis)

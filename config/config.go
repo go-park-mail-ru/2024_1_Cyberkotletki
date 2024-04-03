@@ -37,7 +37,7 @@ type Config struct {
 		Postgres PostgresDatabase `yaml:"postgres"`
 	} `yaml:"user_service"`
 	Static struct {
-		MaxFileSize int64            `yaml:"max_file_size" default:"10485760"`
+		MaxFileSize int              `yaml:"max_file_size" default:"10485760"`
 		Path        string           `yaml:"path"          default:"assets/examples/static"`
 		Postgres    PostgresDatabase `yaml:"postgres"`
 	} `yaml:"static_service"`

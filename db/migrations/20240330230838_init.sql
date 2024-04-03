@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS person
     photo_upload_id      INT,
     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (photo_upload_id) REFERENCES upload (id) ON DELETE SET NULL,
+    FOREIGN KEY (photo_upload_id) REFERENCES static (id) ON DELETE SET NULL,
     FOREIGN KEY (birthplace_id) REFERENCES birthplace (id) ON DELETE SET NULL
 );
 
@@ -99,8 +99,8 @@ CREATE TABLE IF NOT EXISTS content
     playback_upload_id        INT NOT NULL,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (poster_upload_id) REFERENCES upload (id) ON DELETE CASCADE,
-    FOREIGN KEY (playback_upload_id) REFERENCES upload (id) ON DELETE SET NULL
+    FOREIGN KEY (poster_upload_id) REFERENCES static (id) ON DELETE CASCADE,
+    FOREIGN KEY (playback_upload_id) REFERENCES static (id) ON DELETE SET NULL
 );
 
 -- Создание таблицы roles
@@ -201,7 +201,7 @@ CREATE TABLE IF NOT EXISTS users
     avatar_upload_id INT,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (avatar_upload_id) REFERENCES upload (id) ON DELETE SET NULL
+    FOREIGN KEY (avatar_upload_id) REFERENCES static (id) ON DELETE SET NULL
 );
 
 -- Создание таблицы status

@@ -1,56 +1,51 @@
 package postgres
 
 import (
-	"context"
+	"database/sql"
 	"errors"
+	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/config"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/lib/pq"
 )
 
 type UsersDB struct {
-	DB  *pgx.Conn
-	ctx context.Context
+	DB *sql.DB
+}
+
+type User struct {
+	ID             int
+	Email          string
+	Name           sql.NullString
+	PasswordHash   []byte
+	PasswordSalt   []byte
+	AvatarUploadID sql.NullInt64
+}
+
+func (u *User) GetEntity() *entity.User {
+	return &entity.User{
+		ID:             u.ID,
+		Email:          u.Email,
+		Name:           u.Name.String,
+		PasswordHash:   u.PasswordHash,
+		PasswordSalt:   u.PasswordSalt,
+		AvatarUploadID: int(u.AvatarUploadID.Int64),
+	}
 }
 
 func NewUserRepository(database config.PostgresDatabase) (repository.User, error) {
-	ctx := context.Background()
-	db, err := pgx.Connect(ctx, database.ConnectURL)
+	db, err := sql.Open("postgres", database.ConnectURL)
 	if err != nil {
 		return nil, err
 	}
-	if err := db.Ping(ctx); err != nil {
+	if err := db.Ping(); err != nil {
 		return nil, err
 	}
 	return &UsersDB{
-		DB:  db,
-		ctx: ctx,
+		DB: db,
 	}, nil
-}
-
-// HasUser проверяет наличие пользователя в базе данных по email
-func (u *UsersDB) HasUser(user *entity.User) (bool, error) {
-	query, args, err := sq.
-		Select("*").
-		From("users").
-		Where(sq.Eq{"email": user.Email}).
-		PlaceholderFormat(sq.Dollar).ToSql()
-	if err != nil {
-		return false, entity.PSQLWrap(err)
-	}
-	var result entity.User
-	err = u.DB.QueryRow(u.ctx, query, args...).Scan(&result.ID, &result.Email)
-	if errors.Is(err, pgx.ErrNoRows) {
-		// запись не найдена == пользователя нет
-		return false, nil
-	} else if err != nil {
-		return false, entity.PSQLWrap(err)
-	}
-
-	return true, nil
 }
 
 // AddUser добавляет пользователя в базу данных.
@@ -65,15 +60,27 @@ func (u *UsersDB) AddUser(user *entity.User) (*entity.User, error) {
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
-		return nil, entity.PSQLWrap(err)
+		return nil, entity.PSQLWrap(err, errors.New("ошибка при формировании sql-запроса AddUser"))
 	}
-	var pgErr *pgconn.PgError
-	err = u.DB.QueryRow(u.ctx, query, args...).Scan(&user.ID)
+
+	err = u.DB.QueryRow(query, args...).Scan(&user.ID)
 	if err != nil {
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			return nil, entity.NewClientError("пользователь с таким email уже существует", entity.ErrAlreadyExists)
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) {
+			switch pqErr.Code {
+			case entity.PSQLUniqueViolation:
+				return nil, entity.NewClientError("пользователь с таким email уже существует", entity.ErrAlreadyExists)
+			case entity.PSQLCheckViolation:
+				return nil, entity.NewClientError(
+					"одно или несколько полей заполнены некорректно",
+					entity.ErrBadRequest,
+					errors.New("ошибка при выполнении sql-запроса AddUser: нарушение целостности данных"),
+				)
+			default:
+				return nil, entity.PSQLWrap(err, errors.New("ошибка при выполнении sql-запроса AddUser"), pqErr)
+			}
 		}
-		return nil, entity.PSQLWrap(err)
+		return nil, entity.PSQLWrap(err, errors.New("ошибка при выполнении sql-запроса AddUser"))
 	}
 
 	return user, nil
@@ -83,42 +90,39 @@ func (u *UsersDB) AddUser(user *entity.User) (*entity.User, error) {
 // Если пользователь не найден, то возвращается ошибка ErrNotFound
 func (u *UsersDB) GetUser(params map[string]interface{}) (*entity.User, error) {
 	query, args, err := sq.
-		Select("id", "email", "name", "password_hashed", "salt_password").
+		Select("id", "email", "name", "password_hashed", "salt_password", "avatar_upload_id").
 		From("users").
 		Where(params).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
-		return nil, entity.PSQLWrap(err)
+		return nil, entity.PSQLWrap(err, errors.New("ошибка при формировании sql-запроса GetUser"))
 	}
-	var result entity.User
-	err = u.DB.QueryRow(u.ctx, query, args...).
-		Scan(&result.ID, &result.Email, &result.Name, &result.PasswordHash, &result.PasswordSalt)
+	user := User{}
+	err = u.DB.QueryRow(query, args...).
+		Scan(&user.ID, &user.Email, &user.Name, &user.PasswordHash, &user.PasswordSalt, &user.AvatarUploadID)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		fmt.Println(err)
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, entity.NewClientError("пользователь не найден", entity.ErrNotFound)
 		}
-		return nil, entity.PSQLWrap(err)
+		return nil, entity.PSQLWrap(err, errors.New("ошибка при выполнении sql-запроса GetUser"))
 	}
-	return &result, nil
+	return user.GetEntity(), nil
 }
 
 // UpdateUser обновляет пользователя в базе данных по переданным параметрам
 func (u *UsersDB) UpdateUser(params map[string]interface{}, values map[string]interface{}) error {
 	query, args, err := sq.Update("users").
-		SetMap(values).
 		Where(params).
+		SetMap(values).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
-		return entity.PSQLWrap(err)
+		return entity.PSQLWrap(err, errors.New("ошибка при формировании sql-запроса UpdateUser"))
 	}
-	err = u.DB.QueryRow(u.ctx, query, args...).Scan()
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return entity.NewClientError("пользователь не найден", entity.ErrNotFound)
-		}
-		return entity.PSQLWrap(err)
+	if _, err = u.DB.Exec(query, args...); err != nil {
+		return entity.PSQLWrap(err, errors.New("ошибка при выполнении sql-запроса UpdateUser"))
 	}
 	return nil
 }
