@@ -14,21 +14,8 @@ import (
 	"testing"
 )
 
-func TestContentEndpoints_NewContentEndpoints(t *testing.T) {
-	t.Parallel()
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockContent := mockusecase.NewMockContent(ctrl)
-	h := NewContentEndpoints(mockContent)
-
-	if h.useCase != mockContent {
-		t.Errorf("NewContentEndpoints() = %v, want %v", h.useCase, mockContent)
-	}
-}
-
 func TestContentEndpoints_GetContentPreview(t *testing.T) {
 	t.Parallel()
-	e := echo.New()
 
 	testCases := []struct {
 		Name        string
@@ -64,21 +51,17 @@ func TestContentEndpoints_GetContentPreview(t *testing.T) {
 		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
+			e := echo.New()
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockContent := mockusecase.NewMockContent(ctrl)
 			h := NewContentEndpoints(mockContent)
 			tc.SetupMock(mockContent)
-
 			req := httptest.NewRequest(http.MethodGet, "/content?id="+tc.ID, nil)
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
 			err := h.GetContentPreview(c)
-			if tc.ExpectedErr != nil {
-				require.ErrorContains(t, err, tc.ExpectedErr.Error())
-			} else {
-				require.NoError(t, err)
-			}
+			require.Equal(t, tc.ExpectedErr, err)
 		})
 	}
 }

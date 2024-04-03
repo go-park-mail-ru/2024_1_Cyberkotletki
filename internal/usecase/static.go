@@ -4,5 +4,5 @@ package usecase
 type Static interface {
 	GetAvatar(staticID int) (string, error)
 	UploadAvatar(data []byte) (int, error)
-	GetStaticUrl(id int) (string, error)
+	GetStaticURL(id int) (string, error)
 }

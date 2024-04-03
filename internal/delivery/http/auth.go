@@ -2,7 +2,6 @@ package http
 
 import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http/utils"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -32,19 +31,8 @@ func (h *AuthEndpoints) Configure(e *echo.Group) {
 // @Failure		500	{object}	echo.HTTPError	"Внутренняя ошибка сервера"
 // @Router /auth/isAuth [get]
 func (h *AuthEndpoints) IsAuth(ctx echo.Context) error {
-	session, err := ctx.Cookie("session")
-	if err != nil {
-		// нет cookies == не авторизован
-		return utils.NewError(ctx, http.StatusUnauthorized, entity.NewClientError("не авторизован"))
-	}
-	_, err = h.authUC.GetUserIDBySession(session.Value)
-	if err != nil {
-		switch {
-		case entity.Contains(err, entity.ErrNotFound):
-			return utils.NewError(ctx, http.StatusUnauthorized, entity.NewClientError("не авторизован"))
-		default:
-			return utils.NewError(ctx, http.StatusInternalServerError, err)
-		}
+	if _, err := utils.GetUserIDFromSession(ctx, h.authUC); err != nil {
+		return utils.NewError(ctx, http.StatusUnauthorized, err)
 	}
 	ctx.Response().WriteHeader(http.StatusOK)
 	return nil
@@ -85,11 +73,11 @@ func (h *AuthEndpoints) LogoutAll(ctx echo.Context) error {
 		ctx.Response().WriteHeader(http.StatusOK)
 		return nil
 	}
-	userId, err := h.authUC.GetUserIDBySession(cookie.Value)
+	userID, err := h.authUC.GetUserIDBySession(cookie.Value)
 	if err != nil {
 		return utils.NewError(ctx, http.StatusInternalServerError, err)
 	}
-	if err := h.authUC.LogoutAll(userId); err != nil {
+	if err := h.authUC.LogoutAll(userID); err != nil {
 		return utils.NewError(ctx, http.StatusInternalServerError, err)
 	}
 	utils.SessionSet(ctx, "", time.Unix(0, 0))

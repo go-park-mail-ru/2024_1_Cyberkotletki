@@ -9,7 +9,9 @@ import (
 	"github.com/google/uuid"
 	"image"
 	"image/draw"
+	_ "image/gif" // для поддержки формата gif
 	"image/jpeg"
+	_ "image/png" // для поддержки формата png
 	"net/http"
 )
 
@@ -43,7 +45,7 @@ func (s *StaticService) UploadAvatar(data []byte) (int, error) {
 	// Чтение данных файла в структуру изображения
 	img, _, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
-		return -1, err
+		return -1, entity.NewClientError("файл не является изображением", entity.ErrBadRequest, err)
 	}
 
 	// Проверка размеров изображения
@@ -75,6 +77,9 @@ func (s *StaticService) UploadAvatar(data []byte) (int, error) {
 	var opts jpeg.Options
 	opts.Quality = 60
 	err = jpeg.Encode(&out, squareImage, &opts)
+	if err != nil {
+		return -1, entity.NewClientError("ошибка при обработке изображения", entity.ErrBadRequest, err)
+	}
 
 	// Загрузка обработанного изображения на сервер
 	id, err := s.staticRepo.UploadStatic("avatars", uuid.New().String()+".jpg", out.Bytes())
@@ -84,6 +89,6 @@ func (s *StaticService) UploadAvatar(data []byte) (int, error) {
 	return id, nil
 }
 
-func (s *StaticService) GetStaticUrl(id int) (string, error) {
+func (s *StaticService) GetStaticURL(id int) (string, error) {
 	return s.staticRepo.GetStatic(id)
 }

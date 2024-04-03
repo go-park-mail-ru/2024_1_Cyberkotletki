@@ -12,21 +12,8 @@ import (
 	"testing"
 )
 
-func TestNewCollectionsEndpoints(t *testing.T) {
-	t.Parallel()
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockCollections := mockusecase.NewMockCollections(ctrl)
-	h := NewCollectionsEndpoints(mockCollections)
-
-	if h.useCase != mockCollections {
-		t.Errorf("NewCollectionsEndpoints() = %v, want %v", h.useCase, mockCollections)
-	}
-}
-
 func TestCollectionsEndpoints_GetGenres(t *testing.T) {
 	t.Parallel()
-	e := echo.New()
 
 	testCases := []struct {
 		Name        string
@@ -48,28 +35,23 @@ func TestCollectionsEndpoints_GetGenres(t *testing.T) {
 		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
+			e := echo.New()
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockCollections := mockusecase.NewMockCollections(ctrl)
 			h := NewCollectionsEndpoints(mockCollections)
 			tc.SetupMock(mockCollections)
-
 			req := httptest.NewRequest(http.MethodGet, "/collections/genres", nil)
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
 			err := h.GetGenres(c)
-			if tc.ExpectedErr != nil {
-				require.ErrorContains(t, err, tc.ExpectedErr.Error())
-			} else {
-				require.NoError(t, err)
-			}
+			require.Equal(t, tc.ExpectedErr, err)
 		})
 	}
 }
 
 func TestCollectionsEndpoints_GetCompilationByGenre(t *testing.T) {
 	t.Parallel()
-	e := echo.New()
 
 	testCases := []struct {
 		Name        string
@@ -91,7 +73,7 @@ func TestCollectionsEndpoints_GetCompilationByGenre(t *testing.T) {
 		{
 			Name:        "Несуществующий жанр",
 			Genre:       "lolkek",
-			ExpectedErr: entity.NewClientError("Такого жанра не существует", entity.ErrNotFound),
+			ExpectedErr: &echo.HTTPError{Code: 404, Message: "Такого жанра не существует"},
 			SetupMock: func(mockCollections *mockusecase.MockCollections) {
 				mockCollections.EXPECT().GetCompilation(gomock.Eq("lolkek")).Return(
 					nil,
@@ -102,7 +84,7 @@ func TestCollectionsEndpoints_GetCompilationByGenre(t *testing.T) {
 		{
 			Name:        "Не указан жанр",
 			Genre:       "",
-			ExpectedErr: entity.NewClientError("Не указан жанр", entity.ErrBadRequest),
+			ExpectedErr: &echo.HTTPError{Code: 400, Message: "Не указан жанр"},
 			SetupMock:   func(mockCollections *mockusecase.MockCollections) {},
 		},
 	}
@@ -111,21 +93,17 @@ func TestCollectionsEndpoints_GetCompilationByGenre(t *testing.T) {
 		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
+			e := echo.New()
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockCollections := mockusecase.NewMockCollections(ctrl)
 			h := NewCollectionsEndpoints(mockCollections)
 			tc.SetupMock(mockCollections)
-
 			req := httptest.NewRequest(http.MethodGet, "/collections/compilation?genre="+tc.Genre, nil)
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
 			err := h.GetCompilationByGenre(c)
-			if tc.ExpectedErr != nil {
-				require.ErrorContains(t, err, tc.ExpectedErr.Error())
-			} else {
-				require.NoError(t, err)
-			}
+			require.Equal(t, tc.ExpectedErr, err)
 		})
 	}
 }

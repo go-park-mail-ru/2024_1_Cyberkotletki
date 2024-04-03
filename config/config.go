@@ -1,6 +1,9 @@
 package config
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/mcuadros/go-defaults"
+)
 
 type Server struct {
 	IP                      string `yaml:"ip"                        default:"localhost"`
@@ -45,4 +48,10 @@ type Config struct {
 
 func (cfg *Config) GetServerAddr() string {
 	return fmt.Sprintf("%s:%d", cfg.HTTP.Server.IP, cfg.HTTP.Server.Port)
+}
+
+func NewConfigWithDefaults() *Config {
+	var conf Config
+	defaults.SetDefaults(&conf)
+	return &conf
 }

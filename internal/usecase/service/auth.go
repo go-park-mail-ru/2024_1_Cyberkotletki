@@ -22,23 +22,23 @@ func (a AuthService) Logout(s string) error {
 	return nil
 }
 
-func (a AuthService) LogoutAll(userId int) error {
-	if err := a.sessionRepo.DeleteAllSessions(userId); err != nil {
+func (a AuthService) LogoutAll(userID int) error {
+	if err := a.sessionRepo.DeleteAllSessions(userID); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (a AuthService) GetUserIDBySession(session string) (int, error) {
-	userId, err := a.sessionRepo.CheckSession(session)
+	userID, err := a.sessionRepo.CheckSession(session)
 	if err != nil {
 		return 0, err
 	}
-	return userId, nil
+	return userID, nil
 }
 
-func (a AuthService) CreateSession(userId int) (string, error) {
-	session, err := a.sessionRepo.NewSession(userId)
+func (a AuthService) CreateSession(userID int) (string, error) {
+	session, err := a.sessionRepo.NewSession(userID)
 	if err != nil {
 		return "", err
 	}

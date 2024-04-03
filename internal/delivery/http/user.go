@@ -23,14 +23,14 @@ func NewUserEndpoints(userUC usecase.User, authUC usecase.Auth, staticUC usecase
 	return UserEndpoints{userUC: userUC, authUC: authUC, staticUC: staticUC}
 }
 
-func (h *UserEndpoints) Configure(e *echo.Group) {
-	e.POST("/register", h.Register)
-	e.POST("/login", h.Login)
-	e.PUT("/password", h.UpdatePassword)
-	e.PUT("/avatar", h.UploadAvatar)
-	e.PUT("/profile", h.UpdateInfo)
-	e.GET("/profile", h.GetProfile)
-	e.GET("/me", h.GetMyID)
+func (h *UserEndpoints) Configure(server *echo.Group) {
+	server.POST("/register", h.Register)
+	server.POST("/login", h.Login)
+	server.PUT("/password", h.UpdatePassword)
+	server.PUT("/avatar", h.UploadAvatar)
+	server.PUT("/profile", h.UpdateInfo)
+	server.GET("/profile", h.GetProfile)
+	server.GET("/me", h.GetMyID)
 }
 
 // Register
@@ -49,7 +49,7 @@ func (h *UserEndpoints) Register(ctx echo.Context) error {
 	if err := ctx.Bind(registerData); err != nil {
 		return utils.NewError(ctx, http.StatusBadRequest, utils.ErrBadJSON)
 	}
-	userId, err := h.userUC.Register(registerData)
+	userID, err := h.userUC.Register(registerData)
 	if err != nil {
 		switch {
 		case entity.Contains(err, entity.ErrAlreadyExists):
@@ -60,16 +60,7 @@ func (h *UserEndpoints) Register(ctx echo.Context) error {
 			return utils.NewError(ctx, http.StatusInternalServerError, err)
 		}
 	}
-	session, err := h.authUC.CreateSession(userId)
-	if err != nil {
-		return utils.NewError(ctx, http.StatusInternalServerError, err)
-	}
-	utils.SessionSet(
-		ctx,
-		session,
-		time.Now().Add(time.Duration(ctx.Get("params").(config.Config).Auth.SessionAliveTime)*time.Second),
-	)
-	return nil
+	return utils.CreateSession(ctx, h.authUC, userID)
 }
 
 // Login
@@ -90,7 +81,7 @@ func (h *UserEndpoints) Login(ctx echo.Context) error {
 	if err := ctx.Bind(loginData); err != nil {
 		return utils.NewError(ctx, http.StatusBadRequest, utils.ErrBadJSON)
 	}
-	userId, err := h.userUC.Login(loginData)
+	userID, err := h.userUC.Login(loginData)
 	if err != nil {
 		switch {
 		case entity.Contains(err, entity.ErrNotFound):
@@ -101,16 +92,7 @@ func (h *UserEndpoints) Login(ctx echo.Context) error {
 			return utils.NewError(ctx, http.StatusInternalServerError, err)
 		}
 	}
-	session, err := h.authUC.CreateSession(userId)
-	if err != nil {
-		return utils.NewError(ctx, http.StatusInternalServerError, err)
-	}
-	utils.SessionSet(
-		ctx,
-		session,
-		time.Now().Add(time.Duration(ctx.Get("params").(config.Config).Auth.SessionAliveTime)*time.Second),
-	)
-	return nil
+	return utils.CreateSession(ctx, h.authUC, userID)
 }
 
 // UpdatePassword

@@ -69,21 +69,6 @@ func (mr *MockUserMockRecorder) GetUser(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockUser)(nil).GetUser), arg0)
 }
 
-// HasUser mocks base method.
-func (m *MockUser) HasUser(arg0 *entity.User) (bool, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "HasUser", arg0)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// HasUser indicates an expected call of HasUser.
-func (mr *MockUserMockRecorder) HasUser(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasUser", reflect.TypeOf((*MockUser)(nil).HasUser), arg0)
-}
-
 // UpdateUser mocks base method.
 func (m *MockUser) UpdateUser(params, values map[string]any) error {
 	m.ctrl.T.Helper()

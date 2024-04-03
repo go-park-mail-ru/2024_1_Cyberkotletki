@@ -56,13 +56,6 @@ func ParseParams() config.Config {
 		log.Fatalf("Ошибка при парсинге конфига сервера: %v", err)
 	}
 
-	/*
-		при подключении БД все данные надо будет хранить в .env
-		if err = godotenv.Load(".env"); err != nil {
-			logger.Fatal("Не удалось загрузить .env файл. Убедитесь, что он расположен в корне проекта")
-		}
-	*/
-
 	return cfg
 }
 

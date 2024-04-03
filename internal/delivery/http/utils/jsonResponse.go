@@ -8,8 +8,7 @@ import (
 // WriteJSON отправляет json клиенту или ошибку, если по каким-либо причинам невозможно преобразовать
 // response в json
 func WriteJSON(c echo.Context, response any) error {
-	err := c.JSON(http.StatusOK, response)
-	if err != nil {
+	if err := c.JSON(http.StatusOK, response); err != nil {
 		return NewError(c, http.StatusInternalServerError, err)
 	}
 	return nil
