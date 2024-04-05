@@ -60,9 +60,7 @@ func TestUserService_Register(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockUserRepo := mockrepo.NewMockUser(ctrl)
-			userService := UserService{
-				userRepo: mockUserRepo,
-			}
+			userService := NewUserService(mockUserRepo, nil)
 			tc.SetupUserRepoMock(mockUserRepo)
 			id, err := userService.Register(tc.Input)
 			require.Equal(t, tc.ExpectedErr, err)
@@ -128,9 +126,7 @@ func TestUserService_Login(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockUserRepo := mockrepo.NewMockUser(ctrl)
-			userService := UserService{
-				userRepo: mockUserRepo,
-			}
+			userService := NewUserService(mockUserRepo, nil)
 			tc.SetupUserRepoMock(mockUserRepo)
 			id, err := userService.Login(tc.Input)
 			require.Equal(t, tc.ExpectedErr, err)
@@ -176,9 +172,7 @@ func TestUserService_UpdateAvatar(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockUserRepo := mockrepo.NewMockUser(ctrl)
-			userService := UserService{
-				userRepo: mockUserRepo,
-			}
+			userService := NewUserService(mockUserRepo, nil)
 			tc.SetupUserRepoMock(mockUserRepo)
 			err := userService.UpdateAvatar(tc.UserID, tc.UploadID)
 			require.Equal(t, tc.ExpectedErr, err)
@@ -237,9 +231,7 @@ func TestUserService_UpdateInfo(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockUserRepo := mockrepo.NewMockUser(ctrl)
-			userService := UserService{
-				userRepo: mockUserRepo,
-			}
+			userService := NewUserService(mockUserRepo, nil)
 			tc.SetupUserRepoMock(mockUserRepo)
 			err := userService.UpdateInfo(tc.UserID, tc.Update)
 			require.Equal(t, tc.ExpectedErr, err)
@@ -255,15 +247,16 @@ func TestUserService_GetUser(t *testing.T) {
 		UserID            int
 		ExpectedProfile   *dto.UserProfile
 		ExpectedErr       error
-		SetupUserRepoMock func(repo *mockrepo.MockUser)
+		SetupUserRepoMock func(userRepo *mockrepo.MockUser, reviewRepo *mockrepo.MockReview)
 	}{
 		{
 			Name:            "Успешное получение пользователя",
 			UserID:          1,
 			ExpectedProfile: &dto.UserProfile{Name: "name", Email: "email", Avatar: 1},
 			ExpectedErr:     nil,
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {
-				repo.EXPECT().GetUser(gomock.Any()).Return(&entity.User{Name: "name", Email: "email", AvatarUploadID: 1}, nil)
+			SetupUserRepoMock: func(userRepo *mockrepo.MockUser, reviewRepo *mockrepo.MockReview) {
+				reviewRepo.EXPECT().GetAuthorRating(gomock.Any()).Return(0, nil)
+				userRepo.EXPECT().GetUser(gomock.Any()).Return(&entity.User{Name: "name", Email: "email", AvatarUploadID: 1}, nil)
 			},
 		},
 		{
@@ -271,8 +264,8 @@ func TestUserService_GetUser(t *testing.T) {
 			UserID:          1,
 			ExpectedProfile: nil,
 			ExpectedErr:     entity.NewClientError("ошибка получения пользователя", entity.ErrInternal),
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {
-				repo.EXPECT().GetUser(gomock.Any()).Return(nil, entity.NewClientError("ошибка получения пользователя", entity.ErrInternal))
+			SetupUserRepoMock: func(userRepo *mockrepo.MockUser, reviewRepo *mockrepo.MockReview) {
+				userRepo.EXPECT().GetUser(gomock.Any()).Return(nil, entity.NewClientError("ошибка получения пользователя", entity.ErrInternal))
 			},
 		},
 	}
@@ -284,10 +277,9 @@ func TestUserService_GetUser(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockUserRepo := mockrepo.NewMockUser(ctrl)
-			userService := UserService{
-				userRepo: mockUserRepo,
-			}
-			tc.SetupUserRepoMock(mockUserRepo)
+			mockReviewRepo := mockrepo.NewMockReview(ctrl)
+			userService := NewUserService(mockUserRepo, mockReviewRepo)
+			tc.SetupUserRepoMock(mockUserRepo, mockReviewRepo)
 			profile, err := userService.GetUser(tc.UserID)
 			require.Equal(t, tc.ExpectedErr, err)
 			require.Equal(t, tc.ExpectedProfile, profile)
@@ -362,9 +354,7 @@ func TestUserService_UpdatePassword(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockUserRepo := mockrepo.NewMockUser(ctrl)
-			userService := UserService{
-				userRepo: mockUserRepo,
-			}
+			userService := NewUserService(mockUserRepo, nil)
 			tc.SetupUserRepoMock(mockUserRepo)
 			err := userService.UpdatePassword(tc.UserID, tc.Update)
 			require.Equal(t, tc.ExpectedErr, err)

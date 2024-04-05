@@ -97,26 +97,11 @@ func (mr *MockReviewMockRecorder) EditReview(update any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EditReview", reflect.TypeOf((*MockReview)(nil).EditReview), update)
 }
 
-// GetContentRating mocks base method.
-func (m *MockReview) GetContentRating(contentID int) (int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetContentRating", contentID)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetContentRating indicates an expected call of GetContentRating.
-func (mr *MockReviewMockRecorder) GetContentRating(contentID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContentRating", reflect.TypeOf((*MockReview)(nil).GetContentRating), contentID)
-}
-
 // GetContentReviews mocks base method.
-func (m *MockReview) GetContentReviews(contentID, count, page int) (*[]dto.ReviewResponse, error) {
+func (m *MockReview) GetContentReviews(contentID, count, page int) (*dto.ReviewResponseList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetContentReviews", contentID, count, page)
-	ret0, _ := ret[0].(*[]dto.ReviewResponse)
+	ret0, _ := ret[0].(*dto.ReviewResponseList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -128,10 +113,10 @@ func (mr *MockReviewMockRecorder) GetContentReviews(contentID, count, page any) 
 }
 
 // GetLatestReviews mocks base method.
-func (m *MockReview) GetLatestReviews(count int) (*[]dto.ReviewResponse, error) {
+func (m *MockReview) GetLatestReviews(count int) (*dto.ReviewResponseList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetLatestReviews", count)
-	ret0, _ := ret[0].(*[]dto.ReviewResponse)
+	ret0, _ := ret[0].(*dto.ReviewResponseList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -157,26 +142,11 @@ func (mr *MockReviewMockRecorder) GetReview(reviewID any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReview", reflect.TypeOf((*MockReview)(nil).GetReview), reviewID)
 }
 
-// GetUserRating mocks base method.
-func (m *MockReview) GetUserRating(userID int) (int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserRating", userID)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetUserRating indicates an expected call of GetUserRating.
-func (mr *MockReviewMockRecorder) GetUserRating(userID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserRating", reflect.TypeOf((*MockReview)(nil).GetUserRating), userID)
-}
-
 // GetUserReviews mocks base method.
-func (m *MockReview) GetUserReviews(userID, count, page int) (*[]dto.ReviewResponse, error) {
+func (m *MockReview) GetUserReviews(userID, count, page int) (*dto.ReviewResponseList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserReviews", userID, count, page)
-	ret0, _ := ret[0].(*[]dto.ReviewResponse)
+	ret0, _ := ret[0].(*dto.ReviewResponseList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
