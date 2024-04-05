@@ -20,18 +20,35 @@ type ReviewResponse struct {
 	ContentName  string `json:"contentName"  example:"Content"            format:"string"`
 }
 
-type ReviewCreate struct {
-	UserID    int    `json:"userID"    example:"1"         format:"int"`
+type ReviewResponseList struct {
+	Reviews []ReviewResponse `json:"reviews"`
+}
+
+type UserReviewResponseList struct {
+	ReviewResponseList
+	Me bool `json:"me" example:"true" format:"bool"`
+}
+
+type ReviewCreateRequest struct {
 	ContentID int    `json:"contentID" example:"1"         format:"int"`
 	Rating    int    `json:"rating"    example:"5"         format:"int"`
 	Title     string `json:"title"     example:"Title"     format:"string"`
 	Text      string `json:"text"      example:"i like it" format:"string"`
 }
 
-type ReviewUpdate struct {
-	UserID   int    `json:"userID"   example:"1"         format:"int"`
+type ReviewCreate struct {
+	ReviewCreateRequest
+	UserID int `json:"userID" example:"1" format:"int"`
+}
+
+type ReviewUpdateRequest struct {
 	ReviewID int    `json:"reviewID" example:"1"         format:"int"`
 	Rating   int    `json:"rating"   example:"5"         format:"int"`
 	Title    string `json:"title"    example:"Title"     format:"string"`
 	Text     string `json:"text"     example:"i like it" format:"string"`
+}
+
+type ReviewUpdate struct {
+	ReviewUpdateRequest
+	UserID int `json:"userID" example:"1" format:"int"`
 }

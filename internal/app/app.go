@@ -35,13 +35,18 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	if err != nil {
 		logger.Fatalf("Ошибка при создании репозитория статики: %v", err)
 	}
+	reviewRepo, err := postgres.NewReviewRepository(params.Review.Postgres)
+	if err != nil {
+		logger.Fatalf("Ошибка при создании репозитория рецензий: %v", err)
+	}
 
 	// Use Cases
 	staticUseCase := service.NewStaticService(staticRepo)
 	authUseCase := service.NewAuthService(sessionRepo)
-	userUseCase := service.NewUserService(userRepo)
+	userUseCase := service.NewUserService(userRepo, reviewRepo)
 	contentUseCase := service.NewContentService(contentRepo)
 	collectionsUseCase := service.NewCollectionsService(contentRepo)
+	reviewUseCase := service.NewReviewService(reviewRepo, userRepo, contentRepo, staticRepo)
 
 	// Delivery
 	staticDelivery := delivery.NewStaticEndpoints(staticUseCase)
@@ -50,6 +55,7 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	contentDelivery := delivery.NewContentEndpoints(contentUseCase)
 	collectionsDelivery := delivery.NewCollectionsEndpoints(collectionsUseCase)
 	playgroundDelivery := delivery.NewPlaygroundEndpoints()
+	reviewDelivery := delivery.NewReviewEndpoints(reviewUseCase, authUseCase)
 
 	// REST API
 	echoServer := echo.New()
@@ -145,6 +151,9 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	// auth
 	authAPI := api.Group("/auth")
 	authDelivery.Configure(authAPI)
+	// reviews
+	reviewAPI := api.Group("/review")
+	reviewDelivery.Configure(reviewAPI)
 	return echoServer
 }
 

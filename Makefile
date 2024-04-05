@@ -13,8 +13,17 @@ gen-swagger:
 
 .PHONY: run-dev
 run-dev:
+	# генерируем пример конфига
+	make gen-example-config
+	# генерируем документацию swagger
 	make gen-swagger
+	# запускаем контейнер с сессиями
 	make run-session-storage-container
+	# запускаем контейнер с базой данных
+	make run-db-container
+	# накатываем миграции
+	make run-migrations
+	# запускаем приложение
 	go run cmd/app/main.go
 
 .PHONY: gen-example-config

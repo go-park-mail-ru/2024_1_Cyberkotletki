@@ -8,12 +8,14 @@ import (
 )
 
 type UserService struct {
-	userRepo repository.User
+	userRepo   repository.User
+	reviewRepo repository.Review
 }
 
-func NewUserService(userRepo repository.User) usecase.User {
+func NewUserService(userRepo repository.User, reviewRepo repository.Review) usecase.User {
 	return &UserService{
-		userRepo: userRepo,
+		userRepo:   userRepo,
+		reviewRepo: reviewRepo,
 	}
 }
 
@@ -83,9 +85,14 @@ func (u *UserService) GetUser(userID int) (*dto.UserProfile, error) {
 	if err != nil {
 		return nil, err
 	}
+	rating, err := u.reviewRepo.GetAuthorRating(userID)
+	if err != nil {
+		return nil, err
+	}
 	return &dto.UserProfile{
 		Name:   user.Name,
 		Email:  user.Email,
+		Rating: rating,
 		Avatar: user.AvatarUploadID,
 	}, nil
 }

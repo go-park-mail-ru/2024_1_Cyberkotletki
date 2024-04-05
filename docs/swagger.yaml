@@ -84,6 +84,102 @@ definitions:
         format: string
         type: string
     type: object
+  dto.ReviewCreateRequest:
+    properties:
+      contentID:
+        example: 1
+        format: int
+        type: integer
+      rating:
+        example: 5
+        format: int
+        type: integer
+      text:
+        example: i like it
+        format: string
+        type: string
+      title:
+        example: Title
+        format: string
+        type: string
+    type: object
+  dto.ReviewResponse:
+    properties:
+      authorAvatar:
+        example: avatars/avatar.jpg
+        format: string
+        type: string
+      authorID:
+        example: 1
+        format: int
+        type: integer
+      authorName:
+        example: Author
+        format: string
+        type: string
+      contentID:
+        example: 1
+        format: int
+        type: integer
+      contentName:
+        example: Content
+        format: string
+        type: string
+      createdAt:
+        example: "2022-01-02T15:04:05Z"
+        format: int
+        type: string
+      dislikes:
+        example: 5
+        format: int
+        type: integer
+      id:
+        example: 1
+        format: int
+        type: integer
+      likes:
+        example: 5
+        format: int
+        type: integer
+      rating:
+        example: 5
+        format: int
+        type: integer
+      text:
+        example: i like it
+        format: string
+        type: string
+      title:
+        example: Title
+        format: string
+        type: string
+    type: object
+  dto.ReviewResponseList:
+    properties:
+      reviews:
+        items:
+          $ref: '#/definitions/dto.ReviewResponse'
+        type: array
+    type: object
+  dto.ReviewUpdateRequest:
+    properties:
+      rating:
+        example: 5
+        format: int
+        type: integer
+      reviewID:
+        example: 1
+        format: int
+        type: integer
+      text:
+        example: i like it
+        format: string
+        type: string
+      title:
+        example: Title
+        format: string
+        type: string
+    type: object
   dto.UpdatePassword:
     properties:
       newPassword:
@@ -94,6 +190,17 @@ definitions:
         example: OldPassword1!
         format: string
         type: string
+    type: object
+  dto.UserReviewResponseList:
+    properties:
+      me:
+        example: true
+        format: bool
+        type: boolean
+      reviews:
+        items:
+          $ref: '#/definitions/dto.ReviewResponse'
+        type: array
     type: object
   dto.UserUpdate:
     properties:
@@ -244,6 +351,356 @@ paths:
             type: string
       tags:
       - Playground
+  /review:
+    post:
+      consumes:
+      - application/json
+      description: Создать рецензию
+      parameters:
+      - description: Данные для создания рецензии
+        in: body
+        name: reviewCreate
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ReviewCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ReviewResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Создать рецензию
+      tags:
+      - review
+    put:
+      consumes:
+      - application/json
+      description: Обновить рецензию
+      parameters:
+      - description: Данные для обновления рецензии
+        in: body
+        name: reviewUpdate
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ReviewUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ReviewResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Обновить рецензию
+      tags:
+      - review
+  /review/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Удалить рецензию
+      parameters:
+      - description: ID рецензии
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Удалить рецензию
+      tags:
+      - review
+    get:
+      consumes:
+      - application/json
+      description: Получить рецензию по id
+      parameters:
+      - description: ID рецензии
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ReviewResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Получить рецензию
+      tags:
+      - review
+  /review/{id}/dislike:
+    put:
+      consumes:
+      - application/json
+      description: Поставить дизлайк рецензии
+      parameters:
+      - description: ID рецензии
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Поставить дизлайк рецензии
+      tags:
+      - review
+  /review/{id}/like:
+    delete:
+      consumes:
+      - application/json
+      description: Убрать лайк с рецензии
+      parameters:
+      - description: ID рецензии
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Убрать лайк с рецензии
+      tags:
+      - review
+    put:
+      consumes:
+      - application/json
+      description: Поставить лайк рецензии
+      parameters:
+      - description: ID рецензии
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Поставить лайк рецензии
+      tags:
+      - review
+  /review/content/{id}/{page}:
+    get:
+      description: Получить рецензии контента
+      parameters:
+      - description: ID контента
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Номер страницы
+        in: path
+        name: page
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ReviewResponseList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Получить рецензии контента
+      tags:
+      - review
+  /review/recent:
+    get:
+      description: Получить последние рецензии
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ReviewResponseList'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Получить последние рецензии
+      tags:
+      - review
+  /review/user/{id}/{page}:
+    get:
+      description: Получить рецензии пользователя
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Номер страницы
+        in: path
+        name: page
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserReviewResponseList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Получить рецензии пользователя
+      tags:
+      - review
+  /review/user/{id}/recent:
+    get:
+      description: Получить последние рецензии пользователя
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ReviewResponseList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Получить последние рецензии пользователя
+      tags:
+      - review
   /static/{id}:
     get:
       consumes:

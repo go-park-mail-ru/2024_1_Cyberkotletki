@@ -72,7 +72,7 @@ func (r *ReviewService) reviewEntityToDTO(reviewEntity *entity.Review) (*dto.Rev
 }
 
 // reviewEntitiesToDTO конвертирует массив entity.Review в массив dto.ReviewResponse
-func (r *ReviewService) reviewEntitiesToDTO(reviewEntities []*entity.Review) (*[]dto.ReviewResponse, error) {
+func (r *ReviewService) reviewEntitiesToDTO(reviewEntities []*entity.Review) (*dto.ReviewResponseList, error) {
 	reviews := make([]dto.ReviewResponse, 0)
 	for _, review := range reviewEntities {
 		toDTO, err := r.reviewEntityToDTO(review)
@@ -81,11 +81,11 @@ func (r *ReviewService) reviewEntitiesToDTO(reviewEntities []*entity.Review) (*[
 		}
 		reviews = append(reviews, *toDTO)
 	}
-	return &reviews, nil
+	return &dto.ReviewResponseList{Reviews: reviews}, nil
 }
 
 // GetLatestReviews возвращает последние count отзывов
-func (r *ReviewService) GetLatestReviews(count int) (*[]dto.ReviewResponse, error) {
+func (r *ReviewService) GetLatestReviews(count int) (*dto.ReviewResponseList, error) {
 	reviewEntities, err := r.reviewRepo.GetLatestReviews(count)
 	if err != nil {
 		return nil, err
@@ -94,7 +94,7 @@ func (r *ReviewService) GetLatestReviews(count int) (*[]dto.ReviewResponse, erro
 }
 
 // GetUserReviews возвращает count отзывов на странице с номером page пользователя с userID
-func (r *ReviewService) GetUserReviews(userID, count, page int) (*[]dto.ReviewResponse, error) {
+func (r *ReviewService) GetUserReviews(userID, count, page int) (*dto.ReviewResponseList, error) {
 	reviewEntities, err := r.reviewRepo.GetReviewsByAuthorID(userID, page, count)
 	if err != nil {
 		return nil, err
@@ -102,7 +102,7 @@ func (r *ReviewService) GetUserReviews(userID, count, page int) (*[]dto.ReviewRe
 	return r.reviewEntitiesToDTO(reviewEntities)
 }
 
-func (r *ReviewService) GetContentReviews(contentID, count, page int) (*[]dto.ReviewResponse, error) {
+func (r *ReviewService) GetContentReviews(contentID, count, page int) (*dto.ReviewResponseList, error) {
 	reviewEntities, err := r.reviewRepo.GetReviewsByContentID(contentID, page, count)
 	if err != nil {
 		return nil, err
@@ -171,11 +171,45 @@ func (r *ReviewService) DeleteReview(reviewID, userID int) error {
 }
 
 func (r *ReviewService) LikeReview(userID, reviewID int) error {
-	return r.reviewRepo.LikeReview(reviewID, userID, true)
+	isLiked, err := r.IsLikedByUser(userID, reviewID)
+	if err != nil {
+		return err
+	}
+	switch isLiked {
+	case 1:
+		// уже лайкнули, ничего не делаем
+		return nil
+	case -1:
+		// дизлайкнули, удаляем дизлайк и добавляем лайк
+		if err := r.UnlikeReview(userID, reviewID); err != nil {
+			return err
+		}
+		fallthrough
+	default:
+		// не лайкали, добавляем лайк
+		return r.reviewRepo.LikeReview(reviewID, userID, true)
+	}
 }
 
 func (r *ReviewService) DislikeReview(userID, reviewID int) error {
-	return r.reviewRepo.LikeReview(reviewID, userID, false)
+	isLiked, err := r.IsLikedByUser(userID, reviewID)
+	if err != nil {
+		return err
+	}
+	switch isLiked {
+	case -1:
+		// уже дизлайкнули, ничего не делаем
+		return nil
+	case 1:
+		// лайкнули, удаляем лайк и добавляем дизлайк
+		if err := r.UnlikeReview(userID, reviewID); err != nil {
+			return err
+		}
+		fallthrough
+	default:
+		// не дизлайкали, добавляем дизлайк
+		return r.reviewRepo.LikeReview(reviewID, userID, false)
+	}
 }
 
 func (r *ReviewService) IsLikedByUser(userID, reviewID int) (int, error) {
@@ -184,12 +218,4 @@ func (r *ReviewService) IsLikedByUser(userID, reviewID int) (int, error) {
 
 func (r *ReviewService) UnlikeReview(userID, reviewID int) error {
 	return r.reviewRepo.UnlikeReview(reviewID, userID)
-}
-
-func (r *ReviewService) GetUserRating(userID int) (int, error) {
-	return r.reviewRepo.GetAuthorRating(userID)
-}
-
-func (r *ReviewService) GetContentRating(contentID int) (int, error) {
-	return r.reviewRepo.GetContentRating(contentID)
 }

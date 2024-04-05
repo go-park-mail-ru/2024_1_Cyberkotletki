@@ -29,11 +29,13 @@ func TestReviewService_CreateReview(t *testing.T) {
 		{
 			Name: "Успешное создание",
 			Input: &dto.ReviewCreate{
-				UserID:    1,
-				ContentID: 1,
-				Rating:    10,
-				Title:     "title",
-				Text:      "text",
+				ReviewCreateRequest: dto.ReviewCreateRequest{
+					ContentID: 1,
+					Rating:    10,
+					Title:     "title",
+					Text:      "text",
+				},
+				UserID: 1,
 			},
 			ExpectedErr: nil,
 			ExpectedOutput: &dto.ReviewResponse{
@@ -86,11 +88,13 @@ func TestReviewService_CreateReview(t *testing.T) {
 		{
 			Name: "Ошибка создания",
 			Input: &dto.ReviewCreate{
-				UserID:    1,
-				ContentID: 1,
-				Rating:    10,
-				Title:     "title",
-				Text:      "text",
+				ReviewCreateRequest: dto.ReviewCreateRequest{
+					ContentID: 1,
+					Rating:    10,
+					Title:     "title",
+					Text:      "text",
+				},
+				UserID: 1,
 			},
 			ExpectedErr:    fmt.Errorf("ошибка создания отзыва"),
 			ExpectedOutput: nil,
@@ -104,11 +108,13 @@ func TestReviewService_CreateReview(t *testing.T) {
 		{
 			Name: "Ошибка получения автора",
 			Input: &dto.ReviewCreate{
-				UserID:    1,
-				ContentID: 1,
-				Rating:    10,
-				Title:     "title",
-				Text:      "text",
+				ReviewCreateRequest: dto.ReviewCreateRequest{
+					ContentID: 1,
+					Rating:    10,
+					Title:     "title",
+					Text:      "text",
+				},
+				UserID: 1,
 			},
 			ExpectedErr:    fmt.Errorf("ошибка получения автора"),
 			ExpectedOutput: nil,
@@ -135,11 +141,13 @@ func TestReviewService_CreateReview(t *testing.T) {
 		{
 			Name: "Ошибка получения контента",
 			Input: &dto.ReviewCreate{
-				UserID:    1,
-				ContentID: 1,
-				Rating:    10,
-				Title:     "title",
-				Text:      "text",
+				ReviewCreateRequest: dto.ReviewCreateRequest{
+					ContentID: 1,
+					Rating:    10,
+					Title:     "title",
+					Text:      "text",
+				},
+				UserID: 1,
 			},
 			ExpectedErr:    fmt.Errorf("ошибка получения контента"),
 			ExpectedOutput: nil,
@@ -174,11 +182,13 @@ func TestReviewService_CreateReview(t *testing.T) {
 		{
 			Name: "Ошибка получения аватара",
 			Input: &dto.ReviewCreate{
-				UserID:    1,
-				ContentID: 1,
-				Rating:    10,
-				Title:     "title",
-				Text:      "text",
+				ReviewCreateRequest: dto.ReviewCreateRequest{
+					ContentID: 1,
+					Rating:    10,
+					Title:     "title",
+					Text:      "text",
+				},
+				UserID: 1,
 			},
 			ExpectedErr:    fmt.Errorf("не удалось получить аватар"),
 			ExpectedOutput: nil,
@@ -211,11 +221,13 @@ func TestReviewService_CreateReview(t *testing.T) {
 		{
 			Name: "Ошибка валидации c пустым текстом",
 			Input: &dto.ReviewCreate{
-				UserID:    1,
-				ContentID: 1,
-				Rating:    10,
-				Title:     "title",
-				Text:      "", // пустой текст
+				ReviewCreateRequest: dto.ReviewCreateRequest{
+					ContentID: 1,
+					Rating:    10,
+					Title:     "title",
+					Text:      "", // пустой текст
+				},
+				UserID: 1,
 			},
 			ExpectedErr:          entity.NewClientError("Количество символов в тексте рецензии должно быть от 1 до 10000", entity.ErrBadRequest),
 			ExpectedOutput:       nil,
@@ -227,10 +239,13 @@ func TestReviewService_CreateReview(t *testing.T) {
 		{
 			Name: "Ошибка валидации c пустым заголовком",
 			Input: &dto.ReviewCreate{
-				UserID:    1,
-				ContentID: 1,
-				Rating:    10,
-				Title:     "", // пустой заголовок
+				ReviewCreateRequest: dto.ReviewCreateRequest{
+					ContentID: 1,
+					Rating:    10,
+					Title:     "", // пустой заголовок
+					Text:      "text",
+				},
+				UserID: 1,
 			},
 			ExpectedErr:          entity.NewClientError("Количество символов в заголовке рецензии должно быть от 1 до 50", entity.ErrBadRequest),
 			ExpectedOutput:       nil,
@@ -242,10 +257,13 @@ func TestReviewService_CreateReview(t *testing.T) {
 		{
 			Name: "Ошибка валидации с рейтингом больше 10 или меньше 1",
 			Input: &dto.ReviewCreate{
-				UserID:    1,
-				ContentID: 1,
-				Rating:    11, // рейтинг больше 10
-				Title:     "title",
+				ReviewCreateRequest: dto.ReviewCreateRequest{
+					ContentID: 1,
+					Rating:    11, // рейтинг больше 10
+					Title:     "title",
+					Text:      "text",
+				},
+				UserID: 1,
 			},
 			ExpectedErr:          entity.NewClientError("Рейтинг должен быть в диапазоне от 1 до 10", entity.ErrBadRequest),
 			ExpectedOutput:       nil,
@@ -398,11 +416,13 @@ func TestReviewService_EditReview(t *testing.T) {
 		{
 			Name: "Успешное редактирование",
 			Input: &dto.ReviewUpdate{
-				UserID:   1,
-				ReviewID: 1,
-				Rating:   5,
-				Title:    "title",
-				Text:     "text",
+				ReviewUpdateRequest: dto.ReviewUpdateRequest{
+					ReviewID: 1,
+					Rating:   5,
+					Title:    "title",
+					Text:     "text",
+				},
+				UserID: 1,
 			},
 			ExpectedErr: nil,
 			ExpectedOutput: &dto.ReviewResponse{
@@ -466,11 +486,13 @@ func TestReviewService_EditReview(t *testing.T) {
 		{
 			Name: "Ошибка редактирования на уровне БД",
 			Input: &dto.ReviewUpdate{
-				UserID:   1,
-				ReviewID: 1,
-				Rating:   5,
-				Title:    "title",
-				Text:     "text",
+				ReviewUpdateRequest: dto.ReviewUpdateRequest{
+					ReviewID: 1,
+					Rating:   5,
+					Title:    "title",
+					Text:     "text",
+				},
+				UserID: 1,
 			},
 			ExpectedErr:    fmt.Errorf("ошибка редактирования отзыва"),
 			ExpectedOutput: nil,
@@ -496,11 +518,13 @@ func TestReviewService_EditReview(t *testing.T) {
 		{
 			Name: "Ошибка редактирования на уровне валидации",
 			Input: &dto.ReviewUpdate{
-				UserID:   1,
-				ReviewID: 1,
-				Rating:   11, // рейтинг больше 10
-				Title:    "title",
-				Text:     "text",
+				ReviewUpdateRequest: dto.ReviewUpdateRequest{
+					ReviewID: 1,
+					Rating:   11, // рейтинг больше 10
+					Title:    "title",
+					Text:     "text",
+				},
+				UserID: 1,
 			},
 			ExpectedErr:    entity.NewClientError("Рейтинг должен быть в диапазоне от 1 до 10", entity.ErrBadRequest),
 			ExpectedOutput: nil,
@@ -525,11 +549,13 @@ func TestReviewService_EditReview(t *testing.T) {
 		{
 			Name: "Ошибка доступа",
 			Input: &dto.ReviewUpdate{
-				UserID:   2, // другой пользователь
-				ReviewID: 1,
-				Rating:   5,
-				Title:    "title",
-				Text:     "text",
+				ReviewUpdateRequest: dto.ReviewUpdateRequest{
+					ReviewID: 1,
+					Rating:   5,
+					Title:    "title",
+					Text:     "text",
+				},
+				UserID: 2, // другой пользователь
 			},
 			ExpectedErr:    entity.NewClientError("Вы не можете редактировать чужой отзыв", entity.ErrForbidden),
 			ExpectedOutput: nil,
