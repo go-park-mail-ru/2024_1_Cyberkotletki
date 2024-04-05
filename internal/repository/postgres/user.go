@@ -3,7 +3,6 @@ package postgres
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/config"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
@@ -102,7 +101,6 @@ func (u *UsersDB) GetUser(params map[string]interface{}) (*entity.User, error) {
 	err = u.DB.QueryRow(query, args...).
 		Scan(&user.ID, &user.Email, &user.Name, &user.PasswordHash, &user.PasswordSalt, &user.AvatarUploadID)
 	if err != nil {
-		fmt.Println(err)
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, entity.NewClientError("пользователь не найден", entity.ErrNotFound)
 		}

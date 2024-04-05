@@ -13,7 +13,7 @@ type ContentDB struct {
 	// filmsLastId atomic.Int64
 }
 
-func NewContentRepository() repository.Film {
+func NewContentRepository() repository.Content {
 	filmsDB := &ContentDB{
 		DB: make(map[int]entity.Film),
 	}
@@ -587,4 +587,12 @@ func (f *ContentDB) GetFilmsByGenre(genreID int) ([]entity.Film, error) {
 		return nil, entity.NewClientError("фильмы с таким жанром не найдены", entity.ErrNotFound)
 	}
 	return films, nil
+}
+
+func (f *ContentDB) GetContent(id int) (*entity.Content, error) {
+	film, err := f.GetFilm(id)
+	if err != nil {
+		return nil, err
+	}
+	return &film.Content, nil
 }

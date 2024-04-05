@@ -50,6 +50,7 @@ var (
 )
 
 const (
-	PSQLUniqueViolation = "23505"
-	PSQLCheckViolation  = "23514"
+	PSQLUniqueViolation     = "23505"
+	PSQLCheckViolation      = "23514"
+	PSQLForeignKeyViolation = "23503"
 )

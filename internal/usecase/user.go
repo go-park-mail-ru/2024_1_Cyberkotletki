@@ -10,8 +10,4 @@ type User interface {
 	UpdateInfo(userID int, update *dto.UserUpdate) error
 	UpdatePassword(userID int, update *dto.UpdatePassword) error
 	GetUser(userID int) (*dto.UserProfile, error)
-	// TODO см. таск 2.2
-	// GetUserRating(userID int) (int, error)
-	// TODO см. таск 2.2
-	// GetUserReviews(userID int) (int, error)
 }

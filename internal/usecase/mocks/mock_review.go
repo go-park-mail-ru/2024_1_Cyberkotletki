@@ -40,105 +40,192 @@ func (m *MockReview) EXPECT() *MockReviewMockRecorder {
 }
 
 // CreateReview mocks base method.
-func (m *MockReview) CreateReview(arg0 dto.Review) (*dto.Review, error) {
+func (m *MockReview) CreateReview(create dto.ReviewCreate) (*dto.ReviewResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateReview", arg0)
-	ret0, _ := ret[0].(*dto.Review)
+	ret := m.ctrl.Call(m, "CreateReview", create)
+	ret0, _ := ret[0].(*dto.ReviewResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateReview indicates an expected call of CreateReview.
-func (mr *MockReviewMockRecorder) CreateReview(arg0 any) *gomock.Call {
+func (mr *MockReviewMockRecorder) CreateReview(create any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateReview", reflect.TypeOf((*MockReview)(nil).CreateReview), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateReview", reflect.TypeOf((*MockReview)(nil).CreateReview), create)
 }
 
 // DeleteReview mocks base method.
-func (m *MockReview) DeleteReview(arg0 int) error {
+func (m *MockReview) DeleteReview(reviewID, userID int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteReview", arg0)
+	ret := m.ctrl.Call(m, "DeleteReview", reviewID, userID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteReview indicates an expected call of DeleteReview.
-func (mr *MockReviewMockRecorder) DeleteReview(arg0 any) *gomock.Call {
+func (mr *MockReviewMockRecorder) DeleteReview(reviewID, userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteReview", reflect.TypeOf((*MockReview)(nil).DeleteReview), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteReview", reflect.TypeOf((*MockReview)(nil).DeleteReview), reviewID, userID)
+}
+
+// DislikeReview mocks base method.
+func (m *MockReview) DislikeReview(userID, reviewID int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DislikeReview", userID, reviewID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DislikeReview indicates an expected call of DislikeReview.
+func (mr *MockReviewMockRecorder) DislikeReview(userID, reviewID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DislikeReview", reflect.TypeOf((*MockReview)(nil).DislikeReview), userID, reviewID)
 }
 
 // EditReview mocks base method.
-func (m *MockReview) EditReview(arg0 dto.Review) (*dto.Review, error) {
+func (m *MockReview) EditReview(update dto.ReviewUpdate) (*dto.ReviewResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "EditReview", arg0)
-	ret0, _ := ret[0].(*dto.Review)
+	ret := m.ctrl.Call(m, "EditReview", update)
+	ret0, _ := ret[0].(*dto.ReviewResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // EditReview indicates an expected call of EditReview.
-func (mr *MockReviewMockRecorder) EditReview(arg0 any) *gomock.Call {
+func (mr *MockReviewMockRecorder) EditReview(update any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EditReview", reflect.TypeOf((*MockReview)(nil).EditReview), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EditReview", reflect.TypeOf((*MockReview)(nil).EditReview), update)
+}
+
+// GetContentRating mocks base method.
+func (m *MockReview) GetContentRating(contentID int) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetContentRating", contentID)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetContentRating indicates an expected call of GetContentRating.
+func (mr *MockReviewMockRecorder) GetContentRating(contentID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContentRating", reflect.TypeOf((*MockReview)(nil).GetContentRating), contentID)
 }
 
 // GetContentReviews mocks base method.
-func (m *MockReview) GetContentReviews(arg0 int) (*[]dto.Review, error) {
+func (m *MockReview) GetContentReviews(contentID, count, page int) (*[]dto.ReviewResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetContentReviews", arg0)
-	ret0, _ := ret[0].(*[]dto.Review)
+	ret := m.ctrl.Call(m, "GetContentReviews", contentID, count, page)
+	ret0, _ := ret[0].(*[]dto.ReviewResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetContentReviews indicates an expected call of GetContentReviews.
-func (mr *MockReviewMockRecorder) GetContentReviews(arg0 any) *gomock.Call {
+func (mr *MockReviewMockRecorder) GetContentReviews(contentID, count, page any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContentReviews", reflect.TypeOf((*MockReview)(nil).GetContentReviews), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContentReviews", reflect.TypeOf((*MockReview)(nil).GetContentReviews), contentID, count, page)
 }
 
-// GetGlobalReviews mocks base method.
-func (m *MockReview) GetGlobalReviews(arg0 int) (*[]dto.Review, error) {
+// GetLatestReviews mocks base method.
+func (m *MockReview) GetLatestReviews(count int) (*[]dto.ReviewResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetGlobalReviews", arg0)
-	ret0, _ := ret[0].(*[]dto.Review)
+	ret := m.ctrl.Call(m, "GetLatestReviews", count)
+	ret0, _ := ret[0].(*[]dto.ReviewResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetGlobalReviews indicates an expected call of GetGlobalReviews.
-func (mr *MockReviewMockRecorder) GetGlobalReviews(arg0 any) *gomock.Call {
+// GetLatestReviews indicates an expected call of GetLatestReviews.
+func (mr *MockReviewMockRecorder) GetLatestReviews(count any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGlobalReviews", reflect.TypeOf((*MockReview)(nil).GetGlobalReviews), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestReviews", reflect.TypeOf((*MockReview)(nil).GetLatestReviews), count)
 }
 
 // GetReview mocks base method.
-func (m *MockReview) GetReview(arg0 int) (*dto.Review, error) {
+func (m *MockReview) GetReview(reviewID int) (*dto.ReviewResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetReview", arg0)
-	ret0, _ := ret[0].(*dto.Review)
+	ret := m.ctrl.Call(m, "GetReview", reviewID)
+	ret0, _ := ret[0].(*dto.ReviewResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetReview indicates an expected call of GetReview.
-func (mr *MockReviewMockRecorder) GetReview(arg0 any) *gomock.Call {
+func (mr *MockReviewMockRecorder) GetReview(reviewID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReview", reflect.TypeOf((*MockReview)(nil).GetReview), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReview", reflect.TypeOf((*MockReview)(nil).GetReview), reviewID)
+}
+
+// GetUserRating mocks base method.
+func (m *MockReview) GetUserRating(userID int) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserRating", userID)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserRating indicates an expected call of GetUserRating.
+func (mr *MockReviewMockRecorder) GetUserRating(userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserRating", reflect.TypeOf((*MockReview)(nil).GetUserRating), userID)
 }
 
 // GetUserReviews mocks base method.
-func (m *MockReview) GetUserReviews(arg0, arg1 int) (*[]dto.Review, error) {
+func (m *MockReview) GetUserReviews(userID, count, page int) (*[]dto.ReviewResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserReviews", arg0, arg1)
-	ret0, _ := ret[0].(*[]dto.Review)
+	ret := m.ctrl.Call(m, "GetUserReviews", userID, count, page)
+	ret0, _ := ret[0].(*[]dto.ReviewResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserReviews indicates an expected call of GetUserReviews.
-func (mr *MockReviewMockRecorder) GetUserReviews(arg0, arg1 any) *gomock.Call {
+func (mr *MockReviewMockRecorder) GetUserReviews(userID, count, page any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserReviews", reflect.TypeOf((*MockReview)(nil).GetUserReviews), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserReviews", reflect.TypeOf((*MockReview)(nil).GetUserReviews), userID, count, page)
+}
+
+// IsLikedByUser mocks base method.
+func (m *MockReview) IsLikedByUser(userID, reviewID int) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsLikedByUser", userID, reviewID)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsLikedByUser indicates an expected call of IsLikedByUser.
+func (mr *MockReviewMockRecorder) IsLikedByUser(userID, reviewID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsLikedByUser", reflect.TypeOf((*MockReview)(nil).IsLikedByUser), userID, reviewID)
+}
+
+// LikeReview mocks base method.
+func (m *MockReview) LikeReview(userID, reviewID int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LikeReview", userID, reviewID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// LikeReview indicates an expected call of LikeReview.
+func (mr *MockReviewMockRecorder) LikeReview(userID, reviewID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LikeReview", reflect.TypeOf((*MockReview)(nil).LikeReview), userID, reviewID)
+}
+
+// UnlikeReview mocks base method.
+func (m *MockReview) UnlikeReview(userID, reviewID int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UnlikeReview", userID, reviewID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UnlikeReview indicates an expected call of UnlikeReview.
+func (mr *MockReviewMockRecorder) UnlikeReview(userID, reviewID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnlikeReview", reflect.TypeOf((*MockReview)(nil).UnlikeReview), userID, reviewID)
 }

@@ -92,6 +92,21 @@ func (m *MockContent) EXPECT() *MockContentMockRecorder {
 	return m.recorder
 }
 
+// GetContent mocks base method.
+func (m *MockContent) GetContent(id int) (*entity.Content, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetContent", id)
+	ret0, _ := ret[0].(*entity.Content)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetContent indicates an expected call of GetContent.
+func (mr *MockContentMockRecorder) GetContent(id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContent", reflect.TypeOf((*MockContent)(nil).GetContent), id)
+}
+
 // GetFilm mocks base method.
 func (m *MockContent) GetFilm(id int) (*entity.Film, error) {
 	m.ctrl.T.Helper()
