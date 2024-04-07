@@ -10,11 +10,11 @@ type Review interface {
 	UpdateReview(review *entity.Review) (*entity.Review, error)
 	DeleteReviewByID(id int) error
 	GetReviewsByAuthorID(authorID, page, limit int) ([]*entity.Review, error)
+	GetContentReviewByAuthor(authorID, contentID int) (*entity.Review, error)
 	GetAuthorRating(authorID int) (int, error)
 	GetLatestReviews(limit int) ([]*entity.Review, error)
 	LikeReview(reviewID, userID int, like bool) error
 	UnlikeReview(reviewID, userID int) error
 	IsLikedByUser(reviewID, userID int) (int, error)
-	DeleteReview(reviewID int) error
 	GetContentRating(reviewID int) (int, error)
 }

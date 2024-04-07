@@ -48,11 +48,19 @@ func SessionSet(ctx echo.Context, value string, expires time.Time) {
 func GetUserIDFromSession(ctx echo.Context, authUC usecase.Auth) (int, error) {
 	session, err := ctx.Cookie("session")
 	if err != nil {
-		return -1, entity.NewClientError("отсутствует cookies с сессией", entity.ErrUnauthorized)
+		return -1, NewError(
+			ctx,
+			http.StatusUnauthorized,
+			entity.NewClientError("отсутствует cookies с сессией", entity.ErrUnauthorized),
+		)
 	}
 	userID, err := authUC.GetUserIDBySession(session.Value)
 	if err != nil {
-		return -1, entity.NewClientError("необходима авторизация", entity.ErrUnauthorized)
+		return -1, NewError(
+			ctx,
+			http.StatusUnauthorized,
+			entity.NewClientError("необходима авторизация", entity.ErrUnauthorized),
+		)
 	}
 	return userID, nil
 }

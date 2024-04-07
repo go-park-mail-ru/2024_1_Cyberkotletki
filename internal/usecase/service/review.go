@@ -42,7 +42,7 @@ func (r *ReviewService) reviewEntityToDTO(reviewEntity *entity.Review) (*dto.Rev
 		authorName = author.Name
 	}
 	var avatar string
-	// аватарки может и не быть при
+	// аватарки может и не быть
 	if author.AvatarUploadID != 0 {
 		avatar, err = r.staticRepo.GetStatic(author.AvatarUploadID)
 		if err != nil {
@@ -118,6 +118,15 @@ func (r *ReviewService) GetReview(reviewID int) (*dto.ReviewResponse, error) {
 	return r.reviewEntityToDTO(reviewEntity)
 }
 
+func (r *ReviewService) GetContentReviewByAuthor(authorID, contentID int) (*dto.ReviewResponse, error) {
+	reviewEntity, err := r.reviewRepo.GetContentReviewByAuthor(authorID, contentID)
+	// Рецензии нет или произошла иная ошибка
+	if err != nil {
+		return nil, err
+	}
+	return r.reviewEntityToDTO(reviewEntity)
+}
+
 func (r *ReviewService) CreateReview(review dto.ReviewCreate) (*dto.ReviewResponse, error) {
 	if err := entity.ValidateReview(review.Rating, review.Title, review.Text); err != nil {
 		return nil, err
@@ -181,7 +190,7 @@ func (r *ReviewService) LikeReview(userID, reviewID int) error {
 		return nil
 	case -1:
 		// дизлайкнули, удаляем дизлайк и добавляем лайк
-		if err := r.UnlikeReview(userID, reviewID); err != nil {
+		if err = r.UnlikeReview(userID, reviewID); err != nil {
 			return err
 		}
 		fallthrough

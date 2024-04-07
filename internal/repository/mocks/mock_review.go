@@ -54,20 +54,6 @@ func (mr *MockReviewMockRecorder) AddReview(review any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddReview", reflect.TypeOf((*MockReview)(nil).AddReview), review)
 }
 
-// DeleteReview mocks base method.
-func (m *MockReview) DeleteReview(reviewID int) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteReview", reviewID)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteReview indicates an expected call of DeleteReview.
-func (mr *MockReviewMockRecorder) DeleteReview(reviewID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteReview", reflect.TypeOf((*MockReview)(nil).DeleteReview), reviewID)
-}
-
 // DeleteReviewByID mocks base method.
 func (m *MockReview) DeleteReviewByID(id int) error {
 	m.ctrl.T.Helper()
@@ -110,6 +96,21 @@ func (m *MockReview) GetContentRating(reviewID int) (int, error) {
 func (mr *MockReviewMockRecorder) GetContentRating(reviewID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContentRating", reflect.TypeOf((*MockReview)(nil).GetContentRating), reviewID)
+}
+
+// GetContentReviewByAuthor mocks base method.
+func (m *MockReview) GetContentReviewByAuthor(authorID, contentID int) (*entity.Review, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetContentReviewByAuthor", authorID, contentID)
+	ret0, _ := ret[0].(*entity.Review)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetContentReviewByAuthor indicates an expected call of GetContentReviewByAuthor.
+func (mr *MockReviewMockRecorder) GetContentReviewByAuthor(authorID, contentID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContentReviewByAuthor", reflect.TypeOf((*MockReview)(nil).GetContentReviewByAuthor), authorID, contentID)
 }
 
 // GetLatestReviews mocks base method.

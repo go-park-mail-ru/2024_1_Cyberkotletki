@@ -21,6 +21,7 @@ func NewReviewEndpoints(reviewUC usecase.Review, authUC usecase.Auth) ReviewEndp
 
 func (h *ReviewEndpoints) Configure(server *echo.Group) {
 	server.GET("/:id", h.GetReview)
+	server.GET("/myReview", h.GetMyContentReview)
 	server.POST("", h.CreateReview)
 	server.PUT("", h.UpdateReview)
 	server.DELETE("/:id", h.DeleteReview)
@@ -62,6 +63,38 @@ func (h *ReviewEndpoints) GetReview(ctx echo.Context) error {
 	return utils.WriteJSON(ctx, review)
 }
 
+// GetMyContentReview
+// @Summary Получить рецензию пользователя к контенту
+// @Tags review
+// @Description Получить рецензию пользователя к контенту
+// @Produce json
+// @Param content_id query int true "ID контента"
+// @Success 200 {object} dto.ReviewResponse
+// @Failure 400 {object} echo.HTTPError
+// @Failure 404 {object} echo.HTTPError
+// @Failure 500 {object} echo.HTTPError
+// @Router /review/myReview [get]
+func (h *ReviewEndpoints) GetMyContentReview(ctx echo.Context) error {
+	contentID, err := strconv.ParseInt(ctx.QueryParam("id"), 10, 64)
+	if err != nil {
+		return utils.NewError(ctx, http.StatusBadRequest, entity.NewClientError("невалидный id контента"))
+	}
+	userID, err := utils.GetUserIDFromSession(ctx, h.authUC)
+	if err != nil {
+		return err
+	}
+	reviews, err := h.reviewUC.GetContentReviewByAuthor(userID, int(contentID))
+	if err != nil {
+		switch {
+		case entity.Contains(err, entity.ErrNotFound):
+			return utils.NewError(ctx, http.StatusNotFound, err)
+		default:
+			return utils.NewError(ctx, http.StatusInternalServerError, err)
+		}
+	}
+	return utils.WriteJSON(ctx, reviews)
+}
+
 // CreateReview
 // @Summary Создать рецензию
 // @Tags review
@@ -82,14 +115,19 @@ func (h *ReviewEndpoints) CreateReview(ctx echo.Context) error {
 	}
 	userID, err := utils.GetUserIDFromSession(ctx, h.authUC)
 	if err != nil {
-		return utils.NewError(ctx, http.StatusUnauthorized, err)
+		return err
 	}
 	review, err := h.reviewUC.CreateReview(dto.ReviewCreate{
 		ReviewCreateRequest: reviewCreate,
 		UserID:              userID,
 	})
 	if err != nil {
-		return utils.NewError(ctx, http.StatusInternalServerError, err)
+		switch {
+		case entity.Contains(err, entity.ErrBadRequest):
+			return utils.NewError(ctx, http.StatusBadRequest, err)
+		default:
+			return utils.NewError(ctx, http.StatusInternalServerError, err)
+		}
 	}
 	return utils.WriteJSON(ctx, review)
 }
@@ -116,7 +154,7 @@ func (h *ReviewEndpoints) UpdateReview(ctx echo.Context) error {
 	}
 	userID, err := utils.GetUserIDFromSession(ctx, h.authUC)
 	if err != nil {
-		return utils.NewError(ctx, http.StatusUnauthorized, err)
+		return err
 	}
 	review, err := h.reviewUC.EditReview(dto.ReviewUpdate{
 		ReviewUpdateRequest: reviewUpdate,
@@ -157,7 +195,7 @@ func (h *ReviewEndpoints) DeleteReview(ctx echo.Context) error {
 	}
 	userID, err := utils.GetUserIDFromSession(ctx, h.authUC)
 	if err != nil {
-		return utils.NewError(ctx, http.StatusUnauthorized, err)
+		return err
 	}
 	err = h.reviewUC.DeleteReview(int(id), userID)
 	if err != nil {
@@ -204,9 +242,14 @@ func (h *ReviewEndpoints) GetUserLatestReviews(ctx echo.Context) error {
 	if err != nil {
 		return utils.NewError(ctx, http.StatusBadRequest, entity.NewClientError("невалидный id пользователя"))
 	}
-	reviews, err := h.reviewUC.GetUserReviews(int(userID), 3, 0)
+	reviews, err := h.reviewUC.GetUserReviews(int(userID), 3, 1)
 	if err != nil {
-		return utils.NewError(ctx, http.StatusInternalServerError, err)
+		switch {
+		case entity.Contains(err, entity.ErrNotFound):
+			return utils.NewError(ctx, http.StatusNotFound, err)
+		default:
+			return utils.NewError(ctx, http.StatusInternalServerError, err)
+		}
 	}
 	return utils.WriteJSON(ctx, reviews)
 }
@@ -236,7 +279,12 @@ func (h *ReviewEndpoints) GetUserReviews(ctx echo.Context) error {
 	}
 	reviews, err := h.reviewUC.GetUserReviews(int(userID), 10, int(page))
 	if err != nil {
-		return utils.NewError(ctx, http.StatusInternalServerError, err)
+		switch {
+		case entity.Contains(err, entity.ErrNotFound):
+			return utils.NewError(ctx, http.StatusNotFound, err)
+		default:
+			return utils.NewError(ctx, http.StatusInternalServerError, err)
+		}
 	}
 	return utils.WriteJSON(ctx, dto.UserReviewResponseList{
 		ReviewResponseList: *reviews,
@@ -295,7 +343,7 @@ func (h *ReviewEndpoints) LikeReview(ctx echo.Context) error {
 	}
 	userID, err := utils.GetUserIDFromSession(ctx, h.authUC)
 	if err != nil {
-		return utils.NewError(ctx, http.StatusUnauthorized, err)
+		return err
 	}
 	err = h.reviewUC.LikeReview(userID, int(reviewID))
 	if err != nil {
@@ -328,7 +376,7 @@ func (h *ReviewEndpoints) DislikeReview(ctx echo.Context) error {
 	}
 	userID, err := utils.GetUserIDFromSession(ctx, h.authUC)
 	if err != nil {
-		return utils.NewError(ctx, http.StatusUnauthorized, err)
+		return err
 	}
 	err = h.reviewUC.DislikeReview(userID, int(reviewID))
 	if err != nil {
@@ -361,7 +409,7 @@ func (h *ReviewEndpoints) UnlikeReview(ctx echo.Context) error {
 	}
 	userID, err := utils.GetUserIDFromSession(ctx, h.authUC)
 	if err != nil {
-		return utils.NewError(ctx, http.StatusUnauthorized, err)
+		return err
 	}
 	err = h.reviewUC.UnlikeReview(userID, int(reviewID))
 	if err != nil {
