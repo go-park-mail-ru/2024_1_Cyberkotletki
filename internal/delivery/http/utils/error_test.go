@@ -1,4 +1,4 @@
-package echoutil
+package utils
 
 import (
 	"errors"

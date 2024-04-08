@@ -34,12 +34,23 @@ func Contains(err error, target error) bool {
 	return errors.Is(err, target)
 }
 
+func PSQLWrap(errs ...error) error {
+	return NewClientError("внутренняя ошибка сервера", ErrPSQL, errors.Join(errs...))
+}
+
 var (
 	ErrNotFound      = errors.New("not found")
 	ErrBadRequest    = errors.New("bad request")
 	ErrForbidden     = errors.New("forbidden")
+	ErrUnauthorized  = errors.New("unauthorized")
 	ErrAlreadyExists = errors.New("already exists")
 	ErrRedis         = errors.New("redis error")
 	ErrPSQL          = errors.New("postgres error")
 	ErrInternal      = errors.New("internal server error")
+)
+
+const (
+	PSQLUniqueViolation     = "23505"
+	PSQLCheckViolation      = "23514"
+	PSQLForeignKeyViolation = "23503"
 )

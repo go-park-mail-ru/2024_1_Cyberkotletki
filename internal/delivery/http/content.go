@@ -1,9 +1,9 @@
 package http
 
 import (
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http/utils"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/echoutil"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"strconv"
@@ -29,14 +29,14 @@ func NewContentEndpoints(useCase usecase.Content) ContentEndpoints {
 func (h *ContentEndpoints) GetContentPreview(ctx echo.Context) error {
 	id, err := strconv.ParseInt(ctx.QueryParam("id"), 10, 64)
 	if err != nil {
-		return echoutil.NewError(ctx, http.StatusBadRequest, err)
+		return utils.NewError(ctx, http.StatusBadRequest, err)
 	}
 	contentPreview, err := h.useCase.GetContentPreviewCard(int(id))
 	if err != nil {
 		if entity.Contains(err, entity.ErrNotFound) {
-			return echoutil.NewError(ctx, http.StatusNotFound, err)
+			return utils.NewError(ctx, http.StatusNotFound, err)
 		}
-		return echoutil.NewError(ctx, http.StatusInternalServerError, err)
+		return utils.NewError(ctx, http.StatusInternalServerError, err)
 	}
-	return echoutil.WriteJSON(ctx, *contentPreview)
+	return utils.WriteJSON(ctx, *contentPreview)
 }

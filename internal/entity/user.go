@@ -1,10 +1,11 @@
 package entity
 
 import (
+	"bytes"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/random"
 	"golang.org/x/crypto/argon2"
 	"regexp"
-	"time"
+	"unicode/utf8"
 )
 
 // Константы подобраны в соответствии с рекомендациями по безопасности. В рамках оптимизации можно менять кол-во потоков
@@ -15,18 +16,12 @@ const (
 )
 
 type User struct {
-	ID               int       `json:"id"`    // Уникальный идентификатор
-	Name             string    `json:"name"`  // Имя пользователя
-	Email            string    `json:"email"` // Электронная почта
-	PasswordHash     string    // Хэш пароля пользователя
-	PasswordSalt     string    // Соль для генерации хэша пароля
-	BirthDate        time.Time `json:"birth_date"`        // День рождения
-	SavedFilms       []Film    `json:"saved_films"`       // Сохраненные фильмы
-	SavedSeries      []Series  `json:"saved_series"`      // Сохраненные сериалы
-	SavedPersons     []Person  `json:"saved_persons"`     // Сохраненные персоны
-	Friends          []User    `json:"friends"`           // Друзья
-	ExpectedFilms    []Film    `json:"expected_films"`    // Ожидаемые фильмы
-	RegistrationDate time.Time `json:"registration_date"` // Дата регистрации пользователя
+	ID             int    `json:"id"`    // Уникальный идентификатор
+	Name           string `json:"name"`  // Имя пользователя
+	Email          string `json:"email"` // Электронная почта
+	PasswordHash   []byte // Хэш пароля пользователя
+	PasswordSalt   []byte // Соль для генерации хэша пароля
+	AvatarUploadID int    `json:"avatar_upload_id"` // Ссылка на аватар
 }
 
 func NewUserEmpty() *User {
@@ -89,30 +84,44 @@ func ValidateEmail(email string) error {
 
 // HashPassword генерирует соль длинной в 8 символов и хэширует пароль с этой солью.
 // Первым параметром возвращает полученную соль, вторым параметром возвращает хеш
-func HashPassword(password string) (salt string, hash string, err error) {
-	salt, err = random.String(8)
+func HashPassword(password string) (salt []byte, hash []byte, err error) {
+	salt, err = random.Bytes(8)
 	if err != nil {
-		return "", "", NewClientError("произошла непредвиденная ошибка", ErrInternal)
+		return nil, nil, NewClientError("произошла непредвиденная ошибка", ErrInternal)
 	}
-	hash = string(argon2.IDKey(
+	hash = argon2.IDKey(
 		[]byte(password),
-		[]byte(salt),
+		salt,
 		PasswordHashTime,
 		PasswordHashKibMemory,
 		PasswordHashThreads,
 		32,
-	))
+	)
 	return salt, hash, nil
 }
 
 // CheckPassword принимает пароль и хэширует его с подмешиванием соли пользователя. При совпадении хешей возвращает true
 func (u *User) CheckPassword(password string) bool {
-	return string(argon2.IDKey(
-		[]byte(password),
-		[]byte(u.PasswordSalt),
-		PasswordHashTime,
-		PasswordHashKibMemory,
-		PasswordHashThreads,
-		32,
-	)) == u.PasswordHash
+	return bytes.Equal(
+		argon2.IDKey(
+			[]byte(password),
+			u.PasswordSalt,
+			PasswordHashTime,
+			PasswordHashKibMemory,
+			PasswordHashThreads,
+			32,
+		),
+		u.PasswordHash,
+	)
+}
+
+// ValidateName проверяет валидность имени.
+//
+// Имя необязательно должно быть настоящим, оно служит в роли никнейма пользователя, поэтому допустимы любые символы,
+// но не более 30 символов
+func ValidateName(name string) error {
+	if utf8.RuneCountInString(name) > 30 {
+		return NewClientError("имя не может быть длиннее 30 символов", ErrBadRequest)
+	}
+	return nil
 }

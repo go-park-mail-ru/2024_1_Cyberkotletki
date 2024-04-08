@@ -12,7 +12,6 @@ package mock_usecase
 import (
 	reflect "reflect"
 
-	dto "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -39,61 +38,60 @@ func (m *MockAuth) EXPECT() *MockAuthMockRecorder {
 	return m.recorder
 }
 
-// IsAuth mocks base method.
-func (m *MockAuth) IsAuth(arg0 string) (bool, error) {
+// CreateSession mocks base method.
+func (m *MockAuth) CreateSession(userID int) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IsAuth", arg0)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// IsAuth indicates an expected call of IsAuth.
-func (mr *MockAuthMockRecorder) IsAuth(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAuth", reflect.TypeOf((*MockAuth)(nil).IsAuth), arg0)
-}
-
-// Login mocks base method.
-func (m *MockAuth) Login(arg0 *dto.Login) (string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Login", arg0)
+	ret := m.ctrl.Call(m, "CreateSession", userID)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Login indicates an expected call of Login.
-func (mr *MockAuthMockRecorder) Login(arg0 any) *gomock.Call {
+// CreateSession indicates an expected call of CreateSession.
+func (mr *MockAuthMockRecorder) CreateSession(userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockAuth)(nil).Login), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSession", reflect.TypeOf((*MockAuth)(nil).CreateSession), userID)
+}
+
+// GetUserIDBySession mocks base method.
+func (m *MockAuth) GetUserIDBySession(session string) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserIDBySession", session)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserIDBySession indicates an expected call of GetUserIDBySession.
+func (mr *MockAuthMockRecorder) GetUserIDBySession(session any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserIDBySession", reflect.TypeOf((*MockAuth)(nil).GetUserIDBySession), session)
 }
 
 // Logout mocks base method.
-func (m *MockAuth) Logout(arg0 string) error {
+func (m *MockAuth) Logout(session string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Logout", arg0)
+	ret := m.ctrl.Call(m, "Logout", session)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Logout indicates an expected call of Logout.
-func (mr *MockAuthMockRecorder) Logout(arg0 any) *gomock.Call {
+func (mr *MockAuthMockRecorder) Logout(session any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Logout", reflect.TypeOf((*MockAuth)(nil).Logout), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Logout", reflect.TypeOf((*MockAuth)(nil).Logout), session)
 }
 
-// Register mocks base method.
-func (m *MockAuth) Register(arg0 *dto.Register) (string, error) {
+// LogoutAll mocks base method.
+func (m *MockAuth) LogoutAll(userID int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Register", arg0)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "LogoutAll", userID)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
-// Register indicates an expected call of Register.
-func (mr *MockAuthMockRecorder) Register(arg0 any) *gomock.Call {
+// LogoutAll indicates an expected call of LogoutAll.
+func (mr *MockAuthMockRecorder) LogoutAll(userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Register", reflect.TypeOf((*MockAuth)(nil).Register), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LogoutAll", reflect.TypeOf((*MockAuth)(nil).LogoutAll), userID)
 }

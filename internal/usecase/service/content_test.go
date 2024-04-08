@@ -9,13 +9,7 @@ import (
 )
 
 func TestContent_GetContentPreviewCard(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockContentRepo := mockrepo.NewMockContent(ctrl)
-	contentService := ContentService{
-		contentRepo: mockContentRepo,
-	}
+	t.Parallel()
 
 	testCases := []struct {
 		Name                 string
@@ -42,8 +36,16 @@ func TestContent_GetContentPreviewCard(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockContentRepo := mockrepo.NewMockContent(ctrl)
+			contentService := ContentService{
+				contentRepo: mockContentRepo,
+			}
 			tc.SetupContentRepoMock(mockContentRepo)
 			_, err := contentService.GetContentPreviewCard(tc.Input)
 			if tc.ExpectedErr != nil {

@@ -11,6 +11,7 @@ type Film interface {
 
 //go:generate mockgen -source=$GOFILE -destination=mocks/mock_content.go
 type Content interface {
+	GetContent(id int) (*entity.Content, error)
 	Film
 	// todo: content.Series для сериалов
 }

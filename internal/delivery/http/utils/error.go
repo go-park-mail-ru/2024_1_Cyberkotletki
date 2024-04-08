@@ -1,4 +1,4 @@
-package echoutil
+package utils
 
 import (
 	"errors"
@@ -15,15 +15,15 @@ import (
 // Попутно логируются все пятисотки
 func NewError(ctx echo.Context, status int, err error) *echo.HTTPError {
 	httpError := &echo.HTTPError{Code: status}
-	var e entity.ClientError
-	if errors.As(err, &e) {
-		httpError.Message = e.Error()
+	var clientError entity.ClientError
+	if errors.As(err, &clientError) {
+		httpError.Message = clientError.Error()
 	} else {
 		// клиентской ошибки нет, поэтому отобразим стандартное описание
 		httpError.Message = http.StatusText(status)
 	}
 	if status >= 500 {
-		ctx.Logger().Error(GetErrMsgFromContext(ctx))
+		ctx.Logger().Error(GetErrMsgFromContext(ctx, err))
 	}
 	return httpError
 }
@@ -37,13 +37,18 @@ type ServerErrorMsg struct {
 	QueryParams url.Values
 	ClientIP    string
 	RequestBody string
+	Error       error
 }
 
-func GetErrMsgFromContext(ctx echo.Context) ServerErrorMsg {
-	// todo: гипотетически тело запроса может быть большим, лучше заасинхронить чтение
-	body, err := io.ReadAll(ctx.Request().Body)
-	if err != nil {
+func GetErrMsgFromContext(ctx echo.Context, err error) ServerErrorMsg {
+	body, e := io.ReadAll(ctx.Request().Body)
+	if e != nil {
 		body = []byte("не удалось получить тело запроса")
+	}
+
+	var clientError entity.ClientError
+	if errors.As(err, &clientError) {
+		err = errors.Join(err, clientError.Additional)
 	}
 
 	return ServerErrorMsg{
@@ -54,6 +59,7 @@ func GetErrMsgFromContext(ctx echo.Context) ServerErrorMsg {
 		QueryParams: ctx.QueryParams(),
 		ClientIP:    ctx.RealIP(),
 		RequestBody: string(body),
+		Error:       err,
 	}
 }
 

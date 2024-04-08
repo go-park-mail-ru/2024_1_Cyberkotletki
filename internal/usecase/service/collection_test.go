@@ -10,13 +10,7 @@ import (
 )
 
 func TestCollections_GetCompilation(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockContentRepo := mockrepo.NewMockContent(ctrl)
-	collectionsService := CollectionsService{
-		contentRepo: mockContentRepo,
-	}
+	t.Parallel()
 
 	testCases := []struct {
 		Name                 string
@@ -41,8 +35,15 @@ func TestCollections_GetCompilation(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			mockContentRepo := mockrepo.NewMockContent(ctrl)
+			collectionsService := CollectionsService{
+				contentRepo: mockContentRepo,
+			}
 			tc.SetupContentRepoMock(mockContentRepo)
 			_, err := collectionsService.GetCompilation(tc.Input)
 			if tc.ExpectedErr != nil {

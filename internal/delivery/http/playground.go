@@ -1,7 +1,7 @@
 package http
 
 import (
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/echoutil"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http/utils"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -20,7 +20,7 @@ func NewPlaygroundEndpoints() PlaygroundEndpoints {
 // @Router /playground/ping [get]
 func (h *PlaygroundEndpoints) Ping(c echo.Context) error {
 	if err := c.String(http.StatusOK, "pong"); err != nil {
-		return echoutil.NewError(c, http.StatusInternalServerError, err)
+		return utils.NewError(c, http.StatusInternalServerError, err)
 	}
 	return nil
 }

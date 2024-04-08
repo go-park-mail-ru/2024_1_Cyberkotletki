@@ -1,9 +1,9 @@
 package http
 
 import (
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http/utils"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/echoutil"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -25,9 +25,9 @@ func NewCollectionsEndpoints(useCase usecase.Collections) CollectionsEndpoints {
 func (h *CollectionsEndpoints) GetGenres(ctx echo.Context) error {
 	genres, err := h.useCase.GetGenres()
 	if err != nil {
-		return echoutil.NewError(ctx, http.StatusInternalServerError, err)
+		return utils.NewError(ctx, http.StatusInternalServerError, err)
 	}
-	return echoutil.WriteJSON(ctx, genres)
+	return utils.WriteJSON(ctx, genres)
 }
 
 // GetCompilationByGenre
@@ -42,7 +42,7 @@ func (h *CollectionsEndpoints) GetGenres(ctx echo.Context) error {
 func (h *CollectionsEndpoints) GetCompilationByGenre(ctx echo.Context) error {
 	genre := ctx.QueryParam("genre")
 	if genre == "" {
-		return echoutil.NewError(
+		return utils.NewError(
 			ctx,
 			http.StatusBadRequest,
 			entity.NewClientError("Не указан жанр", entity.ErrBadRequest),
@@ -52,12 +52,12 @@ func (h *CollectionsEndpoints) GetCompilationByGenre(ctx echo.Context) error {
 	if err != nil {
 		switch {
 		case entity.Contains(err, entity.ErrNotFound):
-			return echoutil.NewError(ctx, http.StatusNotFound, err)
+			return utils.NewError(ctx, http.StatusNotFound, err)
 		case entity.Contains(err, entity.ErrBadRequest):
-			return echoutil.NewError(ctx, http.StatusBadRequest, err)
+			return utils.NewError(ctx, http.StatusBadRequest, err)
 		default:
-			return echoutil.NewError(ctx, http.StatusInternalServerError, err)
+			return utils.NewError(ctx, http.StatusInternalServerError, err)
 		}
 	}
-	return echoutil.WriteJSON(ctx, compilation)
+	return utils.WriteJSON(ctx, compilation)
 }
