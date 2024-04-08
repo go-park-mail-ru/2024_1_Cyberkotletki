@@ -261,7 +261,10 @@ CREATE TABLE IF NOT EXISTS compilation
         CONSTRAINT compilation_title_length CHECK (LENGTH(title) > 0 AND LENGTH(title) <= 50) NOT NULL,
     compilation_type_id INT
         CONSTRAINT compilation_type_id_positive CHECK (compilation_type_id > 0)               NOT NULL,
-    FOREIGN KEY (compilation_type_id) REFERENCES compilation_type (id) ON DELETE CASCADE
+    poster_upload_id    INT                                                                 NOT NULL,
+    FOREIGN KEY (poster_upload_id) REFERENCES static (id) ON DELETE SET NULL,
+    FOREIGN KEY (compilation_type_id) REFERENCES compilation_type (id) ON DELETE CASCADE,
+    CONSTRAINT compilation_comptype_unique UNIQUE (id, compilation_type_id)
 );
 
 -- Создание таблицы compilation_content
