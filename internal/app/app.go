@@ -43,7 +43,7 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	// Use Cases
 	staticUseCase := service.NewStaticService(staticRepo)
 	authUseCase := service.NewAuthService(sessionRepo)
-	userUseCase := service.NewUserService(userRepo, reviewRepo)
+	userUseCase := service.NewUserService(userRepo, reviewRepo, staticRepo)
 	contentUseCase := service.NewContentService(contentRepo)
 	collectionsUseCase := service.NewCollectionsService(contentRepo)
 	reviewUseCase := service.NewReviewService(reviewRepo, userRepo, contentRepo, staticRepo)

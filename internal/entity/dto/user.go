@@ -6,8 +6,9 @@ type UserUpdate struct {
 }
 
 type UserProfile struct {
+	ID     int    `json:"id"`
 	Name   string `json:"name"`
 	Email  string `json:"email"`
 	Rating int    `json:"rating"`
-	Avatar int    `json:"avatar"`
+	Avatar string `json:"avatar"`
 }
