@@ -18,7 +18,7 @@ func NewContentService(contentRepo repository.Content) usecase.Content {
 }
 
 func (c ContentService) GetContentPreviewCard(contentID int) (*dto.PreviewContentCard, error) {
-	film, err := c.contentRepo.GetFilm(contentID)
+	film, err := c.contentRepo.GetContent(contentID)
 	if err != nil {
 		return nil, err
 	}
@@ -52,13 +52,13 @@ func (c ContentService) GetContentPreviewCard(contentID int) (*dto.PreviewConten
 	return &dto.PreviewContentCard{
 		Title:         film.Title,
 		OriginalTitle: film.OriginalTitle,
-		ReleaseYear:   film.Release.Year(),
+		ReleaseYear:   film.Movie.Premiere.Year(),
 		Country:       country,
 		Genre:         genre,
 		Director:      director,
 		Actors:        actors,
-		Poster:        film.Poster,
-		Rating:        film.Rating,
-		Duration:      film.Duration,
+		Poster:        film.PosterStaticID,
+		Rating:        film.IMDBRating,
+		Duration:      film.Movie.Duration,
 	}, nil
 }

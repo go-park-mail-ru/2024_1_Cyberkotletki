@@ -1,36 +1,67 @@
 package entity
 
-import (
-	"time"
-)
+import "time"
 
 // Content представляет основную структуру для хранения информации о контенте.
+// В зависимости от типа контента, некоторые поля могут быть пустыми.
 type Content struct {
-	ID               int         `json:"id"`               // Уникальный идентификатор
-	Title            string      `json:"title"`            // Название
-	OriginalTitle    string      `json:"original_title"`   // Название
-	Country          []Country   `json:"country"`          // Страны, где был произведен контент
-	Genres           []Genre     `json:"genres"`           // Жанры
-	Directors        []Person    `json:"directors"`        // Режиссеры
-	Writers          []Person    `json:"writers"`          // Сценаристы
-	Producers        []Person    `json:"producers"`        // Продюсеры
-	Cinematographers []Person    `json:"cinematographers"` // Операторы
-	Slogan           string      `json:"slogan"`           // Слоган
-	Composers        []Person    `json:"composers"`        // Композиторы
-	Artists          []Person    `json:"artists"`          // Художники
-	Editors          []Person    `json:"editors"`          // Редакторы
-	Budget           int         `json:"budget"`           // Бюджет
-	Marketing        int         `json:"marketing"`        // Маркетинговые затраты
-	BoxOffices       []BoxOffice `json:"box_offices"`      // Кассовые сборы
-	Audiences        []Audience  `json:"audiences"`        // Аудитория
-	Premiere         time.Time   `json:"premiere"`         // Дата премьеры
-	Release          time.Time   `json:"release"`          // Дата выпуска
-	AgeRestriction   int         `json:"age_restriction"`  // Возрастное ограничение
-	Rating           float64     `json:"rating"`           // Рейтинг
-	Actors           []Person    `json:"actors"`           // Актеры
-	Dubbing          []Person    `json:"dubbing"`          // Дубляж
-	Awards           []Award     `json:"awards,omitempty"` // Награды
-	Description      string      `json:"description"`      // Описание
-	Poster           string      `json:"poster"`           // Постер
-	Playback         string      `json:"playback"`         // Воспроизведение на заднем плане небольшоко фрагмента видео
+	ID             int     `json:"id"`               // Уникальный идентификатор
+	Title          string  `json:"title"`            // Название
+	OriginalTitle  string  `json:"original_title"`   // Название
+	Slogan         string  `json:"slogan"`           // Слоган
+	Budget         int     `json:"budget"`           // Бюджет
+	AgeRestriction int     `json:"age_restriction"`  // Возрастное ограничение
+	Audience       int     `json:"audience"`         // Аудитория
+	IMDBRating     float64 `json:"imdb_rating"`      // Рейтинг IMDB
+	Description    string  `json:"description"`      // Описание
+	PosterStaticID string  `json:"poster_static_id"` // Постер
+	BoxOffice      int     `json:"box_office"`       // Кассовые сборы
+	Marketing      int     `json:"marketing"`        // Маркетинговые затраты
+
+	Country   []Country `json:"country"`   // Страны, где был произведен контент
+	Genres    []Genre   `json:"genres"`    // Жанры
+	Actors    []Person  `json:"actors"`    // Актеры
+	Directors []Person  `json:"directors"` // Режиссеры
+	Producers []Person  `json:"producers"` // Продюсеры
+	Writers   []Person  `json:"writers"`   // Сценаристы
+	Operators []Person  `json:"operators"` // Операторы
+	Composers []Person  `json:"composers"` // Композиторы
+	Editors   []Person  `json:"editors"`   // Редакторы
+
+	Type string `json:"type"` // Тип контента (movie / series)
+	// Поля, которые есть только у фильмов
+	Movie *Movie `json:"movie"`
+	// Поля, которые есть только у сериалов
+	Series *Series `json:"series"`
 }
+
+type Movie struct {
+	Premiere time.Time `json:"premiere"` // Дата премьеры
+	Release  time.Time `json:"release"`  // Дата выпуска
+	Duration int       `json:"duration"` // Продолжительность
+}
+
+type Series struct {
+	YearStart int      `json:"year_start"` // Год начала сериала
+	YearEnd   int      `json:"year_end"`   // Год окончания сериала
+	Seasons   []Season `json:"seasons"`    // Сезоны в сериале
+}
+
+// Episode представляет эпизод сериала
+type Episode struct {
+	ID            int `json:"id"`             // Уникальный идентификатор
+	EpisodeNumber int `json:"episode_number"` // Номер эпизода
+}
+
+// Season представляет сезон сериала
+type Season struct {
+	ID        int       `json:"id"`         // Уникальный идентификатор
+	YearStart int       `json:"year_start"` // Год начала сезона
+	YearEnd   int       `json:"year_end"`   // Год окончания сезона
+	Episodes  []Episode `json:"episodes"`   // Эпизоды в сезоне
+}
+
+const (
+	ContentTypeMovie  = "movie"
+	ContentTypeSeries = "series"
+)

@@ -46,6 +46,9 @@ type Config struct {
 	Review struct {
 		Postgres PostgresDatabase `yaml:"postgres"`
 	} `yaml:"review_service"`
+	Content struct {
+		Postgres PostgresDatabase `yaml:"postgres"`
+	} `yaml:"content_service"`
 }
 
 func (cfg *Config) GetServerAddr() string {
