@@ -67,13 +67,13 @@ func (c *ContentDB) getSeriesData(id int) (*entity.Series, error) {
 // getEpisodeData возвращает информацию об эпизоде по его ID
 func (c *ContentDB) getEpisodeData(id int) (*entity.Episode, error) {
 	// no-lint
-	query, args, _ := sq.Select("id", "episode_number").
+	query, args, _ := sq.Select("id", "episode_number", "title").
 		From("episode").
 		Where(sq.Eq{"id": id}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	var episode entity.Episode
-	err := c.DB.QueryRow(query, args...).Scan(&episode.ID, &episode.EpisodeNumber)
+	err := c.DB.QueryRow(query, args...).Scan(&episode.ID, &episode.EpisodeNumber, &episode.Title)
 	if err != nil {
 		return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при получении информации об эпизоде"))
 	}
@@ -113,13 +113,13 @@ func (c *ContentDB) getEpisodesBySeasonID(seasonID int) ([]entity.Episode, error
 // getSeasonData возвращает информацию о сезоне по его ID
 func (c *ContentDB) getSeasonData(id int) (*entity.Season, error) {
 	// no-lint
-	query, args, _ := sq.Select("year_start", "year_end").
+	query, args, _ := sq.Select("id", "year_start", "year_end").
 		From("season").
 		Where(sq.Eq{"id": id}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	var season entity.Season
-	err := c.DB.QueryRow(query, args...).Scan(&season.YearStart, &season.YearEnd)
+	err := c.DB.QueryRow(query, args...).Scan(&season.ID, &season.YearStart, &season.YearEnd)
 	if err != nil {
 		return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при получении информации о сезоне"))
 	}
@@ -379,41 +379,28 @@ func (c *ContentDB) GetContent(id int) (*entity.Content, error) {
 		return nil, err
 	}
 	content.Genres = genres
-	actors, err := c.getPersonsByRoleAndContentID(entity.RoleActor, id)
-	if err != nil {
-		return nil, err
+
+	type RolePersons struct {
+		Role    string
+		Persons *[]entity.Person
 	}
-	content.Actors = actors
-	directors, err := c.getPersonsByRoleAndContentID(entity.RoleDirector, id)
-	if err != nil {
-		return nil, err
+	roles := []RolePersons{
+		{Role: entity.RoleActor, Persons: &content.Actors},
+		{Role: entity.RoleDirector, Persons: &content.Directors},
+		{Role: entity.RoleProducer, Persons: &content.Producers},
+		{Role: entity.RoleWriter, Persons: &content.Writers},
+		{Role: entity.RoleOperator, Persons: &content.Operators},
+		{Role: entity.RoleComposer, Persons: &content.Composers},
+		{Role: entity.RoleEditor, Persons: &content.Editors},
 	}
-	content.Directors = directors
-	producers, err := c.getPersonsByRoleAndContentID(entity.RoleProducer, id)
-	if err != nil {
-		return nil, err
+	for _, rolePersons := range roles {
+		personsResult, err := c.getPersonsByRoleAndContentID(rolePersons.Role, id)
+		if err != nil {
+			return nil, err
+		}
+		*rolePersons.Persons = personsResult
 	}
-	content.Producers = producers
-	writers, err := c.getPersonsByRoleAndContentID(entity.RoleWriter, id)
-	if err != nil {
-		return nil, err
-	}
-	content.Writers = writers
-	operators, err := c.getPersonsByRoleAndContentID(entity.RoleOperator, id)
-	if err != nil {
-		return nil, err
-	}
-	content.Operators = operators
-	composers, err := c.getPersonsByRoleAndContentID(entity.RoleComposer, id)
-	if err != nil {
-		return nil, err
-	}
-	content.Composers = composers
-	editors, err := c.getPersonsByRoleAndContentID(entity.RoleEditor, id)
-	if err != nil {
-		return nil, err
-	}
-	content.Editors = editors
+
 	switch contentType {
 	case entity.ContentTypeMovie:
 		movie, err := c.getMovieData(id)

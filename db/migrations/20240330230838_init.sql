@@ -147,6 +147,8 @@ CREATE TABLE IF NOT EXISTS episode
     season_id      INT                                                        NOT NULL,
     episode_number INT
         CONSTRAINT episode_episode_number_positive CHECK (episode_number > 0) NOT NULL,
+    title          TEXT
+        CONSTRAINT episode_title_length CHECK (LENGTH(title) <= 150)         NOT NULL,
     FOREIGN KEY (season_id) REFERENCES season (id) ON DELETE CASCADE
 );
 
