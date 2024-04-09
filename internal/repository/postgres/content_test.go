@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"database/sql/driver"
-	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
@@ -133,16 +132,6 @@ func setupGetRoleIDByNameSuccess(mock sqlmock.Sqlmock, roleName string, roleID i
 		ToSql()
 	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(getDriverValues(args)...).WillReturnRows(
 		sqlmock.NewRows([]string{"id"}).AddRow(roleID))
-}
-
-func setupAllRolesSuccess(mock sqlmock.Sqlmock) {
-	setupGetRoleIDByNameSuccess(mock, "actor", 1)
-	setupGetRoleIDByNameSuccess(mock, "director", 2)
-	setupGetRoleIDByNameSuccess(mock, "producer", 3)
-	setupGetRoleIDByNameSuccess(mock, "writer", 4)
-	setupGetRoleIDByNameSuccess(mock, "operator", 5)
-	setupGetRoleIDByNameSuccess(mock, "composer", 6)
-	setupGetRoleIDByNameSuccess(mock, "editor", 7)
 }
 
 func setupGetPersonsByRoleAndContentIDSuccess(mock sqlmock.Sqlmock, roleID, contentID int, personID int) {
@@ -472,8 +461,6 @@ func TestContentDB_GetContent(t *testing.T) {
 			}
 			tc.SetupMock(mock)
 			output, err := repo.GetContent(tc.Request)
-			fmt.Println(output.Series)
-			fmt.Println(tc.ExpectedOut.Series)
 			require.Equal(t, tc.ExpectedOut, output)
 			require.Equal(t, tc.ExpectedErr, err)
 		})

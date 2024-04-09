@@ -16,5 +16,5 @@ type Review interface {
 	LikeReview(reviewID, userID int, like bool) error
 	UnlikeReview(reviewID, userID int) error
 	IsLikedByUser(reviewID, userID int) (int, error)
-	GetContentRating(reviewID int) (int, error)
+	GetContentRating(contentID int) (float64, error)
 }
