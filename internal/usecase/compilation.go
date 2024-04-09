@@ -1,13 +1,15 @@
 package usecase
 
-//TODO добавить респонс
-
 import "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 
+//TODO добавить респонс
+
 type Compilation interface {
-	CreateCompilation(dto.Compilation) (*dto.CompilationResponse, error)
-	GetCompilation(int) (*dto.CompilationResponse, error)
-	EditCompilation(dto.Compilation) (*dto.CompilationResponse, error)
-	DeleteCompilation(int) error
-	GetCompilationTypeCompilations(compilationTypeID, count, page int) (*dto.CompilationResponseList, error)
+	GetCompilation(compID int) (*dto.CompilationResponse, error)
+	// GetCompilationTypes возвращает все типы подборок (кнопки сверху это и есть типы, которые должны лежать в бд)
+	GetCompilationTypes() (*dto.CompilationTypeResponseList, error)
+	// GetCompilationsByCompilationType получить список подборок по айди типа компиляции
+	GetCompilationsByCompilationType(compTypeID int) (*dto.CompilationResponseList, error)
+	// GetCompilation получить компиляцию по айди, должна возвращать все карточки контента
+	GetCompilationContent(compID int) (*dto.PreviewContentCard, error)
 }

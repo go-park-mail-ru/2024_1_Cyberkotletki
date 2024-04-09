@@ -45,7 +45,7 @@ func ValidateCompilation(id int, title string, compilationTypeID int, posterUplo
 	if err := ValidateCompilationTitle(title); err != nil {
 		return err
 	}
-	if err := ValidateCompilationTypeID(compilationTypeID); err != nil {
+	if err := ValidateCompilationCompilationTypeID(compilationTypeID); err != nil {
 		return err
 	}
 	if err := ValidateCompilationPosterUploadID(posterUploadID); err != nil {
