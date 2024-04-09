@@ -66,7 +66,12 @@ func (compserv *CompilationService) compilationEntitiesToDTO(compEntities []*ent
 
 // contentEntityToDTO преобразует entity.Content в dto.PreviewContentCard
 func (compserv *CompilationService) contentEntityToDTO(content *entity.Content) (*dto.PreviewContentCardResponse, error) {
-	if len(content.Actors) < 2 || len(content.Directors) == 0 || len(content.Genres) == 0 || len(content.Country) == 0 {
+	if len(content.Actors) < 2 ||
+		len(content.Directors) == 0 ||
+		len(content.Genres) == 0 ||
+		len(content.Country) == 0 ||
+		len(content.Country) == 0 ||
+		len(content.Genres) == 0 {
 		return nil, entity.NewClientError("недостаточно данных для создания PreviewContentCard")
 	}
 
