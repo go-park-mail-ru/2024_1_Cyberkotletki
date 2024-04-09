@@ -1330,34 +1330,34 @@ func TestReviewDB_GetContentRating(t *testing.T) {
 	testCases := []struct {
 		Name        string
 		RequestID   int
-		Expected    int
+		Expected    float64
 		ExpectedErr error
 		SetupMock   func(mock sqlmock.Sqlmock, query string, args []driver.Value)
 	}{
 		{
 			Name:        "Успешное получение",
 			RequestID:   1,
-			Expected:    5,
+			Expected:    5.0,
 			ExpectedErr: nil,
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
-					WillReturnRows(sqlmock.NewRows([]string{"rating"}).AddRow(5))
+					WillReturnRows(sqlmock.NewRows([]string{"rating"}).AddRow(5.0))
 			},
 		},
 		{
 			Name:        "Неизвестная ошибка",
 			RequestID:   1,
-			Expected:    0,
+			Expected:    0.0,
 			ExpectedErr: entity.PSQLWrap(fmt.Errorf("ошибка"), errors.New("ошибка при получении рейтинга контента")),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(args...).WillReturnError(fmt.Errorf("ошибка"))
 			},
 		},
 		{
-			Name:        "Контента никто не оценивал",
+			Name:        "Контент никто не оценивал",
 			RequestID:   1,
-			Expected:    0,
+			Expected:    0.0,
 			ExpectedErr: nil,
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).

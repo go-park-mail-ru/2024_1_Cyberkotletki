@@ -14,7 +14,7 @@ run-tests:
 
 .PHONY: gen-swagger
 gen-swagger:
-	swag init --dir cmd/app,internal/delivery --parseDependency
+	swag init --dir cmd/app,internal/delivery/http --parseDependency
 
 .PHONY: run-full-dev
 run-full-dev:

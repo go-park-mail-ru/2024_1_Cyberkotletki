@@ -46,14 +46,14 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	staticUseCase := service.NewStaticService(staticRepo)
 	authUseCase := service.NewAuthService(sessionRepo)
 	userUseCase := service.NewUserService(userRepo, reviewRepo, staticRepo)
-	// contentUseCase := service.NewContentService(contentRepo, reviewRepo, staticRepo)
+	contentUseCase := service.NewContentService(contentRepo, reviewRepo, staticRepo)
 	reviewUseCase := service.NewReviewService(reviewRepo, userRepo, contentRepo, staticRepo)
 
 	// Delivery
 	staticDelivery := delivery.NewStaticEndpoints(staticUseCase)
 	authDelivery := delivery.NewAuthEndpoints(authUseCase)
 	userDelivery := delivery.NewUserEndpoints(userUseCase, authUseCase, staticUseCase)
-	// contentDelivery := delivery.NewContentEndpoints(contentUseCase)
+	contentDelivery := delivery.NewContentEndpoints(contentUseCase)
 	playgroundDelivery := delivery.NewPlaygroundEndpoints()
 	reviewDelivery := delivery.NewReviewEndpoints(reviewUseCase, authUseCase)
 
@@ -139,8 +139,8 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	playgroundAPI := api.Group("/playground")
 	playgroundAPI.GET("/ping", playgroundDelivery.Ping)
 	// content
-	// contentAPI := api.Group("/content")
-
+	contentAPI := api.Group("/content")
+	contentDelivery.Configure(contentAPI)
 	// user
 	userAPI := api.Group("/user")
 	userDelivery.Configure(userAPI)

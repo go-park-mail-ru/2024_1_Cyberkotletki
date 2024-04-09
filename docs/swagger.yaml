@@ -1,29 +1,107 @@
 basePath: /api
 definitions:
-  dto.Compilation:
+  dto.Content:
     properties:
-      genre:
-        example: action
-        type: string
-      ids:
-        example:
-        - 1
-        - 2
-        - 3
+      actors:
         items:
-          type: integer
+          $ref: '#/definitions/dto.PersonPreview'
         type: array
-    type: object
-  dto.Genres:
-    properties:
-      genres:
+      ageRestriction:
+        example: 18
+        type: integer
+      audience:
+        example: 1000000
+        type: integer
+      boxOffice:
+        example: 1000000
+        type: integer
+      budget:
+        example: 1000000
+        type: integer
+      composers:
+        items:
+          $ref: '#/definitions/dto.PersonPreview'
+        type: array
+      countries:
         example:
-        - action
-        - drama
-        - comedian
+        - Россия
+        - США
         items:
           type: string
         type: array
+      description:
+        example: Описание фильма или сериала
+        type: string
+      directors:
+        items:
+          $ref: '#/definitions/dto.PersonPreview'
+        type: array
+      editors:
+        items:
+          $ref: '#/definitions/dto.PersonPreview'
+        type: array
+      genres:
+        example:
+        - Боевик
+        - Драма
+        items:
+          type: string
+        type: array
+      id:
+        example: 1
+        type: integer
+      imdbRating:
+        example: 9.1
+        type: number
+      marketing:
+        example: 1000000
+        type: integer
+      movie:
+        $ref: '#/definitions/dto.MovieContent'
+      operators:
+        items:
+          $ref: '#/definitions/dto.PersonPreview'
+        type: array
+      originalTitle:
+        example: Batman
+        type: string
+      posterURL:
+        example: /static/poster.jpg
+        type: string
+      producers:
+        items:
+          $ref: '#/definitions/dto.PersonPreview'
+        type: array
+      rating:
+        example: 9.1
+        type: number
+      series:
+        $ref: '#/definitions/dto.SeriesContent'
+      slogan:
+        example: I'm Batman
+        type: string
+      title:
+        example: Бэтмен
+        type: string
+      type:
+        example: movie
+        type: string
+      writers:
+        items:
+          $ref: '#/definitions/dto.PersonPreview'
+        type: array
+    type: object
+  dto.Episode:
+    properties:
+      episodeNumber:
+        example: 1
+        type: integer
+      id:
+        example: 1
+        type: integer
+      title:
+        example: Название серии
+        type: string
     type: object
   dto.Login:
     properties:
@@ -34,6 +112,76 @@ definitions:
       password:
         example: SecretPassword1!
         format: string
+        type: string
+    type: object
+  dto.MovieContent:
+    properties:
+      duration:
+        example: 134
+        type: integer
+      premiere:
+        example: "2020-01-01"
+        type: string
+      release:
+        example: "2020-01-01"
+        type: string
+    type: object
+  dto.Person:
+    properties:
+      birthDate:
+        example: "1964-09-02"
+        type: string
+      birthPlace:
+        example: Бейрут
+        type: string
+      children:
+        example: Homer, Bart, Lisa, Maggie
+        type: string
+      deathDate:
+        example: "2021-09-02"
+        type: string
+      endCareer:
+        example: "2021-09-02"
+        type: string
+      firstName:
+        example: Киану
+        type: string
+      height:
+        example: 185
+        type: integer
+      id:
+        example: 1
+        type: integer
+      lastName:
+        example: Ривз
+        type: string
+      photoURL:
+        example: /static/photo.jpg
+        type: string
+      roles:
+        items:
+          $ref: '#/definitions/dto.PreviewContentCard'
+        type: array
+      sex:
+        example: M
+        type: string
+      spouse:
+        example: Алисия Викандер
+        type: string
+      startCareer:
+        example: "1984-09-02"
+        type: string
+    type: object
+  dto.PersonPreview:
+    properties:
+      firstName:
+        example: Киану
+        type: string
+      id:
+        example: 1
+        type: integer
+      lastName:
+        example: Ривз
         type: string
     type: object
   dto.PreviewContentCard:
@@ -52,11 +200,15 @@ definitions:
         example: Тарантино
         type: string
       duration:
+        description: Поля, которые есть только у фильмов
         example: 134
         type: integer
       genre:
         example: Боевик
         type: string
+      id:
+        example: 1
+        type: integer
       originalTitle:
         example: Batman
         type: string
@@ -69,9 +221,19 @@ definitions:
       releaseYear:
         example: 2020
         type: integer
+      seasonsNumber:
+        description: Поля, которые есть только у сериалов
+        example: 1
+        type: integer
       title:
         example: Бэтмен
         type: string
+      yearEnd:
+        example: 2021
+        type: integer
+      yearStart:
+        example: 2020
+        type: integer
     type: object
   dto.Register:
     properties:
@@ -180,6 +342,35 @@ definitions:
         format: string
         type: string
     type: object
+  dto.Season:
+    properties:
+      episodes:
+        items:
+          $ref: '#/definitions/dto.Episode'
+        type: array
+      id:
+        example: 1
+        type: integer
+      yearEnd:
+        example: 2020
+        type: integer
+      yearStart:
+        example: 2020
+        type: integer
+    type: object
+  dto.SeriesContent:
+    properties:
+      seasons:
+        items:
+          $ref: '#/definitions/dto.Season'
+        type: array
+      yearEnd:
+        example: 2020
+        type: integer
+      yearStart:
+        example: 2020
+        type: integer
+    type: object
   dto.UpdatePassword:
     properties:
       newPassword:
@@ -275,72 +466,68 @@ paths:
             $ref: '#/definitions/echo.HTTPError'
       tags:
       - Auth
-  /collections/compilation:
+  /content/{id}:
     get:
-      description: Возвращает список всех доступных жанров фильмов и сериалов
+      description: Получение контента по id
       parameters:
-      - description: Жанр для составления подборки
-        in: query
-        name: genre
-        required: true
-        type: string
-      responses:
-        "200":
-          description: Список с id фильмов указанного жанра
-          schema:
-            $ref: '#/definitions/dto.Compilation'
-        "404":
-          description: Такого жанра не существует
-          schema:
-            $ref: '#/definitions/echo.HTTPError'
-        "500":
-          description: Внутренняя ошибка сервера
-          schema:
-            $ref: '#/definitions/echo.HTTPError'
-      tags:
-      - Collections
-  /collections/genres:
-    get:
-      description: Возвращает список всех доступных жанров фильмов и сериалов
-      responses:
-        "200":
-          description: Список с id фильмов указанного жанра
-          schema:
-            $ref: '#/definitions/dto.Genres'
-        "500":
-          description: Внутренняя ошибка сервера
-          schema:
-            $ref: '#/definitions/echo.HTTPError'
-      tags:
-      - Collections
-  /content/contentPreview:
-    get:
-      description: Возвращает краткую информацию о фильме или сериале
-      parameters:
-      - description: ID искомого контента. Контентом может быть как фильм, так и сериал
-        in: query
+      - description: ID контента
+        in: path
         name: id
         required: true
         type: integer
+      produces:
+      - application/json
       responses:
         "200":
-          description: Список с id фильмов указанного жанра
+          description: OK
           schema:
-            $ref: '#/definitions/dto.PreviewContentCard'
+            $ref: '#/definitions/dto.Content'
         "400":
-          description: Требуется указать валидный id контента
+          description: Bad Request
           schema:
             $ref: '#/definitions/echo.HTTPError'
         "404":
-          description: Контент с таким id не найден
+          description: Not Found
           schema:
             $ref: '#/definitions/echo.HTTPError'
         "500":
-          description: Внутренняя ошибка сервера
+          description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      summary: Получение контента по id
       tags:
-      - Content
+      - content
+  /content/person/{id}:
+    get:
+      description: Получение персоны по id
+      parameters:
+      - description: ID персоны
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.Person'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Получение персоны по id
+      tags:
+      - content
   /playground/ping:
     get:
       description: Проверка соединения через классический ping pong

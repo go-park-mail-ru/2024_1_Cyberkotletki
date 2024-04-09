@@ -447,7 +447,7 @@ func (r *ReviewDB) IsLikedByUser(reviewID, userID int) (int, error) {
 }
 
 // GetContentRating возвращает рейтинг контента на основе всех рецензий
-func (r *ReviewDB) GetContentRating(contentID int) (int, error) {
+func (r *ReviewDB) GetContentRating(contentID int) (float64, error) {
 	// no-lint
 	query, args, _ := sq.Select("AVG(content_rating)").
 		From("review").
@@ -455,7 +455,7 @@ func (r *ReviewDB) GetContentRating(contentID int) (int, error) {
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 
-	var rating int
+	var rating float64
 	err := r.DB.QueryRow(query, args...).Scan(&rating)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

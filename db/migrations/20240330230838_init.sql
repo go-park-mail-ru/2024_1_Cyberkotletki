@@ -263,6 +263,7 @@ CREATE TABLE IF NOT EXISTS content_type
     FOREIGN KEY (content_id) REFERENCES content (id) ON DELETE CASCADE
 );
 
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION update_updated_at_column()
     RETURNS TRIGGER AS
 $$
@@ -270,34 +271,35 @@ BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE 'plpgsql';
+-- +goose StatementEnd
 
 -- Добавление триггера к каждой таблице, которая имеет поле updated_at
 CREATE TRIGGER update_at_person
     BEFORE UPDATE
     ON person
     FOR EACH ROW
-EXECUTE PROCEDURE update_updated_at_column();
+EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_at_content
     BEFORE UPDATE
     ON content
     FOR EACH ROW
-EXECUTE PROCEDURE update_updated_at_column();
+EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_at_users
     BEFORE UPDATE
     ON users
     FOR EACH ROW
-EXECUTE PROCEDURE update_updated_at_column();
+EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_at_review
     BEFORE UPDATE
     ON review
     FOR EACH ROW
-EXECUTE PROCEDURE update_updated_at_column();
+EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_at_review_like
     BEFORE UPDATE
     ON review_like
     FOR EACH ROW
-EXECUTE PROCEDURE update_updated_at_column();
+EXECUTE FUNCTION update_updated_at_column();
 
 -- Индекс для быстрой сортировки рецензий по количеству лайков
 CREATE INDEX idx_review_like_review_id ON review_like (review_id);

@@ -94,101 +94,93 @@
                 }
             }
         },
-        "/collections/compilation": {
+        "/content/person/{id}": {
             "get": {
-                "description": "Возвращает список всех доступных жанров фильмов и сериалов",
+                "description": "Получение персоны по id",
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
-                    "Collections"
+                    "content"
                 ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Жанр для составления подборки",
-                        "name": "genre",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Список с id фильмов указанного жанра",
-                        "schema": {
-                            "$ref": "#/definitions/dto.Compilation"
-                        }
-                    },
-                    "404": {
-                        "description": "Такого жанра не существует",
-                        "schema": {
-                            "$ref": "#/definitions/echo.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Внутренняя ошибка сервера",
-                        "schema": {
-                            "$ref": "#/definitions/echo.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/collections/genres": {
-            "get": {
-                "description": "Возвращает список всех доступных жанров фильмов и сериалов",
-                "tags": [
-                    "Collections"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Список с id фильмов указанного жанра",
-                        "schema": {
-                            "$ref": "#/definitions/dto.Genres"
-                        }
-                    },
-                    "500": {
-                        "description": "Внутренняя ошибка сервера",
-                        "schema": {
-                            "$ref": "#/definitions/echo.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/content/contentPreview": {
-            "get": {
-                "description": "Возвращает краткую информацию о фильме или сериале",
-                "tags": [
-                    "Content"
-                ],
+                "summary": "Получение персоны по id",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID искомого контента. Контентом может быть как фильм, так и сериал",
+                        "description": "ID персоны",
                         "name": "id",
-                        "in": "query",
+                        "in": "path",
                         "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Список с id фильмов указанного жанра",
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PreviewContentCard"
+                            "$ref": "#/definitions/dto.Person"
                         }
                     },
                     "400": {
-                        "description": "Требуется указать валидный id контента",
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/echo.HTTPError"
                         }
                     },
                     "404": {
-                        "description": "Контент с таким id не найден",
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/echo.HTTPError"
                         }
                     },
                     "500": {
-                        "description": "Внутренняя ошибка сервера",
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/content/{id}": {
+            "get": {
+                "description": "Получение контента по id",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "content"
+                ],
+                "summary": "Получение контента по id",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID контента",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Content"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/echo.HTTPError"
                         }
@@ -1165,39 +1157,149 @@
         }
     },
     "definitions": {
-        "dto.Compilation": {
+        "dto.Content": {
             "type": "object",
             "properties": {
-                "genre": {
-                    "type": "string",
-                    "example": "action"
-                },
-                "ids": {
+                "actors": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "$ref": "#/definitions/dto.PersonPreview"
+                    }
+                },
+                "ageRestriction": {
+                    "type": "integer",
+                    "example": 18
+                },
+                "audience": {
+                    "type": "integer",
+                    "example": 1000000
+                },
+                "boxOffice": {
+                    "type": "integer",
+                    "example": 1000000
+                },
+                "budget": {
+                    "type": "integer",
+                    "example": 1000000
+                },
+                "composers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PersonPreview"
+                    }
+                },
+                "countries": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
                     },
                     "example": [
-                        1,
-                        2,
-                        3
+                        "Россия",
+                        "США"
                     ]
-                }
-            }
-        },
-        "dto.Genres": {
-            "type": "object",
-            "properties": {
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Описание фильма или сериала"
+                },
+                "directors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PersonPreview"
+                    }
+                },
+                "editors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PersonPreview"
+                    }
+                },
                 "genres": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     },
                     "example": [
-                        "action",
-                        "drama",
-                        "comedian"
+                        "Боевик",
+                        "Драма"
                     ]
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "imdbRating": {
+                    "type": "number",
+                    "example": 9.1
+                },
+                "marketing": {
+                    "type": "integer",
+                    "example": 1000000
+                },
+                "movie": {
+                    "$ref": "#/definitions/dto.MovieContent"
+                },
+                "operators": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PersonPreview"
+                    }
+                },
+                "originalTitle": {
+                    "type": "string",
+                    "example": "Batman"
+                },
+                "posterURL": {
+                    "type": "string",
+                    "example": "/static/poster.jpg"
+                },
+                "producers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PersonPreview"
+                    }
+                },
+                "rating": {
+                    "type": "number",
+                    "example": 9.1
+                },
+                "series": {
+                    "$ref": "#/definitions/dto.SeriesContent"
+                },
+                "slogan": {
+                    "type": "string",
+                    "example": "I'm Batman"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Бэтмен"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "movie"
+                },
+                "writers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PersonPreview"
+                    }
+                }
+            }
+        },
+        "dto.Episode": {
+            "type": "object",
+            "properties": {
+                "episodeNumber": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Название серии"
                 }
             }
         },
@@ -1213,6 +1315,103 @@
                     "type": "string",
                     "format": "string",
                     "example": "SecretPassword1!"
+                }
+            }
+        },
+        "dto.MovieContent": {
+            "type": "object",
+            "properties": {
+                "duration": {
+                    "type": "integer",
+                    "example": 134
+                },
+                "premiere": {
+                    "type": "string",
+                    "example": "2020-01-01"
+                },
+                "release": {
+                    "type": "string",
+                    "example": "2020-01-01"
+                }
+            }
+        },
+        "dto.Person": {
+            "type": "object",
+            "properties": {
+                "birthDate": {
+                    "type": "string",
+                    "example": "1964-09-02"
+                },
+                "birthPlace": {
+                    "type": "string",
+                    "example": "Бейрут"
+                },
+                "children": {
+                    "type": "string",
+                    "example": "Homer, Bart, Lisa, Maggie"
+                },
+                "deathDate": {
+                    "type": "string",
+                    "example": "2021-09-02"
+                },
+                "endCareer": {
+                    "type": "string",
+                    "example": "2021-09-02"
+                },
+                "firstName": {
+                    "type": "string",
+                    "example": "Киану"
+                },
+                "height": {
+                    "type": "integer",
+                    "example": 185
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "lastName": {
+                    "type": "string",
+                    "example": "Ривз"
+                },
+                "photoURL": {
+                    "type": "string",
+                    "example": "/static/photo.jpg"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PreviewContentCard"
+                    }
+                },
+                "sex": {
+                    "type": "string",
+                    "example": "M"
+                },
+                "spouse": {
+                    "type": "string",
+                    "example": "Алисия Викандер"
+                },
+                "startCareer": {
+                    "type": "string",
+                    "example": "1984-09-02"
+                }
+            }
+        },
+        "dto.PersonPreview": {
+            "type": "object",
+            "properties": {
+                "firstName": {
+                    "type": "string",
+                    "example": "Киану"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "lastName": {
+                    "type": "string",
+                    "example": "Ривз"
                 }
             }
         },
@@ -1238,12 +1437,17 @@
                     "example": "Тарантино"
                 },
                 "duration": {
+                    "description": "Поля, которые есть только у фильмов",
                     "type": "integer",
                     "example": 134
                 },
                 "genre": {
                     "type": "string",
                     "example": "Боевик"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
                 },
                 "originalTitle": {
                     "type": "string",
@@ -1261,9 +1465,22 @@
                     "type": "integer",
                     "example": 2020
                 },
+                "seasonsNumber": {
+                    "description": "Поля, которые есть только у сериалов",
+                    "type": "integer",
+                    "example": 1
+                },
                 "title": {
                     "type": "string",
                     "example": "Бэтмен"
+                },
+                "yearEnd": {
+                    "type": "integer",
+                    "example": 2021
+                },
+                "yearStart": {
+                    "type": "integer",
+                    "example": 2020
                 }
             }
         },
@@ -1405,6 +1622,48 @@
                     "type": "string",
                     "format": "string",
                     "example": "Title"
+                }
+            }
+        },
+        "dto.Season": {
+            "type": "object",
+            "properties": {
+                "episodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.Episode"
+                    }
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "yearEnd": {
+                    "type": "integer",
+                    "example": 2020
+                },
+                "yearStart": {
+                    "type": "integer",
+                    "example": 2020
+                }
+            }
+        },
+        "dto.SeriesContent": {
+            "type": "object",
+            "properties": {
+                "seasons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.Season"
+                    }
+                },
+                "yearEnd": {
+                    "type": "integer",
+                    "example": 2020
+                },
+                "yearStart": {
+                    "type": "integer",
+                    "example": 2020
                 }
             }
         },
