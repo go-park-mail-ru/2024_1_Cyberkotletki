@@ -24,30 +24,6 @@ func (h *CompilationEndpoints) Configure(server *echo.Group) {
 
 }
 
-// GetCompilationTypes
-// @Summary Получение списка подборок
-// @Tags compilation
-// @Description Получение списка подборок по id
-// @Accept json
-// @Produce json
-// @Success 200 {object} dto.CompilationTypeResponseList
-// @Failure 400 {object} echo.HTTPError
-// @Failure 404 {object} echo.HTTPError
-// @Failure 500 {object} echo.HTTPError
-// @Router /compilation/types [get]
-func (h *CompilationEndpoints) GetCompilationTypes(ctx echo.Context) error {
-	compType, err := h.сompilationUC.GetCompilationTypes()
-	if err != nil {
-		switch {
-		case entity.Contains(err, entity.ErrNotFound):
-			return utils.NewError(ctx, http.StatusNotFound, err)
-		default:
-			return utils.NewError(ctx, http.StatusInternalServerError, err)
-		}
-	}
-	return utils.WriteJSON(ctx, compType)
-}
-
 // GetCompilation
 // @Summary Получение подборки
 // @Tags compilation
@@ -77,6 +53,30 @@ func (h *CompilationEndpoints) GetCompilation(ctx echo.Context) error {
 	return utils.WriteJSON(ctx, compilation)
 }
 
+// GetCompilationTypes
+// @Summary Получение списка подборок
+// @Tags compilation
+// @Description Получение списка подборок по id
+// @Accept json
+// @Produce json
+// @Success 200 {object} dto.CompilationTypeResponseList
+// @Failure 400 {object} echo.HTTPError
+// @Failure 404 {object} echo.HTTPError
+// @Failure 500 {object} echo.HTTPError
+// @Router /compilation/types [get]
+func (h *CompilationEndpoints) GetCompilationTypes(ctx echo.Context) error {
+	compType, err := h.сompilationUC.GetCompilationTypes()
+	if err != nil {
+		switch {
+		case entity.Contains(err, entity.ErrNotFound):
+			return utils.NewError(ctx, http.StatusNotFound, err)
+		default:
+			return utils.NewError(ctx, http.StatusInternalServerError, err)
+		}
+	}
+	return utils.WriteJSON(ctx, compType)
+}
+
 // GetCompilationsByCompilationType
 // @Summary Получение списка подборок по типу подборок
 // @Tags compilation
@@ -104,4 +104,33 @@ func (h *CompilationEndpoints) GetCompilationsByCompilationType(ctx echo.Context
 		}
 	}
 	return utils.WriteJSON(ctx, compilations)
+}
+
+// GetCompilationContent
+// @Summary Получение карточек контента подборки
+// @Tags compilation
+// @Description Получение карточек контента подборки по id
+// @Accept json
+// @Produce json
+// @Param id path string true "id подборки"
+// @Success 200 {object} dto.CompilationContentResponse
+// @Failure 400 {object} echo.HTTPError
+// @Failure 404 {object} echo.HTTPError
+// @Failure 500 {object} echo.HTTPError
+// @Router /compilation/{id} [get]
+func (h *CompilationEndpoints) GetCompilationContent(ctx echo.Context) error {
+	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	if err != nil {
+		return utils.NewError(ctx, http.StatusBadRequest, entity.NewClientError("невалидный id подборки"))
+	}
+	compilation, err := h.сompilationUC.GetCompilationContent(int(id))
+	if err != nil {
+		switch {
+		case entity.Contains(err, entity.ErrNotFound):
+			return utils.NewError(ctx, http.StatusNotFound, err)
+		default:
+			return utils.NewError(ctx, http.StatusInternalServerError, err)
+		}
+	}
+	return utils.WriteJSON(ctx, compilation)
 }

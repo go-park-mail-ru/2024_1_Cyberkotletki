@@ -12,3 +12,8 @@ type PreviewContentCard struct {
 	Rating        float64  `json:"rating"        example:"9.1"`
 	Duration      int      `json:"duration"      example:"134"`
 }
+
+type PreviewContentCardResponse struct {
+	PreviewContentCard
+	Type string `json:"type" example:"movie"`
+}

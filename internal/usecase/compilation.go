@@ -11,5 +11,5 @@ type Compilation interface {
 	// GetCompilationsByCompilationType получить список подборок по айди типа компиляции
 	GetCompilationsByCompilationType(compTypeID int) (*dto.CompilationResponseList, error)
 	// GetCompilation получить компиляцию по айди, должна возвращать все карточки контента
-	GetCompilationContent(compID int) (*dto.PreviewContentCard, error)
+	GetCompilationContent(compID int) (*dto.PreviewContentCardResponse, error)
 }
