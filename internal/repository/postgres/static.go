@@ -36,16 +36,14 @@ func NewStaticRepository(database config.PostgresDatabase, basicPath string, max
 
 // GetStatic возвращает путь к статике по его ID
 func (s StaticDB) GetStatic(staticID int) (string, error) {
-	query, args, err := sq.
+	// no-lint
+	query, args, _ := sq.
 		Select("path", "name").
 		From("static").
 		Where(sq.Eq{"id": staticID}).
 		PlaceholderFormat(sq.Dollar).ToSql()
-	if err != nil {
-		return "", entity.PSQLWrap(err, errors.New("ошибка при формировании sql-запроса GetStatic"))
-	}
 	var path, name string
-	err = s.DB.QueryRow(query, args...).Scan(&path, &name)
+	err := s.DB.QueryRow(query, args...).Scan(&path, &name)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return "", entity.NewClientError("файл не найден", entity.ErrNotFound)
@@ -100,15 +98,13 @@ func (s StaticDB) UploadStatic(path, filename string, data []byte) (int, error) 
 	}
 
 	// Затем добавляем запись в базу данных
-	query, args, err := sq.
+	// no-lint
+	query, args, _ := sq.
 		Insert("static").
 		Columns("path", "name").
 		Values(path, filename).
 		Suffix("RETURNING id").
 		PlaceholderFormat(sq.Dollar).ToSql()
-	if err != nil {
-		return -1, entity.PSQLWrap(err, errors.New("ошибка при формировании sql-запроса UploadStatic"))
-	}
 	var id int
 	if err = s.DB.QueryRow(query, args...).Scan(&id); err != nil {
 		return -1, entity.PSQLWrap(err, errors.New("ошибка при выполнении sql-запроса UploadStatic"))

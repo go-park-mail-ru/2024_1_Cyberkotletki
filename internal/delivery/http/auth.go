@@ -32,7 +32,7 @@ func (h *AuthEndpoints) Configure(e *echo.Group) {
 // @Router /auth/isAuth [get]
 func (h *AuthEndpoints) IsAuth(ctx echo.Context) error {
 	if _, err := utils.GetUserIDFromSession(ctx, h.authUC); err != nil {
-		return utils.NewError(ctx, http.StatusUnauthorized, err)
+		return err
 	}
 	ctx.Response().WriteHeader(http.StatusOK)
 	return nil

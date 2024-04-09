@@ -97,6 +97,21 @@ func (mr *MockReviewMockRecorder) EditReview(update any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EditReview", reflect.TypeOf((*MockReview)(nil).EditReview), update)
 }
 
+// GetContentReviewByAuthor mocks base method.
+func (m *MockReview) GetContentReviewByAuthor(authorID, contentID int) (*dto.ReviewResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetContentReviewByAuthor", authorID, contentID)
+	ret0, _ := ret[0].(*dto.ReviewResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetContentReviewByAuthor indicates an expected call of GetContentReviewByAuthor.
+func (mr *MockReviewMockRecorder) GetContentReviewByAuthor(authorID, contentID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContentReviewByAuthor", reflect.TypeOf((*MockReview)(nil).GetContentReviewByAuthor), authorID, contentID)
+}
+
 // GetContentReviews mocks base method.
 func (m *MockReview) GetContentReviews(contentID, count, page int) (*dto.ReviewResponseList, error) {
 	m.ctrl.T.Helper()

@@ -625,6 +625,37 @@ paths:
       summary: Получить рецензии контента
       tags:
       - review
+  /review/myReview:
+    get:
+      description: Получить рецензию пользователя к контенту
+      parameters:
+      - description: ID контента
+        in: query
+        name: content_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ReviewResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Получить рецензию пользователя к контенту
+      tags:
+      - review
   /review/recent:
     get:
       description: Получить последние рецензии

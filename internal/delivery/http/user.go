@@ -180,7 +180,7 @@ func (h *UserEndpoints) UploadAvatar(ctx echo.Context) error {
 	if err = h.userUC.UpdateAvatar(userID, uploadID); err != nil {
 		return utils.NewError(ctx, http.StatusInternalServerError, err)
 	}
-	return nil
+	return ctx.NoContent(200)
 }
 
 // UpdateInfo

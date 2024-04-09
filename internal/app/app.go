@@ -9,7 +9,6 @@ import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/postgres"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/redis"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/tmpdb"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/service"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -26,7 +25,10 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	if err != nil {
 		logger.Fatalf("Ошибка при создании репозитория пользователей: %v", err)
 	}
-	contentRepo := tmpdb.NewContentRepository()
+	contentRepo, err := postgres.NewContentRepository(params.Content.Postgres)
+	if err != nil {
+		logger.Fatalf("Ошибка при создании репозитория контента: %v", err)
+	}
 	sessionRepo, err := redis.NewSessionRepository(params)
 	if err != nil {
 		logger.Fatalf("Ошибка при создании репозитория сессий: %v", err)
@@ -43,9 +45,8 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	// Use Cases
 	staticUseCase := service.NewStaticService(staticRepo)
 	authUseCase := service.NewAuthService(sessionRepo)
-	userUseCase := service.NewUserService(userRepo, reviewRepo)
+	userUseCase := service.NewUserService(userRepo, reviewRepo, staticRepo)
 	contentUseCase := service.NewContentService(contentRepo)
-	collectionsUseCase := service.NewCollectionsService(contentRepo)
 	reviewUseCase := service.NewReviewService(reviewRepo, userRepo, contentRepo, staticRepo)
 
 	// Delivery
@@ -53,7 +54,6 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	authDelivery := delivery.NewAuthEndpoints(authUseCase)
 	userDelivery := delivery.NewUserEndpoints(userUseCase, authUseCase, staticUseCase)
 	contentDelivery := delivery.NewContentEndpoints(contentUseCase)
-	collectionsDelivery := delivery.NewCollectionsEndpoints(collectionsUseCase)
 	playgroundDelivery := delivery.NewPlaygroundEndpoints()
 	reviewDelivery := delivery.NewReviewEndpoints(reviewUseCase, authUseCase)
 
@@ -141,10 +141,6 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	// content
 	contentAPI := api.Group("/content")
 	contentAPI.GET("/contentPreview", contentDelivery.GetContentPreview)
-	// collections
-	collectionsAPI := api.Group("/collections")
-	collectionsAPI.GET("/genres", collectionsDelivery.GetGenres)
-	collectionsAPI.GET("/compilation", collectionsDelivery.GetCompilationByGenre)
 	// user
 	userAPI := api.Group("/user")
 	userDelivery.Configure(userAPI)

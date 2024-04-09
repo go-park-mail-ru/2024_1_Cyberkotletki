@@ -8,6 +8,7 @@ type Review interface {
 	GetUserReviews(userID, count, page int) (*dto.ReviewResponseList, error)
 	GetContentReviews(contentID, count, page int) (*dto.ReviewResponseList, error)
 	GetReview(reviewID int) (*dto.ReviewResponse, error)
+	GetContentReviewByAuthor(authorID, contentID int) (*dto.ReviewResponse, error)
 	CreateReview(create dto.ReviewCreate) (*dto.ReviewResponse, error)
 	EditReview(update dto.ReviewUpdate) (*dto.ReviewResponse, error)
 	DeleteReview(reviewID, userID int) error

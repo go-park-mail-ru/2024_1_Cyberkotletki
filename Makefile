@@ -2,17 +2,22 @@ PKG_INTERNAL = ./internal/...
 
 .PHONY: run-tests
 run-tests:
-	go generate $(PKG_INTERNAL)
-	go test -race $(PKG_INTERNAL) -coverprofile=test.coverage.tmp $(PKG_INTERNAL)
-	cat test.coverage.tmp | grep -v 'mocks' > test.coverage
-	go tool cover -func test.coverage | tail -n 1 && rm test.coverage.tmp && rm test.coverage
+	@go generate $(PKG_INTERNAL)
+	@if go test -race $(PKG_INTERNAL) -coverprofile=test.coverage.tmp $(PKG_INTERNAL) ; then \
+    	cat test.coverage.tmp | grep -v 'mocks' > test.coverage ; \
+    	go tool cover -func test.coverage | tail -n 1 && rm test.coverage.tmp && rm test.coverage ; \
+    	echo "\033[0;32mТесты прошли успешно\033[0m" ; \
+    else \
+    	echo "\033[0;31mТесты обнаружили проблемы\033[0m" ; \
+    	exit 1 ; \
+    fi
 
 .PHONY: gen-swagger
 gen-swagger:
 	swag init --dir cmd/app,internal/delivery --parseDependency
 
-.PHONY: run-dev
-run-dev:
+.PHONY: run-full-dev
+run-full-dev:
 	# генерируем пример конфига
 	make gen-example-config
 	# генерируем документацию swagger
@@ -24,6 +29,10 @@ run-dev:
 	# накатываем миграции
 	make run-migrations
 	# запускаем приложение
+	go run cmd/app/main.go
+
+.PHONY: run-dev
+run-dev:
 	go run cmd/app/main.go
 
 .PHONY: gen-example-config
@@ -65,7 +74,15 @@ gen-migration:
 	fi
 	goose -dir=db/migrations create $(name) sql
 
-
 .PHONY: run-linter
 run-linter:
-	golangci-lint run
+	@if golangci-lint run ; then \
+    	echo "\033[0;32mЛинтер прошел успешно\033[0m" ; \
+    else \
+    	echo "\033[0;31mЛинтер обнаружил проблемы\033[0m" ; \
+    	exit 1 ; \
+    fi
+
+.PHONY: before-push
+before-push: run-linter run-tests
+	@echo "\033[0;32mВсе проверки прошли успешно. Можно делать git push.\033[0m"

@@ -29,20 +29,18 @@ func NewReviewRepository(database config.PostgresDatabase) (repository.Review, e
 
 // AddReview добавляет отзыв в базу данных.
 // У переданного entity.Review должны быть заполнены поля: AuthorID, ContentID, Title, Text, Rating.
-// Если операция происходит успешно, то в переданный по указателю review будут записаны ID и CreatedAt, затем
+// Если операция происходит успешно, то в переданный по указателю review будут записаны ID, CreatedAt, UpdatedAt, затем
 // вернется указатель на эту же рецензию
 func (r *ReviewDB) AddReview(review *entity.Review) (*entity.Review, error) {
-	query, args, err := sq.Insert("review").
+	// no-lint
+	query, args, _ := sq.Insert("review").
 		Columns("user_id", "content_id", "title", "text", "content_rating").
 		Values(review.AuthorID, review.ContentID, review.Title, review.Text, review.Rating).
-		Suffix("RETURNING id, updated_at").
+		Suffix("RETURNING id, created_at, updated_at").
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-	if err != nil {
-		return nil, entity.PSQLWrap(err, errors.New("ошибка при формировании sql-запроса AddReview"))
-	}
 
-	err = r.DB.QueryRow(query, args...).Scan(&review.ID, &review.UpdatedAt)
+	err := r.DB.QueryRow(query, args...).Scan(&review.ID, &review.CreatedAt, &review.UpdatedAt)
 	if err != nil {
 		var pqErr *pq.Error
 		if errors.As(err, &pqErr) {
@@ -52,9 +50,12 @@ func (r *ReviewDB) AddReview(review *entity.Review) (*entity.Review, error) {
 			case entity.PSQLUniqueViolation:
 				return nil, entity.NewClientError("рецензия уже существует", entity.ErrAlreadyExists)
 			case entity.PSQLForeignKeyViolation:
-				return nil, entity.NewClientError("контент с таким id не существует", entity.ErrNotFound)
+				return nil, entity.NewClientError(
+					"контент с таким id не существует, либо такого пользователя не существует",
+					entity.ErrNotFound,
+				)
 			default:
-				return nil, entity.PSQLWrap(err, errors.New("ошибка при добавлении рецензии"), pqErr)
+				return nil, entity.PSQLWrap(pqErr, errors.New("ошибка при добавлении рецензии"))
 			}
 		}
 		return nil, entity.PSQLWrap(err, errors.New("ошибка при добавлении рецензии"))
@@ -64,26 +65,30 @@ func (r *ReviewDB) AddReview(review *entity.Review) (*entity.Review, error) {
 
 // GetReviewByID возвращает рецензию по ее ID
 func (r *ReviewDB) GetReviewByID(id int) (*entity.Review, error) {
-	query, args, err := sq.Select(
-		"id",
-		"user_id",
-		"content_id",
-		"title",
-		"text",
-		"content_rating",
-		"created_at",
-		"updated_at",
+	// no-lint
+	query, args, _ := sq.Select(
+		"r.id",
+		"r.user_id",
+		"r.content_id",
+		"r.title",
+		"r.text",
+		"r.content_rating",
+		"r.created_at",
+		"r.updated_at",
+		"likes",
+		"dislikes",
 	).
-		From("review").
-		Where(sq.Eq{"id": id}).
+		Column(sq.Expr("SUM(CASE WHEN rl.value THEN 1 ELSE 0 END) as likes")).
+		Column(sq.Expr("SUM(CASE WHEN rl.value THEN 0 ELSE 1 END) as dislikes")).
+		From("review r").
+		LeftJoin("review_like rl ON r.id = rl.review_id").
+		Where(sq.Eq{"r.id": id}).
+		GroupBy("r.id").
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-	if err != nil {
-		return nil, entity.PSQLWrap(err, errors.New("ошибка при формировании sql-запроса GetReviewByID"))
-	}
 
 	review := &entity.Review{}
-	err = r.DB.QueryRow(query, args...).
+	err := r.DB.QueryRow(query, args...).
 		Scan(
 			&review.ID,
 			&review.AuthorID,
@@ -93,6 +98,8 @@ func (r *ReviewDB) GetReviewByID(id int) (*entity.Review, error) {
 			&review.Rating,
 			&review.CreatedAt,
 			&review.UpdatedAt,
+			&review.Likes,
+			&review.Dislikes,
 		)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -106,9 +113,21 @@ func (r *ReviewDB) GetReviewByID(id int) (*entity.Review, error) {
 // GetReviewsByContentID возвращает все рецензии по ID контента, сортируя их по рейтингу
 func (r *ReviewDB) GetReviewsByContentID(contentID, page, limit int) ([]*entity.Review, error) {
 	// 3НДФ никого не щадит...
-	// можно было бы денормализировать таблицы, то по тз курса СУБД нельзя
+	// Можно было бы денормализировать таблицы, но по тз курса СУБД нельзя
 	// для оптимизации используется индекс на review_id в таблице review_like
-	query, args, err := sq.Select("r.id", "r.user_id", "r.content_id", "r.title", "r.text", "r.content_rating").
+	// no-lint
+	query, args, _ := sq.Select(
+		"r.id",
+		"r.user_id",
+		"r.content_id",
+		"r.title",
+		"r.text",
+		"r.content_rating",
+		"r.created_at",
+		"r.updated_at",
+		"likes",
+		"dislikes",
+	).
 		Column(sq.Expr("SUM(CASE WHEN rl.value THEN 1 ELSE 0 END) as likes")).
 		Column(sq.Expr("SUM(CASE WHEN rl.value THEN 0 ELSE 1 END) as dislikes")).
 		Column(sq.Expr("SUM(CASE WHEN rl.value THEN 1 ELSE -1 END) as rating")).
@@ -121,9 +140,6 @@ func (r *ReviewDB) GetReviewsByContentID(contentID, page, limit int) ([]*entity.
 		Offset(uint64((page - 1) * limit)).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-	if err != nil {
-		return nil, entity.PSQLWrap(err, errors.New("ошибка при формировании sql-запроса GetReviewsByContentID"))
-	}
 
 	rows, err := r.DB.Query(query, args...)
 	if err != nil {
@@ -141,6 +157,8 @@ func (r *ReviewDB) GetReviewsByContentID(contentID, page, limit int) ([]*entity.
 			&review.Title,
 			&review.Text,
 			&review.Rating,
+			&review.CreatedAt,
+			&review.UpdatedAt,
 			&review.Likes,
 			&review.Dislikes,
 		)
@@ -153,10 +171,11 @@ func (r *ReviewDB) GetReviewsByContentID(contentID, page, limit int) ([]*entity.
 }
 
 // UpdateReview обновляет отзыв в базе данных.
-// У переданного entity.Review должны быть заполнены поля: ID, ContentID, Title, Text, Rating.
+// У переданного entity.Review должны быть заполнены поля: ID, Title, Text, Rating.
 // Обратно возвращается указатель на эту же рецензию без изменений
 func (r *ReviewDB) UpdateReview(review *entity.Review) (*entity.Review, error) {
-	query, args, err := sq.Update("review").
+	// no-lint
+	query, args, _ := sq.Update("review").
 		Set("content_id", review.ContentID).
 		Set("title", review.Title).
 		Set("text", review.Text).
@@ -164,12 +183,23 @@ func (r *ReviewDB) UpdateReview(review *entity.Review) (*entity.Review, error) {
 		Where(sq.Eq{"id": review.ID}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-	if err != nil {
-		return nil, entity.PSQLWrap(err, errors.New("ошибка при формировании sql-запроса UpdateReview"))
-	}
 
-	_, err = r.DB.Exec(query, args...)
+	_, err := r.DB.Exec(query, args...)
 	if err != nil {
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) {
+			switch pqErr.Code {
+			case entity.PSQLCheckViolation:
+				return nil, entity.NewClientError("указаны некорректные данные", entity.ErrBadRequest)
+			case entity.PSQLForeignKeyViolation:
+				return nil, entity.NewClientError(
+					"контент с таким id не существует, либо такого пользователя не существует",
+					entity.ErrNotFound,
+				)
+			default:
+				return nil, entity.PSQLWrap(pqErr, errors.New("ошибка при обновлении рецензии"))
+			}
+		}
 		return nil, entity.PSQLWrap(err, errors.New("ошибка при обновлении рецензии"))
 	}
 	return review, nil
@@ -177,36 +207,46 @@ func (r *ReviewDB) UpdateReview(review *entity.Review) (*entity.Review, error) {
 
 // DeleteReviewByID удаляет отзыв по его ID
 func (r *ReviewDB) DeleteReviewByID(id int) error {
-	query, args, err := sq.Delete("review").
+	// no-lint
+	query, args, _ := sq.Delete("review").
 		Where(sq.Eq{"id": id}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-	if err != nil {
-		return entity.PSQLWrap(err, errors.New("ошибка при формировании sql-запроса DeleteReviewByID"))
-	}
 
-	_, err = r.DB.Exec(query, args...)
+	_, err := r.DB.Exec(query, args...)
 	if err != nil {
 		return entity.PSQLWrap(err, errors.New("ошибка при удалении рецензии"))
 	}
 	return nil
 }
 
-// GetReviewsByAuthorID возвращает отзывы по ID автора
+// GetReviewsByAuthorID возвращает отзывы по ID автора, сортируя их по количеству лайки-дизлайки
 func (r *ReviewDB) GetReviewsByAuthorID(authorID, page, limit int) ([]*entity.Review, error) {
-	query, args, err := sq.Select(
-		"id", "user_id", "content_id", "title", "text", "content_rating", "created_at",
+	// no-lint
+	query, args, _ := sq.Select(
+		"r.id",
+		"r.user_id",
+		"r.content_id",
+		"r.title",
+		"r.text",
+		"r.content_rating",
+		"r.created_at",
+		"r.updated_at",
+		"likes",
+		"dislikes",
 	).
-		From("review").
-		OrderBy("id DESC").
-		Where(sq.Eq{"user_id": authorID}).
+		Column(sq.Expr("SUM(CASE WHEN rl.value THEN 1 ELSE 0 END) as likes")).
+		Column(sq.Expr("SUM(CASE WHEN rl.value THEN 0 ELSE 1 END) as dislikes")).
+		Column(sq.Expr("SUM(CASE WHEN rl.value THEN 1 ELSE -1 END) as rating")).
+		From("review r").
+		LeftJoin("review_like rl ON r.id = rl.review_id").
+		Where(sq.Eq{"r.user_id": authorID}).
+		GroupBy("r.id").
+		OrderBy("rating DESC").
 		Limit(uint64(limit)).
 		Offset(uint64((page - 1) * limit)).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-	if err != nil {
-		return nil, entity.PSQLWrap(err, errors.New("ошибка при формировании sql-запроса GetReviewsByAuthorID"))
-	}
 
 	rows, err := r.DB.Query(query, args...)
 	if err != nil {
@@ -225,6 +265,9 @@ func (r *ReviewDB) GetReviewsByAuthorID(authorID, page, limit int) ([]*entity.Re
 			&review.Text,
 			&review.Rating,
 			&review.CreatedAt,
+			&review.UpdatedAt,
+			&review.Likes,
+			&review.Dislikes,
 		)
 		if err != nil {
 			return nil, entity.PSQLWrap(err, errors.New("ошибка при сканировании рецензий"))
@@ -234,9 +277,56 @@ func (r *ReviewDB) GetReviewsByAuthorID(authorID, page, limit int) ([]*entity.Re
 	return reviews, nil
 }
 
+func (r *ReviewDB) GetContentReviewByAuthor(authorID, contentID int) (*entity.Review, error) {
+	// no-lint
+	query, args, _ := sq.Select(
+		"r.id",
+		"r.user_id",
+		"r.content_id",
+		"r.title",
+		"r.text",
+		"r.content_rating",
+		"r.created_at",
+		"r.updated_at",
+		"likes",
+		"dislikes",
+	).
+		Column(sq.Expr("SUM(CASE WHEN rl.value THEN 1 ELSE 0 END) as likes")).
+		Column(sq.Expr("SUM(CASE WHEN rl.value THEN 0 ELSE 1 END) as dislikes")).
+		From("review r").
+		LeftJoin("review_like rl ON r.id = rl.review_id").
+		Where(sq.Eq{"r.user_id": authorID, "r.content_id": contentID}).
+		GroupBy("r.id").
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+
+	review := &entity.Review{}
+	err := r.DB.QueryRow(query, args...).
+		Scan(
+			&review.ID,
+			&review.AuthorID,
+			&review.ContentID,
+			&review.Title,
+			&review.Text,
+			&review.Rating,
+			&review.CreatedAt,
+			&review.UpdatedAt,
+			&review.Likes,
+			&review.Dislikes,
+		)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, entity.NewClientError("рецензия не найдена", entity.ErrNotFound)
+		}
+		return nil, entity.PSQLWrap(err, errors.New("ошибка при получении рецензии"))
+	}
+	return review, nil
+}
+
 // GetAuthorRating возвращает общий рейтинг автора на основе всех его отзывов
 func (r *ReviewDB) GetAuthorRating(authorID int) (int, error) {
-	query, args, err := sq.Select("r.user_id").
+	// no-lint
+	query, args, _ := sq.Select("r.user_id").
 		Column(sq.Expr("SUM(CASE WHEN rl.value THEN 1 ELSE -1 END) as user_rating")).
 		From("review r").
 		LeftJoin("review_like rl ON r.id = rl.review_id").
@@ -244,12 +334,9 @@ func (r *ReviewDB) GetAuthorRating(authorID int) (int, error) {
 		GroupBy("r.user_id").
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-	if err != nil {
-		return 0, entity.PSQLWrap(err, errors.New("ошибка при формировании sql-запроса GetAuthorRating"))
-	}
 
 	var rating int
-	err = r.DB.QueryRow(query, args...).Scan(&rating)
+	err := r.DB.QueryRow(query, args...).Scan(&rating)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return 0, nil
@@ -259,17 +346,24 @@ func (r *ReviewDB) GetAuthorRating(authorID int) (int, error) {
 	return rating, nil
 }
 
-// GetLatestReviews возвращает последние n отзывов
+// GetLatestReviews возвращает последние n отзывов. Не сортирует их и не даёт информацию о лайках и дизлайках
 func (r *ReviewDB) GetLatestReviews(limit int) ([]*entity.Review, error) {
-	query, args, err := sq.Select("id", "user_id", "content_id", "title", "text", "content_rating", "created_at").
+	// no-lint
+	query, args, _ := sq.Select(
+		"id",
+		"user_id",
+		"content_id",
+		"title",
+		"text",
+		"content_rating",
+		"created_at",
+		"updated_at",
+	).
 		From("review").
 		OrderBy("id DESC").
 		Limit(uint64(limit)).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-	if err != nil {
-		return nil, entity.PSQLWrap(err, errors.New("ошибка при формировании sql-запроса GetLatestReviews"))
-	}
 
 	rows, err := r.DB.Query(query, args...)
 	if err != nil {
@@ -288,6 +382,7 @@ func (r *ReviewDB) GetLatestReviews(limit int) ([]*entity.Review, error) {
 			&review.Text,
 			&review.Rating,
 			&review.CreatedAt,
+			&review.UpdatedAt,
 		)
 		if err != nil {
 			return nil, entity.PSQLWrap(err, errors.New("ошибка при сканировании рецензий"))
@@ -299,16 +394,14 @@ func (r *ReviewDB) GetLatestReviews(limit int) ([]*entity.Review, error) {
 
 // LikeReview добавляет лайк к отзыву
 func (r *ReviewDB) LikeReview(reviewID, userID int, like bool) error {
-	query, args, err := sq.Insert("review_like").
+	// no-lint
+	query, args, _ := sq.Insert("review_like").
 		Columns("review_id", "user_id", "value").
 		Values(reviewID, userID, like).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-	if err != nil {
-		return entity.PSQLWrap(err, errors.New("ошибка при формировании sql-запроса LikeReview"))
-	}
 
-	_, err = r.DB.Exec(query, args...)
+	_, err := r.DB.Exec(query, args...)
 	if err != nil {
 		return entity.PSQLWrap(err, errors.New("ошибка при добавлении лайка"))
 	}
@@ -317,15 +410,13 @@ func (r *ReviewDB) LikeReview(reviewID, userID int, like bool) error {
 
 // UnlikeReview удаляет лайк отзыва
 func (r *ReviewDB) UnlikeReview(reviewID, userID int) error {
-	query, args, err := sq.Delete("review_like").
+	// no-lint
+	query, args, _ := sq.Delete("review_like").
 		Where(sq.Eq{"review_id": reviewID, "user_id": userID}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-	if err != nil {
-		return entity.PSQLWrap(err, errors.New("ошибка при формировании sql-запроса UnlikeReview"))
-	}
 
-	_, err = r.DB.Exec(query, args...)
+	_, err := r.DB.Exec(query, args...)
 	if err != nil {
 		return entity.PSQLWrap(err, errors.New("ошибка при удалении лайка"))
 	}
@@ -334,17 +425,15 @@ func (r *ReviewDB) UnlikeReview(reviewID, userID int) error {
 
 // IsLikedByUser возвращает 1, если отзыв лайкнут, -1, если дизлайкнут, 0, если не оценен
 func (r *ReviewDB) IsLikedByUser(reviewID, userID int) (int, error) {
-	query, args, err := sq.Select("value").
+	// no-lint
+	query, args, _ := sq.Select("value").
 		From("review_like").
 		Where(sq.Eq{"review_id": reviewID, "user_id": userID}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-	if err != nil {
-		return 0, entity.PSQLWrap(err, errors.New("ошибка при формировании sql-запроса IsLikedOrDisliked"))
-	}
 
 	var value bool
-	err = r.DB.QueryRow(query, args...).Scan(&value)
+	err := r.DB.QueryRow(query, args...).Scan(&value)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return 0, nil
@@ -357,36 +446,17 @@ func (r *ReviewDB) IsLikedByUser(reviewID, userID int) (int, error) {
 	return -1, nil
 }
 
-// DeleteReview удаляет отзыв по его ID
-func (r *ReviewDB) DeleteReview(reviewID int) error {
-	query, args, err := sq.Delete("review").
-		Where(sq.Eq{"id": reviewID}).
-		PlaceholderFormat(sq.Dollar).
-		ToSql()
-	if err != nil {
-		return entity.PSQLWrap(err, errors.New("ошибка при формировании sql-запроса DeleteReview"))
-	}
-
-	_, err = r.DB.Exec(query, args...)
-	if err != nil {
-		return entity.PSQLWrap(err, errors.New("ошибка при удалении рецензии"))
-	}
-	return nil
-}
-
 // GetContentRating возвращает рейтинг контента на основе всех рецензий
 func (r *ReviewDB) GetContentRating(contentID int) (int, error) {
-	query, args, err := sq.Select("AVG(content_rating)").
+	// no-lint
+	query, args, _ := sq.Select("AVG(content_rating)").
 		From("review").
 		Where(sq.Eq{"content_id": contentID}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-	if err != nil {
-		return 0, entity.PSQLWrap(err, errors.New("ошибка при формировании sql-запроса GetContentRating"))
-	}
 
 	var rating int
-	err = r.DB.QueryRow(query, args...).Scan(&rating)
+	err := r.DB.QueryRow(query, args...).Scan(&rating)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return 0, nil

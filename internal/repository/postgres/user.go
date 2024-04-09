@@ -52,17 +52,15 @@ func NewUserRepository(database config.PostgresDatabase) (repository.User, error
 // Если операция происходит успешно, то в переданный по указателю user будет записан id и вернется указатель на
 // этого же пользователя
 func (u *UsersDB) AddUser(user *entity.User) (*entity.User, error) {
-	query, args, err := sq.Insert("users").
+	// no-lint
+	query, args, _ := sq.Insert("users").
 		Columns("email", "password_hashed", "salt_password").
 		Values(user.Email, user.PasswordHash, user.PasswordSalt).
 		Suffix("RETURNING id").
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-	if err != nil {
-		return nil, entity.PSQLWrap(err, errors.New("ошибка при формировании sql-запроса AddUser"))
-	}
 
-	err = u.DB.QueryRow(query, args...).Scan(&user.ID)
+	err := u.DB.QueryRow(query, args...).Scan(&user.ID)
 	if err != nil {
 		var pqErr *pq.Error
 		if errors.As(err, &pqErr) {
@@ -88,17 +86,15 @@ func (u *UsersDB) AddUser(user *entity.User) (*entity.User, error) {
 // GetUser возвращает пользователя из базы данных по переданным параметрам.
 // Если пользователь не найден, то возвращается ошибка ErrNotFound
 func (u *UsersDB) GetUser(params map[string]interface{}) (*entity.User, error) {
-	query, args, err := sq.
+	// no-lint
+	query, args, _ := sq.
 		Select("id", "email", "name", "password_hashed", "salt_password", "avatar_upload_id").
 		From("users").
 		Where(params).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-	if err != nil {
-		return nil, entity.PSQLWrap(err, errors.New("ошибка при формировании sql-запроса GetUser"))
-	}
 	user := User{}
-	err = u.DB.QueryRow(query, args...).
+	err := u.DB.QueryRow(query, args...).
 		Scan(&user.ID, &user.Email, &user.Name, &user.PasswordHash, &user.PasswordSalt, &user.AvatarUploadID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -111,15 +107,13 @@ func (u *UsersDB) GetUser(params map[string]interface{}) (*entity.User, error) {
 
 // UpdateUser обновляет пользователя в базе данных по переданным параметрам
 func (u *UsersDB) UpdateUser(params map[string]interface{}, values map[string]interface{}) error {
-	query, args, err := sq.Update("users").
+	// no-lint
+	query, args, _ := sq.Update("users").
 		Where(params).
 		SetMap(values).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-	if err != nil {
-		return entity.PSQLWrap(err, errors.New("ошибка при формировании sql-запроса UpdateUser"))
-	}
-	if _, err = u.DB.Exec(query, args...); err != nil {
+	if _, err := u.DB.Exec(query, args...); err != nil {
 		return entity.PSQLWrap(err, errors.New("ошибка при выполнении sql-запроса UpdateUser"))
 	}
 	return nil
