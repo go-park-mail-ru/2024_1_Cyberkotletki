@@ -13,6 +13,16 @@ type CompilationTypeDB struct {
 	DB *sql.DB
 }
 
+func NewCompilationTypeRepository(database config.PostgresDatabase) (repository.CompilationType, error) {
+	db, err := sql.Open("postgres", database.ConnectURL)
+	if err != nil {
+		return nil, err
+	}
+	return &CompilationTypeDB{
+		DB: db,
+	}, nil
+}
+
 // GetCompilationType получает категорию подборки по id
 func (c CompilationTypeDB) GetCompilationType(id int) (*entity.CompilationType, error) {
 	query, args, err := sq.Select("id", "type").
@@ -60,14 +70,4 @@ func (c CompilationTypeDB) GetAllCompilationTypes() ([]*entity.CompilationType, 
 		compilationTypes = append(compilationTypes, compilationType)
 	}
 	return compilationTypes, nil
-}
-
-func NewCompilationTypeRepository(database config.PostgresDatabase) (repository.CompilationType, error) {
-	db, err := sql.Open("postgres", database.ConnectURL)
-	if err != nil {
-		return nil, err
-	}
-	return &CompilationTypeDB{
-		DB: db,
-	}, nil
 }
