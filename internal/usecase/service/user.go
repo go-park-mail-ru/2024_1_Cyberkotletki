@@ -87,14 +87,12 @@ func (u *UserService) GetUser(userID int) (*dto.UserProfile, error) {
 	if err != nil {
 		return nil, err
 	}
-	rating, err := u.reviewRepo.GetAuthorRating(userID)
-	if err != nil {
-		return nil, err
-	}
-	avatar, err := u.staticRepo.GetStatic(user.AvatarUploadID)
-	if err != nil {
-		return nil, err
-	}
+	// если у пользователя нет рейтинга, то это не ошибка, рейтинг по умолчанию = 0
+	// nolint
+	rating, _ := u.reviewRepo.GetAuthorRating(userID)
+	// если у пользователя нет аватарки, то это не ошибка
+	// nolint
+	avatar, _ := u.staticRepo.GetStatic(user.AvatarUploadID)
 	return &dto.UserProfile{
 		ID:     user.ID,
 		Name:   user.Name,

@@ -13,6 +13,8 @@ type PreviewContentCard struct {
 	Actors        []string `json:"actors"        example:"Том Хэнкс,Сергей Бодров"`
 	Poster        string   `json:"poster"        example:"/static/poster.jpg"`
 	Rating        float64  `json:"rating"        example:"9.1"`
+
+	Type string `json:"type" example:"movie"`
 	// Поля, которые есть только у фильмов
 	Duration int `json:"duration,omitempty" example:"134"`
 	// Поля, которые есть только у сериалов
@@ -95,9 +97,4 @@ type Content struct {
 	Type           string          `json:"type"                example:"movie"`
 	Movie          MovieContent    `json:"movie,omitempty"`
 	Series         SeriesContent   `json:"series,omitempty"`
-}
-
-type PreviewContentCardResponse struct {
-	PreviewContentCard
-	Type string `json:"type" example:"movie"`
 }

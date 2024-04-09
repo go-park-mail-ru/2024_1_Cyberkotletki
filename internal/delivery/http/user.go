@@ -218,8 +218,9 @@ func (h *UserEndpoints) UpdateInfo(ctx echo.Context) error {
 // @Tags User
 // @Description Возвращает профиль пользователя по id
 // @Accept json
+// @Produce json
 // @Param 	id	query	int	true	"ID пользователя"
-// @Success     200
+// @Success     200 {object}	dto.UserProfile
 // @Failure		400	{object}	echo.HTTPError	"Неверный id"
 // @Failure		404	{object}	echo.HTTPError	"Пользователь не найден"
 // @Failure		500	{object}	echo.HTTPError	"Внутренняя ошибка сервера"

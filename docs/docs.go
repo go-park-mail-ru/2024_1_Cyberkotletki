@@ -102,6 +102,153 @@ const docTemplate = `{
                 }
             }
         },
+        "/compilation/type/{compilationType}": {
+            "get": {
+                "description": "Получение списка подборок по id типа подборки",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "compilation"
+                ],
+                "summary": "Получение списка подборок по типу подборок",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "id типа подборки",
+                        "name": "compilationType",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CompilationResponseList"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/compilation/types": {
+            "get": {
+                "description": "Получение списка подборок по id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "compilation"
+                ],
+                "summary": "Получение списка подборок",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CompilationTypeResponseList"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/compilation/{id}": {
+            "get": {
+                "description": "Получение карточек контента подборки по id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "compilation"
+                ],
+                "summary": "Получение карточек контента подборки",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "id подборки",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "номер страницы",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CompilationContent"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/content/person/{id}": {
             "get": {
                 "description": "Получение персоны по id",
@@ -1030,6 +1177,9 @@ const docTemplate = `{
                 "consumes": [
                     "application/json"
                 ],
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "User"
                 ],
@@ -1044,7 +1194,10 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.UserProfile"
+                        }
                     },
                     "400": {
                         "description": "Неверный id",
@@ -1165,6 +1318,88 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "dto.CompilationContent": {
+            "type": "object",
+            "properties": {
+                "compilation_id": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
+                },
+                "content_id": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
+                }
+            }
+        },
+        "dto.CompilationResponse": {
+            "type": "object",
+            "properties": {
+                "compilation_type_id": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
+                },
+                "content_length": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
+                },
+                "poster_upload_id": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
+                },
+                "title": {
+                    "type": "string",
+                    "format": "string",
+                    "example": "The Best"
+                }
+            }
+        },
+        "dto.CompilationResponseList": {
+            "type": "object",
+            "properties": {
+                "compilations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CompilationResponse"
+                    }
+                }
+            }
+        },
+        "dto.CompilationTypeResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
+                },
+                "type": {
+                    "type": "string",
+                    "format": "string",
+                    "example": "C"
+                }
+            }
+        },
+        "dto.CompilationTypeResponseList": {
+            "type": "object",
+            "properties": {
+                "compilation_types": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CompilationTypeResponse"
+                    }
+                }
+            }
+        },
         "dto.Content": {
             "type": "object",
             "properties": {
@@ -1482,6 +1717,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Бэтмен"
                 },
+                "type": {
+                    "type": "string",
+                    "example": "movie"
+                },
                 "yearEnd": {
                     "type": "integer",
                     "example": 2021
@@ -1687,6 +1926,26 @@ const docTemplate = `{
                     "type": "string",
                     "format": "string",
                     "example": "OldPassword1!"
+                }
+            }
+        },
+        "dto.UserProfile": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "integer"
                 }
             }
         },

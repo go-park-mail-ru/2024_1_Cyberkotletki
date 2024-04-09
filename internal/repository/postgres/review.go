@@ -446,12 +446,32 @@ func (r *ReviewDB) IsLikedByUser(reviewID, userID int) (int, error) {
 	return -1, nil
 }
 
-// GetContentRating возвращает рейтинг контента на основе всех рецензий
+// GetContentRating возвращает рейтинг контента на основе всех рецензий. Если нет ни одной рецензии, использует IMDB
 func (r *ReviewDB) GetContentRating(contentID int) (float64, error) {
-	// no-lint
 	query, args, _ := sq.Select("AVG(content_rating)").
 		From("review").
 		Where(sq.Eq{"content_id": contentID}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	var rating float64
+	err := r.DB.QueryRow(query, args...).Scan(&rating)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, nil
+		}
+		return 0, entity.PSQLWrap(err, errors.New("ошибка при получении рейтинга контента"))
+	}
+	// Если рецензий нет, то используем IMDB
+	if rating == 0 {
+		return r.getIMDBRating(contentID)
+	}
+	return rating, nil
+}
+
+func (r *ReviewDB) getIMDBRating(contentID int) (float64, error) {
+	query, args, _ := sq.Select("imdb").
+		From("content").
+		Where(sq.Eq{"id": contentID}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 
@@ -459,7 +479,7 @@ func (r *ReviewDB) GetContentRating(contentID int) (float64, error) {
 	err := r.DB.QueryRow(query, args...).Scan(&rating)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return 0, nil
+			return 0, entity.NewClientError("контент не найден", entity.ErrNotFound)
 		}
 		return 0, entity.PSQLWrap(err, errors.New("ошибка при получении рейтинга контента"))
 	}

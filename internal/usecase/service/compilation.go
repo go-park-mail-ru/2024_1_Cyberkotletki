@@ -1,27 +1,29 @@
 package service
 
 import (
-	"errors"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
 )
 
 type CompilationService struct {
-	compilationRepo     repository.Compilation
-	compilationTypeRepo repository.CompilationType
-	staticRepo          repository.Static
-	contentRepo         repository.Content
-	reviewRepo          repository.Review
+	compilationRepo repository.Compilation
+	staticRepo      repository.Static
+	contentRepo     repository.Content
+	reviewRepo      repository.Review
 }
 
-func NewCompilationService(compilationRepo repository.Compilation, compilationTypeRepo repository.CompilationType,
-	staticRepo repository.Static, contentRepo repository.Content) *CompilationService {
+func NewCompilationService(
+	compilationRepo repository.Compilation,
+	staticRepo repository.Static,
+	contentRepo repository.Content,
+	reviewRepo repository.Review,
+) *CompilationService {
 	return &CompilationService{
-		compilationRepo:     compilationRepo,
-		compilationTypeRepo: compilationTypeRepo,
-		staticRepo:          staticRepo,
-		contentRepo:         contentRepo,
+		compilationRepo: compilationRepo,
+		staticRepo:      staticRepo,
+		contentRepo:     contentRepo,
+		reviewRepo:      reviewRepo,
 	}
 }
 
@@ -70,48 +72,46 @@ func (c *CompilationService) compilationEntitiesToDTO(compEntities []*entity.Com
 	return &dto.CompilationResponseList{Compilations: compDTOs}, nil
 }
 
-func (c *CompilationService) contentEntityToDTO(content *entity.Content) (*dto.PreviewContentCardResponse, error) {
-	if len(content.Actors) < 2 ||
-		len(content.Directors) == 0 ||
-		len(content.Genres) == 0 ||
-		len(content.Country) == 0 ||
-		len(content.Country) == 0 ||
-		len(content.Genres) == 0 {
-		return nil, entity.NewClientError("недостаточно данных для создания PreviewContentCard")
-	}
-
+func (c *CompilationService) contentEntityToDTO(content *entity.Content) (*dto.PreviewContentCard, error) {
 	preview, err := c.contentRepo.GetPreviewContent(content.ID)
 	if err != nil {
 		return nil, err
 	}
-
 	actors := make([]string, len(preview.Actors))
 	for i, actor := range preview.Actors {
 		actors[i] = actor.FirstName + " " + actor.LastName
 	}
-
 	poster, err := c.staticRepo.GetStatic(preview.PosterStaticID)
 	if err != nil {
 		return nil, err
 	}
-
 	rating, err := c.reviewRepo.GetContentRating(preview.ID)
 	if err != nil {
 		return nil, err
 	}
-
+	var country string
+	if len(preview.Country) > 0 {
+		country = preview.Country[0].Name
+	}
+	var genre string
+	if len(preview.Genres) > 0 {
+		genre = preview.Genres[0].Name
+	}
+	var director string
+	if len(preview.Directors) > 0 {
+		director = preview.Directors[0].FirstName + " " + preview.Directors[0].LastName
+	}
 	card := dto.PreviewContentCard{
 		ID:            preview.ID,
 		Title:         preview.Title,
 		OriginalTitle: preview.OriginalTitle,
-		Country:       preview.Country[0].Name,
-		Genre:         preview.Genres[0].Name,
-		Director:      preview.Directors[0].FirstName + " " + preview.Directors[0].LastName,
+		Country:       country,
+		Genre:         genre,
+		Director:      director,
 		Actors:        actors,
 		Poster:        poster,
-		Rating:        float64(rating),
+		Rating:        rating,
 	}
-
 	if preview.Type == entity.ContentTypeMovie {
 		card.Duration = preview.Movie.Duration
 	} else if preview.Type == entity.ContentTypeSeries {
@@ -120,68 +120,57 @@ func (c *CompilationService) contentEntityToDTO(content *entity.Content) (*dto.P
 		card.YearEnd = preview.Series.YearEnd
 	}
 
-	return &dto.PreviewContentCardResponse{
-		PreviewContentCard: card,
-		Type:               preview.Type,
-	}, nil
+	return &card, nil
 }
 
 func (c *CompilationService) compilationTypeEntitiesToDTO(compTypeEntities []*entity.CompilationType) (
 	*dto.CompilationTypeResponseList,
 	error,
 ) {
-	compTypeDTOs := make([]dto.CompilationTypeResponse, 0)
-	for _, compTypeEntity := range compTypeEntities {
+	compTypeDTOs := make([]dto.CompilationTypeResponse, 0, len(compTypeEntities))
+	for index, compTypeEntity := range compTypeEntities {
 		compTypeDTO := c.compilationTypeDTOToEntity(compTypeEntity)
-		compTypeDTOs = append(compTypeDTOs, *compTypeDTO)
+		compTypeDTOs[index] = *compTypeDTO
 	}
 	return &dto.CompilationTypeResponseList{CompilationTypes: compTypeDTOs}, nil
-
 }
 
 // GetCompilationTypes возвращает список типов подборок
 func (c *CompilationService) GetCompilationTypes() (*dto.CompilationTypeResponseList, error) {
-	compTypes, err := c.compilationTypeRepo.GetAllCompilationTypes()
+	compTypes, err := c.compilationRepo.GetAllCompilationTypes()
 	if err != nil {
 		return nil, err
 	}
 	return c.compilationTypeEntitiesToDTO(compTypes)
 }
 
-func (c *CompilationService) GetCompilationsByCompilationType(compTypeID, count, page int) (
+func (c *CompilationService) GetCompilationsByCompilationType(compTypeID int) (
 	*dto.CompilationResponseList,
 	error,
 ) {
-	compEntities, err := c.compilationRepo.GetCompilationsByCompilationTypeID(compTypeID, count, page)
+	compEntities, err := c.compilationRepo.GetCompilationsByTypeID(compTypeID)
 	if err != nil {
 		return nil, err
 	}
 	return c.compilationEntitiesToDTO(compEntities)
 }
 
-func (c *CompilationService) GetCompilationContent(compID int) ([]*dto.PreviewContentCardResponse, error) {
-	contentIDs, err := c.compilationRepo.GetCompilationContent(compID, 0, 2)
+func (c *CompilationService) GetCompilationContent(compID, page, limit int) ([]*dto.PreviewContentCard, error) {
+	contentIDs, err := c.compilationRepo.GetCompilationContent(compID, page, limit)
 	if err != nil {
 		return nil, err
 	}
-
-	if len(contentIDs) == 0 {
-		return nil, errors.New("no content found for this compilation")
-	}
-
-	contentCards := make([]*dto.PreviewContentCardResponse, 0)
-	for _, contentID := range contentIDs {
+	contentCards := make([]*dto.PreviewContentCard, 0, limit)
+	for index, contentID := range contentIDs {
 		content, err := c.contentRepo.GetPreviewContent(contentID)
 		if err != nil {
 			return nil, err
 		}
-
 		contentCard, err := c.contentEntityToDTO(content)
 		if err != nil {
 			return nil, err
 		}
-
-		contentCards = append(contentCards, contentCard)
+		contentCards[index] = contentCard
 	}
 
 	return contentCards, nil

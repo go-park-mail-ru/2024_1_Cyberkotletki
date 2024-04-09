@@ -10,47 +10,17 @@ import (
 )
 
 type CompilationEndpoints struct {
-	сompilationUC usecase.Compilation
+	compilationUC usecase.Compilation
 }
 
-func NewCompilationEndpoints(сompilationUC usecase.Compilation) CompilationEndpoints {
-	return CompilationEndpoints{сompilationUC: сompilationUC}
+func NewCompilationEndpoints(compilationUC usecase.Compilation) CompilationEndpoints {
+	return CompilationEndpoints{compilationUC: compilationUC}
 }
 
 func (h *CompilationEndpoints) Configure(server *echo.Group) {
-	server.GET("/compilation/:id", h.GetCompilation)
 	server.GET("/compilation/types", h.GetCompilationTypes)
 	server.GET("/compilation/type/:compilationType", h.GetCompilationsByCompilationType)
 	server.GET("/compilation/content/:id", h.GetCompilationContent)
-}
-
-// GetCompilation
-// @Summary Получение подборки
-// @Tags compilation
-// @Description Получение подборки по id
-// @Accept json
-// @Produce json
-// @Param id path string true "id подборки"
-// @Success 200 {object} dto.CompilationResponse
-// @Failure 400 {object} echo.HTTPError
-// @Failure 404 {object} echo.HTTPError
-// @Failure 500 {object} echo.HTTPError
-// @Router /compilation/{id} [get]
-func (h *CompilationEndpoints) GetCompilation(ctx echo.Context) error {
-	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
-	if err != nil {
-		return utils.NewError(ctx, http.StatusBadRequest, entity.NewClientError("невалидный id подборки"))
-	}
-	compilation, err := h.сompilationUC.GetCompilation(int(id))
-	if err != nil {
-		switch {
-		case entity.Contains(err, entity.ErrNotFound):
-			return utils.NewError(ctx, http.StatusNotFound, err)
-		default:
-			return utils.NewError(ctx, http.StatusInternalServerError, err)
-		}
-	}
-	return utils.WriteJSON(ctx, compilation)
 }
 
 // GetCompilationTypes
@@ -65,7 +35,7 @@ func (h *CompilationEndpoints) GetCompilation(ctx echo.Context) error {
 // @Failure 500 {object} echo.HTTPError
 // @Router /compilation/types [get]
 func (h *CompilationEndpoints) GetCompilationTypes(ctx echo.Context) error {
-	compType, err := h.сompilationUC.GetCompilationTypes()
+	compType, err := h.compilationUC.GetCompilationTypes()
 	if err != nil {
 		switch {
 		case entity.Contains(err, entity.ErrNotFound):
@@ -94,7 +64,7 @@ func (h *CompilationEndpoints) GetCompilationsByCompilationType(ctx echo.Context
 	if err != nil {
 		return utils.NewError(ctx, http.StatusBadRequest, entity.NewClientError("невалидный id типа подборки"))
 	}
-	compilations, err := h.сompilationUC.GetCompilationsByCompilationType(int(compilationType))
+	compilations, err := h.compilationUC.GetCompilationsByCompilationType(int(compilationType))
 	if err != nil {
 		switch {
 		case entity.Contains(err, entity.ErrNotFound):
@@ -113,7 +83,8 @@ func (h *CompilationEndpoints) GetCompilationsByCompilationType(ctx echo.Context
 // @Accept json
 // @Produce json
 // @Param id path string true "id подборки"
-// @Success 200 {object} dto.CompilationContentResponse
+// @Param page query int false "номер страницы"
+// @Success 200 {object} dto.CompilationContent
 // @Failure 400 {object} echo.HTTPError
 // @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
@@ -123,7 +94,11 @@ func (h *CompilationEndpoints) GetCompilationContent(ctx echo.Context) error {
 	if err != nil {
 		return utils.NewError(ctx, http.StatusBadRequest, entity.NewClientError("невалидный id подборки"))
 	}
-	compilation, err := h.сompilationUC.GetCompilationContentCards(int(id))
+	page, err := strconv.ParseInt(ctx.QueryParam("page"), 10, 64)
+	if err != nil {
+		page = 1
+	}
+	compilation, err := h.compilationUC.GetCompilationContent(int(id), int(page), 10)
 	if err != nil {
 		switch {
 		case entity.Contains(err, entity.ErrNotFound):

@@ -41,6 +41,11 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	if err != nil {
 		logger.Fatalf("Ошибка при создании репозитория рецензий: %v", err)
 	}
+	compilationRepo, err := postgres.NewCompilationRepository(params.Compilation.Postgres)
+	if err != nil {
+		logger.Fatalf("Ошибка при создании репозитория подборок: %v", err)
+
+	}
 
 	// Use Cases
 	staticUseCase := service.NewStaticService(staticRepo)
@@ -48,6 +53,7 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	userUseCase := service.NewUserService(userRepo, reviewRepo, staticRepo)
 	contentUseCase := service.NewContentService(contentRepo, reviewRepo, staticRepo)
 	reviewUseCase := service.NewReviewService(reviewRepo, userRepo, contentRepo, staticRepo)
+	compilationUseCase := service.NewCompilationService(compilationRepo, staticRepo, contentRepo, reviewRepo)
 
 	// Delivery
 	staticDelivery := delivery.NewStaticEndpoints(staticUseCase)
@@ -56,6 +62,7 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	contentDelivery := delivery.NewContentEndpoints(contentUseCase)
 	playgroundDelivery := delivery.NewPlaygroundEndpoints()
 	reviewDelivery := delivery.NewReviewEndpoints(reviewUseCase, authUseCase)
+	compilationDelivery := delivery.NewCompilationEndpoints(compilationUseCase)
 
 	// REST API
 	echoServer := echo.New()
@@ -150,6 +157,9 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	// reviews
 	reviewAPI := api.Group("/review")
 	reviewDelivery.Configure(reviewAPI)
+	// compilations
+	compilationAPI := api.Group("/compilation")
+	compilationDelivery.Configure(compilationAPI)
 	return echoServer
 }
 

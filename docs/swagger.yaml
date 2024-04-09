@@ -1,5 +1,64 @@
 basePath: /api
 definitions:
+  dto.CompilationContent:
+    properties:
+      compilation_id:
+        example: 1
+        format: int
+        type: integer
+      content_id:
+        example: 1
+        format: int
+        type: integer
+    type: object
+  dto.CompilationResponse:
+    properties:
+      compilation_type_id:
+        example: 1
+        format: int
+        type: integer
+      content_length:
+        example: 1
+        format: int
+        type: integer
+      id:
+        example: 1
+        format: int
+        type: integer
+      poster_upload_id:
+        example: 1
+        format: int
+        type: integer
+      title:
+        example: The Best
+        format: string
+        type: string
+    type: object
+  dto.CompilationResponseList:
+    properties:
+      compilations:
+        items:
+          $ref: '#/definitions/dto.CompilationResponse'
+        type: array
+    type: object
+  dto.CompilationTypeResponse:
+    properties:
+      id:
+        example: 1
+        format: int
+        type: integer
+      type:
+        example: C
+        format: string
+        type: string
+    type: object
+  dto.CompilationTypeResponseList:
+    properties:
+      compilation_types:
+        items:
+          $ref: '#/definitions/dto.CompilationTypeResponse'
+        type: array
+    type: object
   dto.Content:
     properties:
       actors:
@@ -228,6 +287,9 @@ definitions:
       title:
         example: Бэтмен
         type: string
+      type:
+        example: movie
+        type: string
       yearEnd:
         example: 2021
         type: integer
@@ -382,6 +444,19 @@ definitions:
         format: string
         type: string
     type: object
+  dto.UserProfile:
+    properties:
+      avatar:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      rating:
+        type: integer
+    type: object
   dto.UserReviewResponseList:
     properties:
       me:
@@ -466,6 +541,103 @@ paths:
             $ref: '#/definitions/echo.HTTPError'
       tags:
       - Auth
+  /compilation/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Получение карточек контента подборки по id
+      parameters:
+      - description: id подборки
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: номер страницы
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.CompilationContent'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Получение карточек контента подборки
+      tags:
+      - compilation
+  /compilation/type/{compilationType}:
+    get:
+      consumes:
+      - application/json
+      description: Получение списка подборок по id типа подборки
+      parameters:
+      - description: id типа подборки
+        in: path
+        name: compilationType
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.CompilationResponseList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Получение списка подборок по типу подборок
+      tags:
+      - compilation
+  /compilation/types:
+    get:
+      consumes:
+      - application/json
+      description: Получение списка подборок по id
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.CompilationTypeResponseList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Получение списка подборок
+      tags:
+      - compilation
   /content/{id}:
     get:
       description: Получение контента по id
@@ -1088,9 +1260,13 @@ paths:
         name: id
         required: true
         type: integer
+      produces:
+      - application/json
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/dto.UserProfile'
         "400":
           description: Неверный id
           schema:

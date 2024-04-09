@@ -4,8 +4,8 @@ import "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 
 //go:generate mockgen -source=$GOFILE -destination=mocks/mock_compilation.go
 type Compilation interface {
-	GetCompilationsByCompilationTypeID(compilationTypeID, page, limit int) ([]*entity.Compilation, error)
-	GetCompilation(id int) (*entity.Compilation, error)
+	GetCompilationsByTypeID(compilationTypeID int) ([]*entity.Compilation, error)
 	GetCompilationContentLength(id int) (int, error)
 	GetCompilationContent(id, page, limit int) ([]int, error)
+	GetAllCompilationTypes() ([]*entity.CompilationType, error)
 }
