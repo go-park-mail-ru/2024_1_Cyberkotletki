@@ -24,18 +24,21 @@ func NewCompilationRepository(database config.PostgresDatabase) (repository.Comp
 	}, nil
 }
 
-// GetAllCompilationsByCompilationTypeID получает все подборки по ID категории подборок из бд отсортированные по алфавиту
-func (c *CompilationDB) GetCompilationsByCompilationTypeID(compilationTypeID, page, limit int) ([]*entity.Compilation, error) {
-	query, args, err := sq.Select("id", "compilation_type_id", "title", "poster").
-		From("compilation").
-		Where(sq.Eq{"compilation_type_id": compilationTypeID}).
-		OrderBy("title ASC").
+// GetAllCompilationsByCompilationTypeID получает все подборки по ID категории
+// подборок из бд отсортированные по алфавиту
+func (c *CompilationDB) GetCompilationsByCompilationTypeID(compilationTypeID,
+	page, limit int) ([]*entity.Compilation, error) {
+	query, args, err := sq.Select("с.id", "с.compilation_type_id", "с.title", "с.poster").
+		From("compilation с").
+		Where(sq.Eq{"с.compilation_type_id": compilationTypeID}).
+		OrderBy("с.title ASC").
 		Limit(uint64(limit)).
 		Offset(uint64((page - 1) * limit)).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
-		return nil, entity.PSQLWrap(err, errors.New("ошибка при формировании sql-запроса GetAllCompilationsByCompilationTypeID"))
+		return nil, entity.PSQLWrap(err,
+			errors.New("ошибка при формировании sql-запроса GetAllCompilationsByCompilationTypeID"))
 	}
 	rows, err := c.DB.Query(query, args...)
 	if err != nil {
@@ -63,17 +66,19 @@ func (c *CompilationDB) GetCompilationsByCompilationTypeID(compilationTypeID, pa
 
 // GetCompilation получает подборку из бд по ID
 func (c *CompilationDB) GetCompilation(id int) (*entity.Compilation, error) {
-	query, args, err := sq.Select("id", "compilation_type_id", "title", "poster").
+	query, args, err := sq.Select("id", "title", "compilation_type_id", " poster_upload_id").
 		From("compilation").
 		Where(sq.Eq{"id": id}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
-		return nil, entity.PSQLWrap(err, errors.New("ошибка при формировании sql-запроса GetCompilation"))
+		return nil, entity.PSQLWrap(err,
+			errors.New("ошибка при формировании sql-запроса GetCompilation"))
 	}
 
 	compilation := &entity.Compilation{}
-	err = c.DB.QueryRow(query, args...).Scan(&compilation.ID, &compilation.CompilationTypeID, &compilation.Title, &compilation.PosterUploadID)
+	err = c.DB.QueryRow(query, args...).Scan(&compilation.ID,
+		&compilation.CompilationTypeID, &compilation.Title, &compilation.PosterUploadID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, entity.NewClientError("подборка не найдена", entity.ErrNotFound)
@@ -91,12 +96,14 @@ func (c *CompilationDB) GetCompilationContentLength(id int) (int, error) {
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
-		return 0, entity.PSQLWrap(err, errors.New("ошибка при формировании sql-запроса GetCompilationContentLength"))
+		return 0, entity.PSQLWrap(err,
+			errors.New("ошибка при формировании sql-запроса GetCompilationContentLength"))
 	}
 	var length int
 	err = c.DB.QueryRow(query, args...).Scan(&length)
 	if err != nil {
-		return 0, entity.PSQLWrap(err, errors.New("ошибка при получении числа контента в подборке"))
+		return 0, entity.PSQLWrap(err,
+			errors.New("ошибка при получении числа контента в подборке"))
 	}
 	return length, nil
 
@@ -116,7 +123,11 @@ func (c *CompilationDB) GetCompilationContent(id, page, limit int) ([]int, error
 	}
 	rows, err := c.DB.Query(query, args...)
 	if err != nil {
-		return nil, entity.PSQLWrap(err, errors.New("ошибка при получении рецензий"))
+		if errors.Is(err, sql.ErrNoRows) {
+			return []int{}, entity.PSQLWrap(err, errors.New("контент подборки не найден"), entity.ErrNotFound)
+		}
+		return nil, entity.PSQLWrap(err,
+			errors.New("ошибка при получении контента подборки"))
 	}
 	defer rows.Close()
 

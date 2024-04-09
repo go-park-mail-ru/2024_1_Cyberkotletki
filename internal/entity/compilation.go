@@ -5,10 +5,10 @@ package entity
 import "unicode/utf8"
 
 type Compilation struct {
-	ID                int    `json:"id" example:"1" format:"int"`
-	Title             string `json:"title" example:"The Best" format:"string"`
-	CompilationTypeID int    `json:"compilation_type_id" example:"1" format:"int"`
-	PosterUploadID    int    `json:"poster_uploadId" example:"1" format:"int"`
+	ID                int    `json:"id"                  example:"1"        format:"int"`
+	Title             string `json:"title"               example:"The Best" format:"string"`
+	CompilationTypeID int    `json:"compilation_type_id" example:"1"        format:"int"`
+	PosterUploadID    int    `json:"poster_uploadId"     example:"1"        format:"int"`
 }
 
 func ValidateCompilationID(id int) error {

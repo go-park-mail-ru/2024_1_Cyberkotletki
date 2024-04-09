@@ -2,8 +2,7 @@ package usecase
 
 import "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 
-//TODO добавить респонс
-
+//go:generate mockgen -source=$GOFILE -destination=mocks/mock_compilation.go
 type Compilation interface {
 	GetCompilation(compID int) (*dto.CompilationResponse, error)
 	// GetCompilationTypes возвращает все типы подборок (кнопки сверху это и есть типы, которые должны лежать в бд)
@@ -11,5 +10,5 @@ type Compilation interface {
 	// GetCompilationsByCompilationType получить список подборок по айди типа компиляции
 	GetCompilationsByCompilationType(compTypeID int) (*dto.CompilationResponseList, error)
 	// GetCompilation получить компиляцию по айди, должна возвращать все карточки контента
-	GetCompilationContent(compID int) (*dto.PreviewContentCardResponse, error)
+	GetCompilationContentCards(compID int) (*dto.PreviewContentCardResponse, error)
 }

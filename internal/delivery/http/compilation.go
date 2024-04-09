@@ -123,7 +123,7 @@ func (h *CompilationEndpoints) GetCompilationContent(ctx echo.Context) error {
 	if err != nil {
 		return utils.NewError(ctx, http.StatusBadRequest, entity.NewClientError("невалидный id подборки"))
 	}
-	compilation, err := h.сompilationUC.GetCompilationContent(int(id))
+	compilation, err := h.сompilationUC.GetCompilationContentCards(int(id))
 	if err != nil {
 		switch {
 		case entity.Contains(err, entity.ErrNotFound):

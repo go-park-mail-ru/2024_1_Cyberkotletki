@@ -55,7 +55,7 @@ func (c CompilationTypeDB) GetAllCompilationTypes() ([]*entity.CompilationType, 
 	}
 	rows, err := c.DB.Query(query, args...)
 	if err != nil {
-		return nil, entity.PSQLWrap(err, errors.New("ошибка при получении подборок"))
+		return nil, entity.PSQLWrap(err, errors.New("ошибка при получении категорий"))
 	}
 	// закрываем соединение
 	defer rows.Close()

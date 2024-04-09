@@ -1,6 +1,6 @@
 package dto
 
-type Compilation struct {
+type Collection struct {
 	Genre              string `json:"genre" example:"action"`
 	ContentIdentifiers []int  `json:"ids"   example:"1,2,3"`
 }
