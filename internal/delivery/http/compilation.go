@@ -21,7 +21,7 @@ func (h *CompilationEndpoints) Configure(server *echo.Group) {
 	server.GET("/compilation/:id", h.GetCompilation)
 	server.GET("/compilation/types", h.GetCompilationTypes)
 	server.GET("/compilation/type/:compilationType", h.GetCompilationsByCompilationType)
-
+	server.GET("/compilation/content/:id", h.GetCompilationContent)
 }
 
 // GetCompilation
