@@ -1,64 +1,174 @@
 package service
 
 import (
-	"fmt"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
+	"strings"
 )
 
 type ContentService struct {
 	contentRepo repository.Content
+	reviewRepo  repository.Review
+	staticRepo  repository.Static
 }
 
-func NewContentService(contentRepo repository.Content) usecase.Content {
+func NewContentService(
+	contentRepo repository.Content,
+	reviewRepo repository.Review,
+	staticRepo repository.Static,
+) usecase.Content {
 	return &ContentService{
 		contentRepo: contentRepo,
+		reviewRepo:  reviewRepo,
+		staticRepo:  staticRepo,
 	}
 }
 
-func (c ContentService) GetContentPreviewCard(contentID int) (*dto.PreviewContentCard, error) {
-	film, err := c.contentRepo.GetContent(contentID)
+func CountryEntityToDTO(countryEntity []entity.Country) []string {
+	countries := make([]string, len(countryEntity))
+	for i, country := range countryEntity {
+		countries[i] = country.Name
+	}
+	return countries
+}
+
+func GenreEntityToDTO(genreEntity []entity.Genre) []string {
+	genres := make([]string, len(genreEntity))
+	for i, genre := range genreEntity {
+		genres[i] = genre.Name
+	}
+	return genres
+}
+
+func PersonEntityToDTO(personEntity []entity.Person) []dto.PersonPreview {
+	persons := make([]dto.PersonPreview, len(personEntity))
+	for i, person := range personEntity {
+		persons[i] = dto.PersonPreview{
+			ID:        person.ID,
+			FirstName: person.FirstName,
+			LastName:  person.LastName,
+		}
+	}
+	return persons
+}
+
+func MovieEntityToDTO(movieEntity entity.Movie) dto.MovieContent {
+	return dto.MovieContent{
+		Premiere: movieEntity.Premiere,
+		Release:  movieEntity.Release,
+		Duration: movieEntity.Duration,
+	}
+}
+
+func SeriesEntityToDTO(seriesEntity entity.Series) dto.SeriesContent {
+	seasons := make([]dto.Season, len(seriesEntity.Seasons))
+	for seasonIndex, season := range seriesEntity.Seasons {
+		episodes := make([]dto.Episode, len(season.Episodes))
+		for episodeIndex, episode := range season.Episodes {
+			episodes[episodeIndex] = dto.Episode{
+				ID:            episode.ID,
+				EpisodeNumber: episode.EpisodeNumber,
+				Title:         episode.Title,
+			}
+		}
+		seasons[seasonIndex] = dto.Season{
+			ID:        season.ID,
+			YearStart: season.YearStart,
+			YearEnd:   season.YearEnd,
+			Episodes:  episodes,
+		}
+	}
+	return dto.SeriesContent{
+		YearStart: seriesEntity.YearStart,
+		YearEnd:   seriesEntity.YearEnd,
+		Seasons:   seasons,
+	}
+
+}
+
+// GetContentByID возвращает dto.Content по его ID
+func (c *ContentService) GetContentByID(id int) (*dto.Content, error) {
+	contentEntity, err := c.contentRepo.GetContent(id)
 	if err != nil {
 		return nil, err
 	}
-	var country string
-	if len(film.Country) > 0 {
-		country = film.Country[0].Name
-	} else {
-		country = ""
+	posterURL, err := c.staticRepo.GetStatic(contentEntity.PosterStaticID)
+	if err != nil {
+		return nil, err
 	}
-	var genre string
-	if len(film.Genres) > 0 {
-		genre = film.Genres[0].Name
-	} else {
-		genre = ""
+	contentDTO := dto.Content{
+		ID:             contentEntity.ID,
+		Title:          contentEntity.Title,
+		OriginalTitle:  contentEntity.OriginalTitle,
+		Slogan:         contentEntity.Slogan,
+		Budget:         contentEntity.Budget,
+		AgeRestriction: contentEntity.AgeRestriction,
+		Audience:       contentEntity.Audience,
+		IMDBRating:     contentEntity.IMDBRating,
+		Description:    contentEntity.Description,
+		PosterURL:      posterURL,
+		BoxOffice:      contentEntity.BoxOffice,
+		Marketing:      contentEntity.Marketing,
+		Countries:      CountryEntityToDTO(contentEntity.Country),
+		Genres:         GenreEntityToDTO(contentEntity.Genres),
+		Actors:         PersonEntityToDTO(contentEntity.Actors),
+		Directors:      PersonEntityToDTO(contentEntity.Directors),
+		Producers:      PersonEntityToDTO(contentEntity.Producers),
+		Writers:        PersonEntityToDTO(contentEntity.Writers),
+		Operators:      PersonEntityToDTO(contentEntity.Operators),
+		Composers:      PersonEntityToDTO(contentEntity.Composers),
+		Editors:        PersonEntityToDTO(contentEntity.Editors),
+		Type:           contentEntity.Type,
 	}
-	var director string
-	if len(film.Directors) > 0 {
-		director = fmt.Sprintf("%s %s", film.Directors[0].FirstName, film.Directors[0].LastName)
-	} else {
-		director = ""
+	if contentEntity.Type == entity.ContentTypeMovie {
+		contentDTO.Movie = MovieEntityToDTO(*contentEntity.Movie)
+	} else if contentEntity.Type == entity.ContentTypeSeries {
+		contentDTO.Series = SeriesEntityToDTO(*contentEntity.Series)
 	}
-	var actors []string
-	if len(film.Actors) > 0 {
-		actors = []string{
-			fmt.Sprintf("%s %s", film.Actors[0].FirstName, film.Actors[0].LastName),
-			fmt.Sprintf("%s %s", film.Actors[1].FirstName, film.Actors[1].LastName),
+
+	return &contentDTO, nil
+}
+
+// GetPersonByID возвращает dto.Person по его ID
+func (c *ContentService) GetPersonByID(id int) (*dto.Person, error) {
+	personEntity, err := c.contentRepo.GetPerson(id)
+	if err != nil {
+		return nil, err
+	}
+	personDTO := dto.Person{
+		ID:          personEntity.ID,
+		FirstName:   personEntity.FirstName,
+		LastName:    personEntity.LastName,
+		BirthDate:   personEntity.BirthDate,
+		DeathDate:   personEntity.DeathDate,
+		StartCareer: personEntity.StartCareer,
+		EndCareer:   personEntity.EndCareer,
+		Sex:         personEntity.Sex,
+		BirthPlace:  personEntity.BirthPlace,
+		Height:      personEntity.Height,
+		Spouse:      personEntity.Spouse,
+		Children:    strings.Split(personEntity.Children, ","),
+	}
+	contentRoles, err := c.contentRepo.GetPersonRoles(personEntity.ID)
+	if err != nil {
+		return nil, err
+	}
+	personDTO.Roles = make([]dto.PreviewContentCard, len(contentRoles))
+	for i, role := range contentRoles {
+		personDTO.Roles[i] = dto.PreviewContentCard{
+			ID:            role.ID,
+			Title:         role.Title,
+			OriginalTitle: role.OriginalTitle,
 		}
-	} else {
-		actors = []string{}
 	}
-	return &dto.PreviewContentCard{
-		Title:         film.Title,
-		OriginalTitle: film.OriginalTitle,
-		ReleaseYear:   film.Movie.Premiere.Year(),
-		Country:       country,
-		Genre:         genre,
-		Director:      director,
-		Actors:        actors,
-		Poster:        film.PosterStaticID,
-		Rating:        film.IMDBRating,
-		Duration:      film.Movie.Duration,
-	}, nil
+	if personEntity.PhotoStaticID != 0 {
+		static, err := c.staticRepo.GetStatic(personEntity.PhotoStaticID)
+		if err != nil {
+			return nil, err
+		}
+		personDTO.PhotoURL = static
+	}
+	return &personDTO, nil
 }

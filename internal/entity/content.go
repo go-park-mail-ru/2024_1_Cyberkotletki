@@ -14,7 +14,7 @@ type Content struct {
 	Audience       int     `json:"audience"`         // Аудитория
 	IMDBRating     float64 `json:"imdb_rating"`      // Рейтинг IMDB
 	Description    string  `json:"description"`      // Описание
-	PosterStaticID string  `json:"poster_static_id"` // Постер
+	PosterStaticID int     `json:"poster_static_id"` // Постер
 	BoxOffice      int     `json:"box_office"`       // Кассовые сборы
 	Marketing      int     `json:"marketing"`        // Маркетинговые затраты
 
@@ -49,8 +49,9 @@ type Series struct {
 
 // Episode представляет эпизод сериала
 type Episode struct {
-	ID            int `json:"id"`             // Уникальный идентификатор
-	EpisodeNumber int `json:"episode_number"` // Номер эпизода
+	ID            int    `json:"id"`             // Уникальный идентификатор
+	EpisodeNumber int    `json:"episode_number"` // Номер эпизода
+	Title         string `json:"title"`          // Название эпизода
 }
 
 // Season представляет сезон сериала

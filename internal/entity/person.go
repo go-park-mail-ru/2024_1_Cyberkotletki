@@ -17,8 +17,8 @@ type Person struct {
 	BirthPlace    string    `json:"birth_place"`
 	Height        int       `json:"height"`
 	// Жена/муж
-	Spouse   string   `json:"spouse"`
-	Children []string `json:"children"`
+	Spouse   string `json:"spouse"`
+	Children string `json:"children"`
 }
 
 const (
