@@ -99,10 +99,10 @@ CREATE TABLE IF NOT EXISTS person_role
     role_id    INT NOT NULL,
     person_id  INT NOT NULL,
     content_id INT NOT NULL,
-    FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES role (id) ON DELETE CASCADE,
     FOREIGN KEY (person_id) REFERENCES person (id) ON DELETE CASCADE,
     FOREIGN KEY (content_id) REFERENCES content (id) ON DELETE CASCADE,
-    CONSTRAINT roles_unique UNIQUE (person_id, content_id, role_id)
+    CONSTRAINT role_unique UNIQUE (person_id, content_id, role_id)
 );
 
 -- Создание таблицы movie

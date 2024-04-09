@@ -70,6 +70,7 @@ func SeriesEntityToDTO(seriesEntity entity.Series) dto.SeriesContent {
 			episodes[episodeIndex] = dto.Episode{
 				ID:            episode.ID,
 				EpisodeNumber: episode.EpisodeNumber,
+				Title:         episode.Title,
 			}
 		}
 		seasons[seasonIndex] = dto.Season{
@@ -88,7 +89,7 @@ func SeriesEntityToDTO(seriesEntity entity.Series) dto.SeriesContent {
 }
 
 // GetContentByID возвращает dto.Content по его ID
-func (c ContentService) GetContentByID(id int) (*dto.Content, error) {
+func (c *ContentService) GetContentByID(id int) (*dto.Content, error) {
 	contentEntity, err := c.contentRepo.GetContent(id)
 	if err != nil {
 		return nil, err
@@ -131,7 +132,7 @@ func (c ContentService) GetContentByID(id int) (*dto.Content, error) {
 }
 
 // GetPersonByID возвращает dto.Person по его ID
-func (c ContentService) GetPersonByID(id int) (*dto.Person, error) {
+func (c *ContentService) GetPersonByID(id int) (*dto.Person, error) {
 	personEntity, err := c.contentRepo.GetPerson(id)
 	if err != nil {
 		return nil, err
@@ -149,6 +150,18 @@ func (c ContentService) GetPersonByID(id int) (*dto.Person, error) {
 		Height:      personEntity.Height,
 		Spouse:      personEntity.Spouse,
 		Children:    strings.Split(personEntity.Children, ","),
+	}
+	contentRoles, err := c.contentRepo.GetPersonRoles(personEntity.ID)
+	if err != nil {
+		return nil, err
+	}
+	personDTO.Roles = make([]dto.PreviewContentCard, len(contentRoles))
+	for i, role := range contentRoles {
+		personDTO.Roles[i] = dto.PreviewContentCard{
+			ID:            role.ID,
+			Title:         role.Title,
+			OriginalTitle: role.OriginalTitle,
+		}
 	}
 	if personEntity.PhotoStaticID != 0 {
 		static, err := c.staticRepo.GetStatic(personEntity.PhotoStaticID)

@@ -329,6 +329,7 @@ func TestContentDB_GetContent(t *testing.T) {
 			},
 			ExpectedErr: nil,
 			SetupMock: func(mock sqlmock.Sqlmock) {
+				// устанавливаем порядок вызовов и мокаем их
 				setupGetContentSuccess(mock, 1)
 				setupGetContentTypeSuccess(mock, 1, "movie")
 				setupGetContentProductionsCountriesSuccess(mock, 1, []int{1})
@@ -415,6 +416,7 @@ func TestContentDB_GetContent(t *testing.T) {
 			},
 			ExpectedErr: nil,
 			SetupMock: func(mock sqlmock.Sqlmock) {
+				// устанавливаем порядок вызовов и мокаем их
 				setupGetContentSuccess(mock, 1)
 				setupGetContentTypeSuccess(mock, 1, "series")
 				setupGetContentProductionsCountriesSuccess(mock, 1, []int{1})
