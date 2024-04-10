@@ -30,7 +30,7 @@ func (c *CompilationDB) GetCompilationsByTypeID(compilationTypeID int) ([]*entit
 	query, args, _ := sq.Select("id", "title", "compilation_type_id", "poster").
 		From("compilation").
 		Where(sq.Eq{"compilation_type_id": compilationTypeID}).
-		OrderBy("с.title ASC").
+		OrderBy("title ASC").
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	rows, err := c.DB.Query(query, args...)
@@ -103,7 +103,7 @@ func (c *CompilationDB) GetCompilationContent(id, page, limit int) ([]int, error
 		contentIDs = append(contentIDs, contentID)
 	}
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, entity.PSQLWrap(err, errors.New("ошибка при сканировании контента"))
 	}
 	return contentIDs, nil
 }
