@@ -39,17 +39,32 @@ func (m *MockContent) EXPECT() *MockContentMockRecorder {
 	return m.recorder
 }
 
-// GetContentPreviewCard mocks base method.
-func (m *MockContent) GetContentPreviewCard(arg0 int) (*dto.PreviewContentCard, error) {
+// GetContentByID mocks base method.
+func (m *MockContent) GetContentByID(id int) (*dto.Content, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetContentPreviewCard", arg0)
-	ret0, _ := ret[0].(*dto.PreviewContentCard)
+	ret := m.ctrl.Call(m, "GetContentByID", id)
+	ret0, _ := ret[0].(*dto.Content)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetContentPreviewCard indicates an expected call of GetContentPreviewCard.
-func (mr *MockContentMockRecorder) GetContentPreviewCard(arg0 any) *gomock.Call {
+// GetContentByID indicates an expected call of GetContentByID.
+func (mr *MockContentMockRecorder) GetContentByID(id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContentPreviewCard", reflect.TypeOf((*MockContent)(nil).GetContentPreviewCard), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContentByID", reflect.TypeOf((*MockContent)(nil).GetContentByID), id)
+}
+
+// GetPersonByID mocks base method.
+func (m *MockContent) GetPersonByID(id int) (*dto.Person, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPersonByID", id)
+	ret0, _ := ret[0].(*dto.Person)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPersonByID indicates an expected call of GetPersonByID.
+func (mr *MockContentMockRecorder) GetPersonByID(id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPersonByID", reflect.TypeOf((*MockContent)(nil).GetPersonByID), id)
 }

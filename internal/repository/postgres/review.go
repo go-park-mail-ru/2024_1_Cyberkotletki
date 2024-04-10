@@ -75,11 +75,9 @@ func (r *ReviewDB) GetReviewByID(id int) (*entity.Review, error) {
 		"r.content_rating",
 		"r.created_at",
 		"r.updated_at",
-		"likes",
-		"dislikes",
 	).
-		Column(sq.Expr("SUM(CASE WHEN rl.value THEN 1 ELSE 0 END) as likes")).
-		Column(sq.Expr("SUM(CASE WHEN rl.value THEN 0 ELSE 1 END) as dislikes")).
+		Column(sq.Expr("SUM(CASE WHEN rl.value IS TRUE THEN 1 ELSE 0 END) as likes")).
+		Column(sq.Expr("SUM(CASE WHEN rl.value IS FALSE THEN 1 ELSE 0 END) as dislikes")).
 		From("review r").
 		LeftJoin("review_like rl ON r.id = rl.review_id").
 		Where(sq.Eq{"r.id": id}).
@@ -125,12 +123,10 @@ func (r *ReviewDB) GetReviewsByContentID(contentID, page, limit int) ([]*entity.
 		"r.content_rating",
 		"r.created_at",
 		"r.updated_at",
-		"likes",
-		"dislikes",
 	).
-		Column(sq.Expr("SUM(CASE WHEN rl.value THEN 1 ELSE 0 END) as likes")).
-		Column(sq.Expr("SUM(CASE WHEN rl.value THEN 0 ELSE 1 END) as dislikes")).
-		Column(sq.Expr("SUM(CASE WHEN rl.value THEN 1 ELSE -1 END) as rating")).
+		Column(sq.Expr("SUM(CASE WHEN rl.value IS TRUE THEN 1 ELSE 0 END) as likes")).
+		Column(sq.Expr("SUM(CASE WHEN rl.value IS FALSE THEN 1 ELSE 0 END) as dislikes")).
+		Column(sq.Expr("SUM(CASE WHEN rl.value IS TRUE THEN 1 WHEN rl.value IS FALSE THEN -1 ELSE 0 END) as rating")).
 		From("review r").
 		LeftJoin("review_like rl ON r.id = rl.review_id").
 		Where(sq.Eq{"r.content_id": contentID}).
@@ -149,6 +145,7 @@ func (r *ReviewDB) GetReviewsByContentID(contentID, page, limit int) ([]*entity.
 
 	reviews := make([]*entity.Review, 0, limit)
 	for rows.Next() {
+		var rating int
 		review := &entity.Review{}
 		err = rows.Scan(
 			&review.ID,
@@ -161,6 +158,7 @@ func (r *ReviewDB) GetReviewsByContentID(contentID, page, limit int) ([]*entity.
 			&review.UpdatedAt,
 			&review.Likes,
 			&review.Dislikes,
+			&rating,
 		)
 		if err != nil {
 			return nil, entity.PSQLWrap(err, errors.New("ошибка при сканировании рецензий"))
@@ -172,11 +170,9 @@ func (r *ReviewDB) GetReviewsByContentID(contentID, page, limit int) ([]*entity.
 
 // UpdateReview обновляет отзыв в базе данных.
 // У переданного entity.Review должны быть заполнены поля: ID, Title, Text, Rating.
-// Обратно возвращается указатель на эту же рецензию без изменений
 func (r *ReviewDB) UpdateReview(review *entity.Review) (*entity.Review, error) {
 	// no-lint
 	query, args, _ := sq.Update("review").
-		Set("content_id", review.ContentID).
 		Set("title", review.Title).
 		Set("text", review.Text).
 		Set("content_rating", review.Rating).
@@ -201,6 +197,10 @@ func (r *ReviewDB) UpdateReview(review *entity.Review) (*entity.Review, error) {
 			}
 		}
 		return nil, entity.PSQLWrap(err, errors.New("ошибка при обновлении рецензии"))
+	}
+	review, err = r.GetReviewByID(review.ID)
+	if err != nil {
+		return nil, err
 	}
 	return review, nil
 }
@@ -232,12 +232,10 @@ func (r *ReviewDB) GetReviewsByAuthorID(authorID, page, limit int) ([]*entity.Re
 		"r.content_rating",
 		"r.created_at",
 		"r.updated_at",
-		"likes",
-		"dislikes",
 	).
-		Column(sq.Expr("SUM(CASE WHEN rl.value THEN 1 ELSE 0 END) as likes")).
-		Column(sq.Expr("SUM(CASE WHEN rl.value THEN 0 ELSE 1 END) as dislikes")).
-		Column(sq.Expr("SUM(CASE WHEN rl.value THEN 1 ELSE -1 END) as rating")).
+		Column(sq.Expr("SUM(CASE WHEN rl.value IS TRUE THEN 1 ELSE 0 END) as likes")).
+		Column(sq.Expr("SUM(CASE WHEN rl.value IS FALSE THEN 1 ELSE 0 END) as dislikes")).
+		Column(sq.Expr("SUM(CASE WHEN rl.value IS TRUE THEN 1 WHEN rl.value IS FALSE THEN -1 ELSE 0 END) as rating")).
 		From("review r").
 		LeftJoin("review_like rl ON r.id = rl.review_id").
 		Where(sq.Eq{"r.user_id": authorID}).
@@ -250,12 +248,16 @@ func (r *ReviewDB) GetReviewsByAuthorID(authorID, page, limit int) ([]*entity.Re
 
 	rows, err := r.DB.Query(query, args...)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, entity.NewClientError("рецензии не найдены", entity.ErrNotFound)
+		}
 		return nil, entity.PSQLWrap(err, errors.New("ошибка при получении рецензий"))
 	}
 	defer rows.Close()
 
 	reviews := make([]*entity.Review, 0)
 	for rows.Next() {
+		var rating int
 		review := &entity.Review{}
 		err = rows.Scan(
 			&review.ID,
@@ -268,6 +270,7 @@ func (r *ReviewDB) GetReviewsByAuthorID(authorID, page, limit int) ([]*entity.Re
 			&review.UpdatedAt,
 			&review.Likes,
 			&review.Dislikes,
+			&rating,
 		)
 		if err != nil {
 			return nil, entity.PSQLWrap(err, errors.New("ошибка при сканировании рецензий"))
@@ -288,11 +291,9 @@ func (r *ReviewDB) GetContentReviewByAuthor(authorID, contentID int) (*entity.Re
 		"r.content_rating",
 		"r.created_at",
 		"r.updated_at",
-		"likes",
-		"dislikes",
 	).
-		Column(sq.Expr("SUM(CASE WHEN rl.value THEN 1 ELSE 0 END) as likes")).
-		Column(sq.Expr("SUM(CASE WHEN rl.value THEN 0 ELSE 1 END) as dislikes")).
+		Column(sq.Expr("SUM(CASE WHEN rl.value IS TRUE THEN 1 ELSE 0 END) as likes")).
+		Column(sq.Expr("SUM(CASE WHEN rl.value IS FALSE THEN 1 ELSE 0 END) as dislikes")).
 		From("review r").
 		LeftJoin("review_like rl ON r.id = rl.review_id").
 		Where(sq.Eq{"r.user_id": authorID, "r.content_id": contentID}).
@@ -326,8 +327,8 @@ func (r *ReviewDB) GetContentReviewByAuthor(authorID, contentID int) (*entity.Re
 // GetAuthorRating возвращает общий рейтинг автора на основе всех его отзывов
 func (r *ReviewDB) GetAuthorRating(authorID int) (int, error) {
 	// no-lint
-	query, args, _ := sq.Select("r.user_id").
-		Column(sq.Expr("SUM(CASE WHEN rl.value THEN 1 ELSE -1 END) as user_rating")).
+	query, args, _ := sq.Select().
+		Column(sq.Expr("SUM(CASE WHEN rl.value IS TRUE THEN 1 WHEN rl.value IS FALSE THEN -1 ELSE 0 END) as user_rating")).
 		From("review r").
 		LeftJoin("review_like rl ON r.id = rl.review_id").
 		Where(sq.Eq{"r.user_id": authorID}).
@@ -403,6 +404,12 @@ func (r *ReviewDB) LikeReview(reviewID, userID int, like bool) error {
 
 	_, err := r.DB.Exec(query, args...)
 	if err != nil {
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) {
+			if pqErr.Code == entity.PSQLForeignKeyViolation {
+				return entity.NewClientError("рецензия не найдена", entity.ErrNotFound)
+			}
+		}
 		return entity.PSQLWrap(err, errors.New("ошибка при добавлении лайка"))
 	}
 	return nil
@@ -416,9 +423,16 @@ func (r *ReviewDB) UnlikeReview(reviewID, userID int) error {
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 
-	_, err := r.DB.Exec(query, args...)
+	rows, err := r.DB.Exec(query, args...)
 	if err != nil {
 		return entity.PSQLWrap(err, errors.New("ошибка при удалении лайка"))
+	}
+	affected, err := rows.RowsAffected()
+	if err != nil {
+		return entity.PSQLWrap(err, errors.New("ошибка при получении количества затронутых строк"))
+	}
+	if affected == 0 {
+		return entity.NewClientError("лайк не найден", entity.ErrNotFound)
 	}
 	return nil
 }
@@ -446,20 +460,40 @@ func (r *ReviewDB) IsLikedByUser(reviewID, userID int) (int, error) {
 	return -1, nil
 }
 
-// GetContentRating возвращает рейтинг контента на основе всех рецензий
-func (r *ReviewDB) GetContentRating(contentID int) (int, error) {
-	// no-lint
+// GetContentRating возвращает рейтинг контента на основе всех рецензий. Если нет ни одной рецензии, использует IMDB
+func (r *ReviewDB) GetContentRating(contentID int) (float64, error) {
 	query, args, _ := sq.Select("AVG(content_rating)").
 		From("review").
 		Where(sq.Eq{"content_id": contentID}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-
-	var rating int
+	var rating sql.NullFloat64
 	err := r.DB.QueryRow(query, args...).Scan(&rating)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return 0, nil
+		}
+		return 0, entity.PSQLWrap(err, errors.New("ошибка при получении рейтинга контента"))
+	}
+	// Если рецензий нет, то используем IMDB
+	if rating.Float64 == .0 {
+		return r.getIMDBRating(contentID)
+	}
+	return rating.Float64, nil
+}
+
+func (r *ReviewDB) getIMDBRating(contentID int) (float64, error) {
+	query, args, _ := sq.Select("imdb").
+		From("content").
+		Where(sq.Eq{"id": contentID}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+
+	var rating float64
+	err := r.DB.QueryRow(query, args...).Scan(&rating)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, entity.NewClientError("контент не найден", entity.ErrNotFound)
 		}
 		return 0, entity.PSQLWrap(err, errors.New("ошибка при получении рейтинга контента"))
 	}

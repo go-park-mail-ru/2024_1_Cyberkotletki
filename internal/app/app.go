@@ -9,10 +9,10 @@ import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/postgres"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/redis"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/tmpdb"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/service"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"net/http"
 	"runtime/debug"
@@ -26,7 +26,10 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	if err != nil {
 		logger.Fatalf("Ошибка при создании репозитория пользователей: %v", err)
 	}
-	contentRepo := tmpdb.NewContentRepository()
+	contentRepo, err := postgres.NewContentRepository(params.Content.Postgres)
+	if err != nil {
+		logger.Fatalf("Ошибка при создании репозитория контента: %v", err)
+	}
 	sessionRepo, err := redis.NewSessionRepository(params)
 	if err != nil {
 		logger.Fatalf("Ошибка при создании репозитория сессий: %v", err)
@@ -39,23 +42,28 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	if err != nil {
 		logger.Fatalf("Ошибка при создании репозитория рецензий: %v", err)
 	}
+	compilationRepo, err := postgres.NewCompilationRepository(params.Compilation.Postgres)
+	if err != nil {
+		logger.Fatalf("Ошибка при создании репозитория подборок: %v", err)
+
+	}
 
 	// Use Cases
 	staticUseCase := service.NewStaticService(staticRepo)
 	authUseCase := service.NewAuthService(sessionRepo)
 	userUseCase := service.NewUserService(userRepo, reviewRepo, staticRepo)
-	contentUseCase := service.NewContentService(contentRepo)
-	collectionsUseCase := service.NewCollectionsService(contentRepo)
+	contentUseCase := service.NewContentService(contentRepo, reviewRepo, staticRepo)
 	reviewUseCase := service.NewReviewService(reviewRepo, userRepo, contentRepo, staticRepo)
+	compilationUseCase := service.NewCompilationService(compilationRepo, staticRepo, contentRepo, reviewRepo)
 
 	// Delivery
 	staticDelivery := delivery.NewStaticEndpoints(staticUseCase)
 	authDelivery := delivery.NewAuthEndpoints(authUseCase)
 	userDelivery := delivery.NewUserEndpoints(userUseCase, authUseCase, staticUseCase)
 	contentDelivery := delivery.NewContentEndpoints(contentUseCase)
-	collectionsDelivery := delivery.NewCollectionsEndpoints(collectionsUseCase)
 	playgroundDelivery := delivery.NewPlaygroundEndpoints()
 	reviewDelivery := delivery.NewReviewEndpoints(reviewUseCase, authUseCase)
+	compilationDelivery := delivery.NewCompilationEndpoints(compilationUseCase)
 
 	// REST API
 	echoServer := echo.New()
@@ -101,12 +109,56 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 				echo.HeaderAccessControlRequestMethod,
 				echo.HeaderAccessControlRequestHeaders,
 				echo.HeaderCookie,
+				"X-Csrf",
 			}, ","))
 			ctx.Response().Header().Set(echo.HeaderAccessControlAllowCredentials, "true")
 			ctx.Response().Header().Set(echo.HeaderAccessControlMaxAge, "86400")
 			return next(ctx)
 		}
 	})
+	// СSRF
+	/*
+		echoServer.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+			return func(ctx echo.Context) error {
+				// Сетим новый токен
+				token, err := random.Bytes(32)
+				cookie := http.Cookie{
+					Name:     "session",
+					MaxAge:   86400,
+					HttpOnly: true,
+					Secure:   params.HTTP.SecureCookies,
+					Path:     "/",
+				}
+				if err != nil {
+					// в качестве исключительного случая будем сетить csrf константным значением
+					ctx.Response().Header().Set("X-Csrf-Token", "error")
+					cookie.Value = "error"
+					ctx.SetCookie(&cookie)
+				}
+				ctx.Response().Header().Set("X-Csrf-Token", string(token))
+				cookie.Value = string(token)
+				// новый токен устанавливаем только после остальных операций
+				defer ctx.SetCookie(&cookie)
+
+				// Обрабатываем токен, если необходимо
+				if ctx.Request().Method == http.MethodPost ||
+					ctx.Request().Method == http.MethodPut ||
+					ctx.Request().Method == http.MethodDelete {
+					token, err := ctx.Cookie("X-Csrf-Token")
+					if err != nil || token.Value != ctx.Request().Header.Get("X-Csrf-Token") {
+						return ctx.JSON(http.StatusForbidden, struct{ message string }{message: "Невалидный csrf токен"})
+					}
+				}
+
+				return next(ctx)
+			}
+		})
+	*/
+	echoServer.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
+		CookieHTTPOnly: false,
+		CookiePath:     "/",
+		TokenLookup:    "header:X-Csrf",
+	}))
 	// recover
 	echoServer.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
@@ -122,7 +174,6 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 					)
 					ctx.Logger().Error(log)
 					ctx.Error(entity.ErrInternal)
-					fmt.Println(log)
 				}
 			}()
 			return next(ctx)
@@ -140,11 +191,7 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	playgroundAPI.GET("/ping", playgroundDelivery.Ping)
 	// content
 	contentAPI := api.Group("/content")
-	contentAPI.GET("/contentPreview", contentDelivery.GetContentPreview)
-	// collections
-	collectionsAPI := api.Group("/collections")
-	collectionsAPI.GET("/genres", collectionsDelivery.GetGenres)
-	collectionsAPI.GET("/compilation", collectionsDelivery.GetCompilationByGenre)
+	contentDelivery.Configure(contentAPI)
 	// user
 	userAPI := api.Group("/user")
 	userDelivery.Configure(userAPI)
@@ -154,6 +201,9 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	// reviews
 	reviewAPI := api.Group("/review")
 	reviewDelivery.Configure(reviewAPI)
+	// compilations
+	compilationAPI := api.Group("/compilation")
+	compilationDelivery.Configure(compilationAPI)
 	return echoServer
 }
 

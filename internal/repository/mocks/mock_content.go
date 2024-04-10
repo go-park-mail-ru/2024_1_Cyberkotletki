@@ -16,59 +16,6 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockFilm is a mock of Film interface.
-type MockFilm struct {
-	ctrl     *gomock.Controller
-	recorder *MockFilmMockRecorder
-}
-
-// MockFilmMockRecorder is the mock recorder for MockFilm.
-type MockFilmMockRecorder struct {
-	mock *MockFilm
-}
-
-// NewMockFilm creates a new mock instance.
-func NewMockFilm(ctrl *gomock.Controller) *MockFilm {
-	mock := &MockFilm{ctrl: ctrl}
-	mock.recorder = &MockFilmMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockFilm) EXPECT() *MockFilmMockRecorder {
-	return m.recorder
-}
-
-// GetFilm mocks base method.
-func (m *MockFilm) GetFilm(id int) (*entity.Film, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFilm", id)
-	ret0, _ := ret[0].(*entity.Film)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetFilm indicates an expected call of GetFilm.
-func (mr *MockFilmMockRecorder) GetFilm(id any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFilm", reflect.TypeOf((*MockFilm)(nil).GetFilm), id)
-}
-
-// GetFilmsByGenre mocks base method.
-func (m *MockFilm) GetFilmsByGenre(genreID int) ([]entity.Film, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFilmsByGenre", genreID)
-	ret0, _ := ret[0].([]entity.Film)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetFilmsByGenre indicates an expected call of GetFilmsByGenre.
-func (mr *MockFilmMockRecorder) GetFilmsByGenre(genreID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFilmsByGenre", reflect.TypeOf((*MockFilm)(nil).GetFilmsByGenre), genreID)
-}
-
 // MockContent is a mock of Content interface.
 type MockContent struct {
 	ctrl     *gomock.Controller
@@ -107,32 +54,47 @@ func (mr *MockContentMockRecorder) GetContent(id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContent", reflect.TypeOf((*MockContent)(nil).GetContent), id)
 }
 
-// GetFilm mocks base method.
-func (m *MockContent) GetFilm(id int) (*entity.Film, error) {
+// GetPerson mocks base method.
+func (m *MockContent) GetPerson(id int) (*entity.Person, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFilm", id)
-	ret0, _ := ret[0].(*entity.Film)
+	ret := m.ctrl.Call(m, "GetPerson", id)
+	ret0, _ := ret[0].(*entity.Person)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetFilm indicates an expected call of GetFilm.
-func (mr *MockContentMockRecorder) GetFilm(id any) *gomock.Call {
+// GetPerson indicates an expected call of GetPerson.
+func (mr *MockContentMockRecorder) GetPerson(id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFilm", reflect.TypeOf((*MockContent)(nil).GetFilm), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPerson", reflect.TypeOf((*MockContent)(nil).GetPerson), id)
 }
 
-// GetFilmsByGenre mocks base method.
-func (m *MockContent) GetFilmsByGenre(genreID int) ([]entity.Film, error) {
+// GetPersonRoles mocks base method.
+func (m *MockContent) GetPersonRoles(id int) ([]entity.Content, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFilmsByGenre", genreID)
-	ret0, _ := ret[0].([]entity.Film)
+	ret := m.ctrl.Call(m, "GetPersonRoles", id)
+	ret0, _ := ret[0].([]entity.Content)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetFilmsByGenre indicates an expected call of GetFilmsByGenre.
-func (mr *MockContentMockRecorder) GetFilmsByGenre(genreID any) *gomock.Call {
+// GetPersonRoles indicates an expected call of GetPersonRoles.
+func (mr *MockContentMockRecorder) GetPersonRoles(id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFilmsByGenre", reflect.TypeOf((*MockContent)(nil).GetFilmsByGenre), genreID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPersonRoles", reflect.TypeOf((*MockContent)(nil).GetPersonRoles), id)
+}
+
+// GetPreviewContent mocks base method.
+func (m *MockContent) GetPreviewContent(id int) (*entity.Content, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPreviewContent", id)
+	ret0, _ := ret[0].(*entity.Content)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPreviewContent indicates an expected call of GetPreviewContent.
+func (mr *MockContentMockRecorder) GetPreviewContent(id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPreviewContent", reflect.TypeOf((*MockContent)(nil).GetPreviewContent), id)
 }

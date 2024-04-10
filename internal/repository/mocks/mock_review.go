@@ -84,18 +84,18 @@ func (mr *MockReviewMockRecorder) GetAuthorRating(authorID any) *gomock.Call {
 }
 
 // GetContentRating mocks base method.
-func (m *MockReview) GetContentRating(reviewID int) (int, error) {
+func (m *MockReview) GetContentRating(contentID int) (float64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetContentRating", reviewID)
-	ret0, _ := ret[0].(int)
+	ret := m.ctrl.Call(m, "GetContentRating", contentID)
+	ret0, _ := ret[0].(float64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetContentRating indicates an expected call of GetContentRating.
-func (mr *MockReviewMockRecorder) GetContentRating(reviewID any) *gomock.Call {
+func (mr *MockReviewMockRecorder) GetContentRating(contentID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContentRating", reflect.TypeOf((*MockReview)(nil).GetContentRating), reviewID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContentRating", reflect.TypeOf((*MockReview)(nil).GetContentRating), contentID)
 }
 
 // GetContentReviewByAuthor mocks base method.

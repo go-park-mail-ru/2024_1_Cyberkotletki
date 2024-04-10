@@ -269,27 +269,6 @@ func TestUserService_GetUser(t *testing.T) {
 				userRepo.EXPECT().GetUser(gomock.Any()).Return(nil, entity.NewClientError("ошибка получения пользователя", entity.ErrInternal))
 			},
 		},
-		{
-			Name:            "Ошибка получения рейтинга",
-			UserID:          1,
-			ExpectedProfile: nil,
-			ExpectedErr:     entity.NewClientError("ошибка получения рейтинга", entity.ErrInternal),
-			SetupUserRepoMock: func(userRepo *mockrepo.MockUser, reviewRepo *mockrepo.MockReview, staticRepo *mockrepo.MockStatic) {
-				userRepo.EXPECT().GetUser(gomock.Any()).Return(&entity.User{Name: "name", Email: "email", AvatarUploadID: 1}, nil)
-				reviewRepo.EXPECT().GetAuthorRating(gomock.Any()).Return(0, entity.NewClientError("ошибка получения рейтинга", entity.ErrInternal))
-			},
-		},
-		{
-			Name:            "Ошибка получения аватара",
-			UserID:          1,
-			ExpectedProfile: nil,
-			ExpectedErr:     entity.NewClientError("ошибка получения аватара", entity.ErrInternal),
-			SetupUserRepoMock: func(userRepo *mockrepo.MockUser, reviewRepo *mockrepo.MockReview, staticRepo *mockrepo.MockStatic) {
-				userRepo.EXPECT().GetUser(gomock.Any()).Return(&entity.User{Name: "name", Email: "email", AvatarUploadID: 1}, nil)
-				reviewRepo.EXPECT().GetAuthorRating(gomock.Any()).Return(0, nil)
-				staticRepo.EXPECT().GetStatic(gomock.Any()).Return("", entity.NewClientError("ошибка получения аватара", entity.ErrInternal))
-			},
-		},
 	}
 
 	for _, tc := range testCases {

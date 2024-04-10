@@ -14,7 +14,7 @@ run-tests:
 
 .PHONY: gen-swagger
 gen-swagger:
-	swag init --dir cmd/app,internal/delivery --parseDependency
+	swag init --dir cmd/app,internal/delivery/http --parseDependency
 
 .PHONY: run-full-dev
 run-full-dev:
@@ -58,6 +58,12 @@ run-db-container:
 	-docker exec -it db psql -U postgres -c "CREATE DATABASE kinoskop"
 	-docker exec -it db psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE kinoskop TO kinoskop_admin"
 	-docker exec -it db psql -U postgres -c "ALTER DATABASE kinoskop OWNER TO kinoskop_admin;"
+
+.PHONY: create-db-from-state
+create-db-from-state:
+	# Выполняем SQL-скрипт из файла state1.sql
+	docker cp $(PWD)/db/states/state1.sql db:/state.sql
+	docker exec -i db bash -c 'psql -U kinoskop_admin kinoskop < /state.sql'
 
 .PHONY: run-migrations
 run-migrations:

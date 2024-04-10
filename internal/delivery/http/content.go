@@ -17,26 +17,63 @@ func NewContentEndpoints(useCase usecase.Content) ContentEndpoints {
 	return ContentEndpoints{useCase: useCase}
 }
 
-// GetContentPreview
-// @Tags Content
-// @Description Возвращает краткую информацию о фильме или сериале
-// @Param	id	query	int true	"ID искомого контента. Контентом может быть как фильм, так и сериал"
-// @Success		200	{object}	dto.PreviewContentCard	"Список с id фильмов указанного жанра"
-// @Failure		400	{object}	echo.HTTPError	"Требуется указать валидный id контента"
-// @Failure		404	{object}	echo.HTTPError	"Контент с таким id не найден"
-// @Failure		500	{object}	echo.HTTPError	"Внутренняя ошибка сервера"
-// @Router /content/contentPreview [get]
-func (h *ContentEndpoints) GetContentPreview(ctx echo.Context) error {
-	id, err := strconv.ParseInt(ctx.QueryParam("id"), 10, 64)
+func (h *ContentEndpoints) Configure(server *echo.Group) {
+	server.GET("/:id", h.GetContent)
+	server.GET("/person/:id", h.GetPerson)
+}
+
+// GetContent
+// @Summary Получение контента по id
+// @Tags content
+// @Description Получение контента по id
+// @Produce json
+// @Param id path int true "ID контента"
+// @Success 200 {object} dto.Content
+// @Failure 400 {object} echo.HTTPError
+// @Failure 404 {object} echo.HTTPError
+// @Failure 500 {object} echo.HTTPError
+// @Router /content/{id} [get]
+func (h *ContentEndpoints) GetContent(ctx echo.Context) error {
+	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
-		return utils.NewError(ctx, http.StatusBadRequest, err)
+		return utils.NewError(ctx, http.StatusBadRequest, entity.NewClientError("невалидный id контента"))
 	}
-	contentPreview, err := h.useCase.GetContentPreviewCard(int(id))
+	content, err := h.useCase.GetContentByID(int(id))
 	if err != nil {
-		if entity.Contains(err, entity.ErrNotFound) {
+		switch {
+		case entity.Contains(err, entity.ErrNotFound):
 			return utils.NewError(ctx, http.StatusNotFound, err)
+		default:
+			return utils.NewError(ctx, http.StatusInternalServerError, err)
 		}
-		return utils.NewError(ctx, http.StatusInternalServerError, err)
 	}
-	return utils.WriteJSON(ctx, *contentPreview)
+	return utils.WriteJSON(ctx, content)
+}
+
+// GetPerson
+// @Summary Получение персоны по id
+// @Tags content
+// @Description Получение персоны по id
+// @Produce json
+// @Param id path int true "ID персоны"
+// @Success 200 {object} dto.Person
+// @Failure 400 {object} echo.HTTPError
+// @Failure 404 {object} echo.HTTPError
+// @Failure 500 {object} echo.HTTPError
+// @Router /content/person/{id} [get]
+func (h *ContentEndpoints) GetPerson(ctx echo.Context) error {
+	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	if err != nil {
+		return utils.NewError(ctx, http.StatusBadRequest, entity.NewClientError("невалидный id персоны"))
+	}
+	person, err := h.useCase.GetPersonByID(int(id))
+	if err != nil {
+		switch {
+		case entity.Contains(err, entity.ErrNotFound):
+			return utils.NewError(ctx, http.StatusNotFound, err)
+		default:
+			return utils.NewError(ctx, http.StatusInternalServerError, err)
+		}
+	}
+	return utils.WriteJSON(ctx, person)
 }

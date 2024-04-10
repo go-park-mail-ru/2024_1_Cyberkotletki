@@ -235,7 +235,7 @@ func TestReviewEndpoints_GetMyContentReview(t *testing.T) {
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
 			c.SetPath("/review/myReview")
-			c.QueryParams().Add("id", tc.ContentID)
+			c.QueryParams().Add("content_id", tc.ContentID)
 			err := reviewHandler.GetMyContentReview(c)
 			require.Equal(t, tc.ExpectedErr, err)
 		})

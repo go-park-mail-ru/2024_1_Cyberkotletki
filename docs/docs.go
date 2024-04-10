@@ -52,6 +52,11 @@ const docTemplate = `{
         },
         "/auth/logout": {
             "post": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Удаляет сессию",
                 "tags": [
                     "Auth"
@@ -75,6 +80,11 @@ const docTemplate = `{
         },
         "/auth/logoutAll": {
             "post": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Удаляет все сессии пользователя",
                 "tags": [
                     "Auth"
@@ -102,101 +112,241 @@ const docTemplate = `{
                 }
             }
         },
-        "/collections/compilation": {
+        "/compilation/type/{compilationType}": {
             "get": {
-                "description": "Возвращает список всех доступных жанров фильмов и сериалов",
-                "tags": [
-                    "Collections"
+                "description": "Получение списка подборок по id типа подборки",
+                "consumes": [
+                    "application/json"
                 ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "compilation"
+                ],
+                "summary": "Получение списка подборок по типу подборок",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Жанр для составления подборки",
-                        "name": "genre",
-                        "in": "query",
+                        "description": "id типа подборки",
+                        "name": "compilationType",
+                        "in": "path",
                         "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Список с id фильмов указанного жанра",
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.Compilation"
-                        }
-                    },
-                    "404": {
-                        "description": "Такого жанра не существует",
-                        "schema": {
-                            "$ref": "#/definitions/echo.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Внутренняя ошибка сервера",
-                        "schema": {
-                            "$ref": "#/definitions/echo.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/collections/genres": {
-            "get": {
-                "description": "Возвращает список всех доступных жанров фильмов и сериалов",
-                "tags": [
-                    "Collections"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Список с id фильмов указанного жанра",
-                        "schema": {
-                            "$ref": "#/definitions/dto.Genres"
-                        }
-                    },
-                    "500": {
-                        "description": "Внутренняя ошибка сервера",
-                        "schema": {
-                            "$ref": "#/definitions/echo.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/content/contentPreview": {
-            "get": {
-                "description": "Возвращает краткую информацию о фильме или сериале",
-                "tags": [
-                    "Content"
-                ],
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID искомого контента. Контентом может быть как фильм, так и сериал",
-                        "name": "id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Список с id фильмов указанного жанра",
-                        "schema": {
-                            "$ref": "#/definitions/dto.PreviewContentCard"
+                            "$ref": "#/definitions/dto.CompilationResponseList"
                         }
                     },
                     "400": {
-                        "description": "Требуется указать валидный id контента",
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/echo.HTTPError"
                         }
                     },
                     "404": {
-                        "description": "Контент с таким id не найден",
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/echo.HTTPError"
                         }
                     },
                     "500": {
-                        "description": "Внутренняя ошибка сервера",
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/compilation/types": {
+            "get": {
+                "description": "Получение списка подборок по id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "compilation"
+                ],
+                "summary": "Получение списка подборок",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CompilationTypeResponseList"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/compilation/{id}/{page}": {
+            "get": {
+                "description": "Получение карточек контента подборки по id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "compilation"
+                ],
+                "summary": "Получение карточек контента подборки",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "id подборки",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "номер страницы",
+                        "name": "page",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CompilationContent"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/content/person/{id}": {
+            "get": {
+                "description": "Получение персоны по id",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "content"
+                ],
+                "summary": "Получение персоны по id",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID персоны",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Person"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/content/{id}": {
+            "get": {
+                "description": "Получение контента по id",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "content"
+                ],
+                "summary": "Получение контента по id",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID контента",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Content"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/echo.HTTPError"
                         }
@@ -222,6 +372,11 @@ const docTemplate = `{
         },
         "/review": {
             "put": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Обновить рецензию",
                 "consumes": [
                     "application/json"
@@ -284,6 +439,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Создать рецензию",
                 "consumes": [
                     "application/json"
@@ -321,6 +481,12 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
                             "$ref": "#/definitions/echo.HTTPError"
                         }
@@ -594,6 +760,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Удалить рецензию",
                 "consumes": [
                     "application/json"
@@ -650,6 +821,11 @@ const docTemplate = `{
         },
         "/review/{id}/dislike": {
             "put": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Поставить дизлайк рецензии",
                 "consumes": [
                     "application/json"
@@ -700,6 +876,11 @@ const docTemplate = `{
         },
         "/review/{id}/like": {
             "put": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Поставить лайк рецензии",
                 "consumes": [
                     "application/json"
@@ -748,6 +929,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Убрать лайк с рецензии",
                 "consumes": [
                     "application/json"
@@ -841,6 +1027,11 @@ const docTemplate = `{
         },
         "/user/avatar": {
             "put": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Позволяет загрузить аватарку пользователя. Необходимо быть авторизованным",
                 "consumes": [
                     "application/json"
@@ -892,6 +1083,11 @@ const docTemplate = `{
         },
         "/user/login": {
             "post": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Авторизация пользователя. При успешной авторизации отправляет куки с сессией. Если пользователь уже",
                 "consumes": [
                     "application/json"
@@ -981,6 +1177,11 @@ const docTemplate = `{
         },
         "/user/password": {
             "put": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Обновляет пароль пользователя. Необходимо быть авторизованным, при этом все сессии пользователя",
                 "consumes": [
                     "application/json"
@@ -1038,6 +1239,9 @@ const docTemplate = `{
                 "consumes": [
                     "application/json"
                 ],
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "User"
                 ],
@@ -1052,7 +1256,10 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.UserProfile"
+                        }
                     },
                     "400": {
                         "description": "Неверный id",
@@ -1075,6 +1282,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Позволяет обновить следующие данные пользователя: почта, имя (никнейм). Необходимо быть авторизованным.",
                 "consumes": [
                     "application/json"
@@ -1128,6 +1340,11 @@ const docTemplate = `{
         },
         "/user/register": {
             "post": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Регистрация пользователя. Сразу же возвращает сессию в cookies",
                 "consumes": [
                     "application/json"
@@ -1173,39 +1390,231 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dto.Compilation": {
+        "dto.CompilationContent": {
             "type": "object",
             "properties": {
-                "genre": {
-                    "type": "string",
-                    "example": "action"
+                "compilation_id": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
                 },
-                "ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    },
-                    "example": [
-                        1,
-                        2,
-                        3
-                    ]
+                "content_id": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
                 }
             }
         },
-        "dto.Genres": {
+        "dto.CompilationResponse": {
             "type": "object",
             "properties": {
+                "compilation_type_id": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
+                },
+                "content_length": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
+                },
+                "poster_upload_id": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
+                },
+                "title": {
+                    "type": "string",
+                    "format": "string",
+                    "example": "The Best"
+                }
+            }
+        },
+        "dto.CompilationResponseList": {
+            "type": "object",
+            "properties": {
+                "compilations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CompilationResponse"
+                    }
+                }
+            }
+        },
+        "dto.CompilationTypeResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
+                },
+                "type": {
+                    "type": "string",
+                    "format": "string",
+                    "example": "C"
+                }
+            }
+        },
+        "dto.CompilationTypeResponseList": {
+            "type": "object",
+            "properties": {
+                "compilation_types": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CompilationTypeResponse"
+                    }
+                }
+            }
+        },
+        "dto.Content": {
+            "type": "object",
+            "properties": {
+                "actors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PersonPreview"
+                    }
+                },
+                "ageRestriction": {
+                    "type": "integer",
+                    "example": 18
+                },
+                "audience": {
+                    "type": "integer",
+                    "example": 1000000
+                },
+                "boxOffice": {
+                    "type": "integer",
+                    "example": 1000000
+                },
+                "budget": {
+                    "type": "integer",
+                    "example": 1000000
+                },
+                "composers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PersonPreview"
+                    }
+                },
+                "countries": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "Россия",
+                        "США"
+                    ]
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Описание фильма или сериала"
+                },
+                "directors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PersonPreview"
+                    }
+                },
+                "editors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PersonPreview"
+                    }
+                },
                 "genres": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     },
                     "example": [
-                        "action",
-                        "drama",
-                        "comedian"
+                        "Боевик",
+                        "Драма"
                     ]
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "imdbRating": {
+                    "type": "number",
+                    "example": 9.1
+                },
+                "marketing": {
+                    "type": "integer",
+                    "example": 1000000
+                },
+                "movie": {
+                    "$ref": "#/definitions/dto.MovieContent"
+                },
+                "operators": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PersonPreview"
+                    }
+                },
+                "originalTitle": {
+                    "type": "string",
+                    "example": "Batman"
+                },
+                "posterURL": {
+                    "type": "string",
+                    "example": "/static/poster.jpg"
+                },
+                "producers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PersonPreview"
+                    }
+                },
+                "rating": {
+                    "type": "number",
+                    "example": 9.1
+                },
+                "series": {
+                    "$ref": "#/definitions/dto.SeriesContent"
+                },
+                "slogan": {
+                    "type": "string",
+                    "example": "I'm Batman"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Бэтмен"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "movie"
+                },
+                "writers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PersonPreview"
+                    }
+                }
+            }
+        },
+        "dto.Episode": {
+            "type": "object",
+            "properties": {
+                "episodeNumber": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Название серии"
                 }
             }
         },
@@ -1221,6 +1630,103 @@ const docTemplate = `{
                     "type": "string",
                     "format": "string",
                     "example": "SecretPassword1!"
+                }
+            }
+        },
+        "dto.MovieContent": {
+            "type": "object",
+            "properties": {
+                "duration": {
+                    "type": "integer",
+                    "example": 134
+                },
+                "premiere": {
+                    "type": "string",
+                    "example": "2020-01-01"
+                },
+                "release": {
+                    "type": "string",
+                    "example": "2020-01-01"
+                }
+            }
+        },
+        "dto.Person": {
+            "type": "object",
+            "properties": {
+                "birthDate": {
+                    "type": "string",
+                    "example": "1964-09-02"
+                },
+                "birthPlace": {
+                    "type": "string",
+                    "example": "Бейрут"
+                },
+                "children": {
+                    "type": "string",
+                    "example": "Homer, Bart, Lisa, Maggie"
+                },
+                "deathDate": {
+                    "type": "string",
+                    "example": "2021-09-02"
+                },
+                "endCareer": {
+                    "type": "string",
+                    "example": "2021-09-02"
+                },
+                "firstName": {
+                    "type": "string",
+                    "example": "Киану"
+                },
+                "height": {
+                    "type": "integer",
+                    "example": 185
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "lastName": {
+                    "type": "string",
+                    "example": "Ривз"
+                },
+                "photoURL": {
+                    "type": "string",
+                    "example": "/static/photo.jpg"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PreviewContentCard"
+                    }
+                },
+                "sex": {
+                    "type": "string",
+                    "example": "M"
+                },
+                "spouse": {
+                    "type": "string",
+                    "example": "Алисия Викандер"
+                },
+                "startCareer": {
+                    "type": "string",
+                    "example": "1984-09-02"
+                }
+            }
+        },
+        "dto.PersonPreview": {
+            "type": "object",
+            "properties": {
+                "firstName": {
+                    "type": "string",
+                    "example": "Киану"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "lastName": {
+                    "type": "string",
+                    "example": "Ривз"
                 }
             }
         },
@@ -1246,12 +1752,17 @@ const docTemplate = `{
                     "example": "Тарантино"
                 },
                 "duration": {
+                    "description": "Поля, которые есть только у фильмов",
                     "type": "integer",
                     "example": 134
                 },
                 "genre": {
                     "type": "string",
                     "example": "Боевик"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
                 },
                 "originalTitle": {
                     "type": "string",
@@ -1269,9 +1780,26 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 2020
                 },
+                "seasonsNumber": {
+                    "description": "Поля, которые есть только у сериалов",
+                    "type": "integer",
+                    "example": 1
+                },
                 "title": {
                     "type": "string",
                     "example": "Бэтмен"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "movie"
+                },
+                "yearEnd": {
+                    "type": "integer",
+                    "example": 2021
+                },
+                "yearStart": {
+                    "type": "integer",
+                    "example": 2020
                 }
             }
         },
@@ -1416,6 +1944,48 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.Season": {
+            "type": "object",
+            "properties": {
+                "episodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.Episode"
+                    }
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "yearEnd": {
+                    "type": "integer",
+                    "example": 2020
+                },
+                "yearStart": {
+                    "type": "integer",
+                    "example": 2020
+                }
+            }
+        },
+        "dto.SeriesContent": {
+            "type": "object",
+            "properties": {
+                "seasons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.Season"
+                    }
+                },
+                "yearEnd": {
+                    "type": "integer",
+                    "example": 2020
+                },
+                "yearStart": {
+                    "type": "integer",
+                    "example": 2020
+                }
+            }
+        },
         "dto.UpdatePassword": {
             "type": "object",
             "properties": {
@@ -1428,6 +1998,26 @@ const docTemplate = `{
                     "type": "string",
                     "format": "string",
                     "example": "OldPassword1!"
+                }
+            }
+        },
+        "dto.UserProfile": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "integer"
                 }
             }
         },
@@ -1464,6 +2054,13 @@ const docTemplate = `{
                 "message": {}
             }
         }
+    },
+    "securityDefinitions": {
+        "_csrf": {
+            "type": "apiKey",
+            "name": "x-csrf",
+            "in": "header"
+        }
     }
 }`
 
@@ -1474,7 +2071,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api",
 	Schemes:          []string{},
 	Title:            "API Киноскопа",
-	Description:      "",
+	Description:      "сервис Киноскоп (аналог кинопоиска)",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

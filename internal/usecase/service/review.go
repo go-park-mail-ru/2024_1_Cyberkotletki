@@ -5,6 +5,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
+	"strings"
 )
 
 type ReviewService struct {
@@ -135,8 +136,8 @@ func (r *ReviewService) CreateReview(review dto.ReviewCreate) (*dto.ReviewRespon
 		AuthorID:  review.UserID,
 		ContentID: review.ContentID,
 		Rating:    review.Rating,
-		Title:     review.Title,
-		Text:      review.Text,
+		Title:     strings.TrimSpace(review.Title),
+		Text:      strings.TrimSpace(review.Text),
 	})
 	if err != nil {
 		return nil, err
@@ -159,8 +160,8 @@ func (r *ReviewService) EditReview(review dto.ReviewUpdate) (*dto.ReviewResponse
 		ID:       review.ReviewID,
 		AuthorID: review.UserID,
 		Rating:   review.Rating,
-		Title:    review.Title,
-		Text:     review.Text,
+		Title:    strings.TrimSpace(review.Title),
+		Text:     strings.TrimSpace(review.Text),
 	})
 	if err != nil {
 		return nil, err

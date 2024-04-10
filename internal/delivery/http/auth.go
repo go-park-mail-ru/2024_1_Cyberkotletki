@@ -44,6 +44,7 @@ func (h *AuthEndpoints) IsAuth(ctx echo.Context) error {
 // @Param 	Cookie header string  true "session"     default(session=xxx)
 // @Success     200
 // @Router /auth/logout [post]
+// @Security _csrf
 func (h *AuthEndpoints) Logout(ctx echo.Context) error {
 	cookie, err := ctx.Cookie("session")
 	if err != nil {
@@ -66,6 +67,7 @@ func (h *AuthEndpoints) Logout(ctx echo.Context) error {
 // @Success     200
 // @Failure		500	{object}	echo.HTTPError	"Внутренняя ошибка сервера"
 // @Router /auth/logoutAll [post]
+// @Security _csrf
 func (h *AuthEndpoints) LogoutAll(ctx echo.Context) error {
 	cookie, err := ctx.Cookie("session")
 	if err != nil {

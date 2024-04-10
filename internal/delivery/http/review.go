@@ -75,7 +75,7 @@ func (h *ReviewEndpoints) GetReview(ctx echo.Context) error {
 // @Failure 500 {object} echo.HTTPError
 // @Router /review/myReview [get]
 func (h *ReviewEndpoints) GetMyContentReview(ctx echo.Context) error {
-	contentID, err := strconv.ParseInt(ctx.QueryParam("id"), 10, 64)
+	contentID, err := strconv.ParseInt(ctx.QueryParam("content_id"), 10, 64)
 	if err != nil {
 		return utils.NewError(ctx, http.StatusBadRequest, entity.NewClientError("невалидный id контента"))
 	}
@@ -105,8 +105,10 @@ func (h *ReviewEndpoints) GetMyContentReview(ctx echo.Context) error {
 // @Success 200 {object} dto.ReviewResponse
 // @Failure 400 {object} echo.HTTPError
 // @Failure 401 {object} echo.HTTPError
+// @Failure 409 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
 // @Router /review [post]
+// @Security _csrf
 func (h *ReviewEndpoints) CreateReview(ctx echo.Context) error {
 	var reviewCreate dto.ReviewCreateRequest
 	err := ctx.Bind(&reviewCreate)
@@ -125,6 +127,8 @@ func (h *ReviewEndpoints) CreateReview(ctx echo.Context) error {
 		switch {
 		case entity.Contains(err, entity.ErrBadRequest):
 			return utils.NewError(ctx, http.StatusBadRequest, err)
+		case entity.Contains(err, entity.ErrAlreadyExists):
+			return utils.NewError(ctx, http.StatusConflict, err)
 		default:
 			return utils.NewError(ctx, http.StatusInternalServerError, err)
 		}
@@ -146,6 +150,7 @@ func (h *ReviewEndpoints) CreateReview(ctx echo.Context) error {
 // @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
 // @Router /review [put]
+// @Security _csrf
 func (h *ReviewEndpoints) UpdateReview(ctx echo.Context) error {
 	var reviewUpdate dto.ReviewUpdateRequest
 	err := ctx.Bind(&reviewUpdate)
@@ -188,6 +193,7 @@ func (h *ReviewEndpoints) UpdateReview(ctx echo.Context) error {
 // @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
 // @Router /review/{id} [delete]
+// @Security _csrf
 func (h *ReviewEndpoints) DeleteReview(ctx echo.Context) error {
 	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
@@ -336,6 +342,7 @@ func (h *ReviewEndpoints) GetContentReviews(ctx echo.Context) error {
 // @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
 // @Router /review/{id}/like [put]
+// @Security _csrf
 func (h *ReviewEndpoints) LikeReview(ctx echo.Context) error {
 	reviewID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
@@ -369,6 +376,7 @@ func (h *ReviewEndpoints) LikeReview(ctx echo.Context) error {
 // @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
 // @Router /review/{id}/dislike [put]
+// @Security _csrf
 func (h *ReviewEndpoints) DislikeReview(ctx echo.Context) error {
 	reviewID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
@@ -402,6 +410,7 @@ func (h *ReviewEndpoints) DislikeReview(ctx echo.Context) error {
 // @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
 // @Router /review/{id}/like [delete]
+// @Security _csrf
 func (h *ReviewEndpoints) UnlikeReview(ctx echo.Context) error {
 	reviewID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {

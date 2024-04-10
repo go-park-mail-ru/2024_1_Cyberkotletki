@@ -61,7 +61,6 @@ func (s StaticDB) UploadStatic(path, filename string, data []byte) (int, error) 
 	// Создаем путь, если он еще не существует
 	dir := filepath.Dir(fmt.Sprintf("%s/%s/", s.basicPath, path))
 	err := os.MkdirAll(dir, 0755)
-	fmt.Println(dir)
 	if err != nil {
 		return -1, entity.NewClientError(
 			"произошла внутренняя ошибка",
