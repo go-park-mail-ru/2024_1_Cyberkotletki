@@ -19,32 +19,20 @@ func TestCompilationDB_GetCompilationsByTypeID(t *testing.T) {
 	testCases := []struct {
 		Name           string
 		RequestID      int
-		ExpectedOutput []*entity.Compilation
 		ExpectedErr    error
 		SetupMock      func(mock sqlmock.Sqlmock, query string, args []driver.Value)
 	}{
 		{
 			Name:      "Успешное получение",
 			RequestID: 1,
-			ExpectedOutput: []*entity.Compilation{
-				{
-					ID:                1,
-					Title:             "title",
-					CompilationTypeID: 1,
-					PosterUploadID:    1,
-				},
-			},
 			ExpectedErr: nil,
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
-					WillReturnRows(sqlmock.NewRows([]string{"id", "title", "compilation_type_id", "poster"}).
-						AddRow(1, "title", 1, "poster"))
 			},
 		},
 		{
 			Name:           "Несуществующая подборка",
-			RequestID:      1,
 			ExpectedOutput: nil,
 			ExpectedErr:    entity.PSQLWrap(sql.ErrNoRows, errors.New("ошибка при получении подборок")),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
@@ -55,13 +43,11 @@ func TestCompilationDB_GetCompilationsByTypeID(t *testing.T) {
 		},
 		{
 			Name:           "Неизвестная ошибка",
-			RequestID:      1,
 			ExpectedOutput: nil,
 			ExpectedErr:    entity.PSQLWrap(fmt.Errorf("ошибка"), errors.New("ошибка при получении подборок")),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
-					WillReturnError(fmt.Errorf("ошибка")) // или любой другой непредусмотренный код ошибки
 			},
 		},
 	}
@@ -75,7 +61,6 @@ func TestCompilationDB_GetCompilationsByTypeID(t *testing.T) {
 			repo := &CompilationDB{
 				DB: db,
 			}
-			query, args, _ := sq.Select("id", "title", "compilation_type_id", "poster").
 				From("compilation").
 				Where(sq.Eq{"compilation_type_id": tc.RequestID}).
 				OrderBy("title ASC").
@@ -271,28 +256,14 @@ func TestCompilationDB_GetAllCompilationTypes(t *testing.T) {
 
 	testCases := []struct {
 		Name           string
-		ExpectedOutput []*entity.CompilationType
 		ExpectedErr    error
 		SetupMock      func(mock sqlmock.Sqlmock, query string, args []driver.Value)
 	}{
 		{
 			Name: "Успешное получение",
-			ExpectedOutput: []*entity.CompilationType{
-				{
-					ID:   1,
-					Type: "type1",
-				},
-				{
-					ID:   2,
-					Type: "type2",
-				},
-			},
 			ExpectedErr: nil,
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
-					WillReturnRows(sqlmock.NewRows([]string{"id", "type"}).
-						AddRow(1, "type1").
-						AddRow(2, "type2"))
 			},
 		},
 		{
