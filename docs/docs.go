@@ -52,6 +52,11 @@ const docTemplate = `{
         },
         "/auth/logout": {
             "post": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Удаляет сессию",
                 "tags": [
                     "Auth"
@@ -75,6 +80,11 @@ const docTemplate = `{
         },
         "/auth/logoutAll": {
             "post": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Удаляет все сессии пользователя",
                 "tags": [
                     "Auth"
@@ -208,7 +218,7 @@ const docTemplate = `{
                 "summary": "Получение карточек контента подборки",
                 "parameters": [
                     {
-                        "type": "string",
+                        "type": "integer",
                         "description": "id подборки",
                         "name": "id",
                         "in": "path",
@@ -362,6 +372,11 @@ const docTemplate = `{
         },
         "/review": {
             "put": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Обновить рецензию",
                 "consumes": [
                     "application/json"
@@ -424,6 +439,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Создать рецензию",
                 "consumes": [
                     "application/json"
@@ -740,6 +760,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Удалить рецензию",
                 "consumes": [
                     "application/json"
@@ -796,6 +821,11 @@ const docTemplate = `{
         },
         "/review/{id}/dislike": {
             "put": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Поставить дизлайк рецензии",
                 "consumes": [
                     "application/json"
@@ -846,6 +876,11 @@ const docTemplate = `{
         },
         "/review/{id}/like": {
             "put": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Поставить лайк рецензии",
                 "consumes": [
                     "application/json"
@@ -894,6 +929,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Убрать лайк с рецензии",
                 "consumes": [
                     "application/json"
@@ -987,6 +1027,11 @@ const docTemplate = `{
         },
         "/user/avatar": {
             "put": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Позволяет загрузить аватарку пользователя. Необходимо быть авторизованным",
                 "consumes": [
                     "application/json"
@@ -1038,6 +1083,11 @@ const docTemplate = `{
         },
         "/user/login": {
             "post": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Авторизация пользователя. При успешной авторизации отправляет куки с сессией. Если пользователь уже",
                 "consumes": [
                     "application/json"
@@ -1127,6 +1177,11 @@ const docTemplate = `{
         },
         "/user/password": {
             "put": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Обновляет пароль пользователя. Необходимо быть авторизованным, при этом все сессии пользователя",
                 "consumes": [
                     "application/json"
@@ -1227,6 +1282,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Позволяет обновить следующие данные пользователя: почта, имя (никнейм). Необходимо быть авторизованным.",
                 "consumes": [
                     "application/json"
@@ -1280,6 +1340,11 @@ const docTemplate = `{
         },
         "/user/register": {
             "post": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Регистрация пользователя. Сразу же возвращает сессию в cookies",
                 "consumes": [
                     "application/json"
@@ -1989,6 +2054,13 @@ const docTemplate = `{
                 "message": {}
             }
         }
+    },
+    "securityDefinitions": {
+        "_csrf": {
+            "type": "apiKey",
+            "name": "x-csrf",
+            "in": "header"
+        }
     }
 }`
 
@@ -1999,7 +2071,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api",
 	Schemes:          []string{},
 	Title:            "API Киноскопа",
-	Description:      "",
+	Description:      "сервис Киноскоп (аналог кинопоиска)",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

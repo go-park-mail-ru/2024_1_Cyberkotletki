@@ -44,6 +44,7 @@ func (h *UserEndpoints) Configure(server *echo.Group) {
 // @Failure		409	{object}	echo.HTTPError
 // @Failure		500	{object}	echo.HTTPError
 // @Router /user/register [post]
+// @Security _csrf
 func (h *UserEndpoints) Register(ctx echo.Context) error {
 	registerData := new(dto.Register)
 	if err := ctx.Bind(registerData); err != nil {
@@ -76,6 +77,7 @@ func (h *UserEndpoints) Register(ctx echo.Context) error {
 // @Failure		404	{object}	echo.HTTPError
 // @Failure		500	{object}	echo.HTTPError
 // @Router /user/login [post]
+// @Security _csrf
 func (h *UserEndpoints) Login(ctx echo.Context) error {
 	loginData := new(dto.Login)
 	if err := ctx.Bind(loginData); err != nil {
@@ -108,6 +110,7 @@ func (h *UserEndpoints) Login(ctx echo.Context) error {
 // @Failure		401	{object}	echo.HTTPError	"Не авторизован"
 // @Failure		500	{object}	echo.HTTPError	"Внутренняя ошибка сервера"
 // @Router /user/password [put]
+// @Security _csrf
 func (h *UserEndpoints) UpdatePassword(ctx echo.Context) error {
 	userID, err := utils.GetUserIDFromSession(ctx, h.authUC)
 	if err != nil {
@@ -148,6 +151,7 @@ func (h *UserEndpoints) UpdatePassword(ctx echo.Context) error {
 // @Failure		401	{object}	echo.HTTPError	"Не авторизован"
 // @Failure		500	{object}	echo.HTTPError	"Внутренняя ошибка сервера"
 // @Router /user/avatar [put]
+// @Security _csrf
 func (h *UserEndpoints) UploadAvatar(ctx echo.Context) error {
 	userID, err := utils.GetUserIDFromSession(ctx, h.authUC)
 	if err != nil {
@@ -194,6 +198,7 @@ func (h *UserEndpoints) UploadAvatar(ctx echo.Context) error {
 // @Failure		401	{object}	echo.HTTPError	"Не авторизован"
 // @Failure		500	{object}	echo.HTTPError	"Внутренняя ошибка сервера"
 // @Router /user/profile [put]
+// @Security _csrf
 func (h *UserEndpoints) UpdateInfo(ctx echo.Context) error {
 	userID, err := utils.GetUserIDFromSession(ctx, h.authUC)
 	if err != nil {

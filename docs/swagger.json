@@ -1,6 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
+        "description": "сервис Киноскоп (аналог кинопоиска)",
         "title": "API Киноскопа",
         "contact": {},
         "version": "1.0"
@@ -44,6 +45,11 @@
         },
         "/auth/logout": {
             "post": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Удаляет сессию",
                 "tags": [
                     "Auth"
@@ -67,6 +73,11 @@
         },
         "/auth/logoutAll": {
             "post": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Удаляет все сессии пользователя",
                 "tags": [
                     "Auth"
@@ -200,7 +211,7 @@
                 "summary": "Получение карточек контента подборки",
                 "parameters": [
                     {
-                        "type": "string",
+                        "type": "integer",
                         "description": "id подборки",
                         "name": "id",
                         "in": "path",
@@ -354,6 +365,11 @@
         },
         "/review": {
             "put": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Обновить рецензию",
                 "consumes": [
                     "application/json"
@@ -416,6 +432,11 @@
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Создать рецензию",
                 "consumes": [
                     "application/json"
@@ -732,6 +753,11 @@
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Удалить рецензию",
                 "consumes": [
                     "application/json"
@@ -788,6 +814,11 @@
         },
         "/review/{id}/dislike": {
             "put": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Поставить дизлайк рецензии",
                 "consumes": [
                     "application/json"
@@ -838,6 +869,11 @@
         },
         "/review/{id}/like": {
             "put": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Поставить лайк рецензии",
                 "consumes": [
                     "application/json"
@@ -886,6 +922,11 @@
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Убрать лайк с рецензии",
                 "consumes": [
                     "application/json"
@@ -979,6 +1020,11 @@
         },
         "/user/avatar": {
             "put": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Позволяет загрузить аватарку пользователя. Необходимо быть авторизованным",
                 "consumes": [
                     "application/json"
@@ -1030,6 +1076,11 @@
         },
         "/user/login": {
             "post": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Авторизация пользователя. При успешной авторизации отправляет куки с сессией. Если пользователь уже",
                 "consumes": [
                     "application/json"
@@ -1119,6 +1170,11 @@
         },
         "/user/password": {
             "put": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Обновляет пароль пользователя. Необходимо быть авторизованным, при этом все сессии пользователя",
                 "consumes": [
                     "application/json"
@@ -1219,6 +1275,11 @@
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Позволяет обновить следующие данные пользователя: почта, имя (никнейм). Необходимо быть авторизованным.",
                 "consumes": [
                     "application/json"
@@ -1272,6 +1333,11 @@
         },
         "/user/register": {
             "post": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
                 "description": "Регистрация пользователя. Сразу же возвращает сессию в cookies",
                 "consumes": [
                     "application/json"
@@ -1980,6 +2046,13 @@
             "properties": {
                 "message": {}
             }
+        }
+    },
+    "securityDefinitions": {
+        "_csrf": {
+            "type": "apiKey",
+            "name": "x-csrf",
+            "in": "header"
         }
     }
 }

@@ -61,7 +61,11 @@ func ParseParams() config.Config {
 
 // @title API Киноскопа
 // @version 1.0
+// @Description сервис Киноскоп (аналог кинопоиска)
 // @BasePath  /api
+// @securityDefinitions.apikey _csrf
+// @in header
+// @name x-csrf
 func main() {
 	genCfg := flag.Bool("generate-example-config", false, "Генерирует пример конфига, с которым умеет работать сервер")
 	flag.Parse()

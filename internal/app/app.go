@@ -12,6 +12,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/service"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"net/http"
 	"runtime/debug"
@@ -152,6 +153,11 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 			}
 		})
 	*/
+	echoServer.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
+		CookieHTTPOnly: false,
+		CookiePath:     "/",
+		TokenLookup:    "header:X-Csrf",
+	}))
 	// recover
 	echoServer.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
@@ -167,7 +173,6 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 					)
 					ctx.Logger().Error(log)
 					ctx.Error(entity.ErrInternal)
-					fmt.Println(log)
 				}
 			}()
 			return next(ctx)

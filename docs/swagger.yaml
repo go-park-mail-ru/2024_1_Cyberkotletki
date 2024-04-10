@@ -481,6 +481,7 @@ definitions:
     type: object
 info:
   contact: {}
+  description: сервис Киноскоп (аналог кинопоиска)
   title: API Киноскопа
   version: "1.0"
 paths:
@@ -520,6 +521,8 @@ paths:
       responses:
         "200":
           description: OK
+      security:
+      - _csrf: []
       tags:
       - Auth
   /auth/logoutAll:
@@ -539,6 +542,8 @@ paths:
           description: Внутренняя ошибка сервера
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - _csrf: []
       tags:
       - Auth
   /compilation/{id}/{page}:
@@ -551,7 +556,7 @@ paths:
         in: path
         name: id
         required: true
-        type: string
+        type: integer
       - description: номер страницы
         in: path
         name: page
@@ -746,6 +751,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - _csrf: []
       summary: Создать рецензию
       tags:
       - review
@@ -787,6 +794,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - _csrf: []
       summary: Обновить рецензию
       tags:
       - review
@@ -824,6 +833,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - _csrf: []
       summary: Удалить рецензию
       tags:
       - review
@@ -889,6 +900,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - _csrf: []
       summary: Поставить дизлайк рецензии
       tags:
       - review
@@ -922,6 +935,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - _csrf: []
       summary: Убрать лайк с рецензии
       tags:
       - review
@@ -954,6 +969,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - _csrf: []
       summary: Поставить лайк рецензии
       tags:
       - review
@@ -1157,6 +1174,8 @@ paths:
           description: Внутренняя ошибка сервера
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - _csrf: []
       tags:
       - User
   /user/login:
@@ -1191,6 +1210,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - _csrf: []
       tags:
       - User
   /user/me:
@@ -1252,6 +1273,8 @@ paths:
           description: Внутренняя ошибка сервера
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - _csrf: []
       tags:
       - User
   /user/profile:
@@ -1319,6 +1342,8 @@ paths:
           description: Внутренняя ошибка сервера
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - _csrf: []
       tags:
       - User
   /user/register:
@@ -1348,6 +1373,13 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - _csrf: []
       tags:
       - User
+securityDefinitions:
+  _csrf:
+    in: header
+    name: x-csrf
+    type: apiKey
 swagger: "2.0"

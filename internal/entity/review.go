@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"strings"
 	"time"
 	"unicode/utf8"
 )
@@ -28,7 +29,7 @@ func ValidateReviewRating(rating int) error {
 
 // ValidateReviewText проверяет, что длина текста находится в диапазоне от 1 до 10000 символов
 func ValidateReviewText(text string) error {
-	if utf8.RuneCountInString(text) < 1 || utf8.RuneCountInString(text) > 10000 {
+	if utf8.RuneCountInString(strings.TrimSpace(text)) < 1 || utf8.RuneCountInString(strings.TrimSpace(text)) > 10000 {
 		return NewClientError("Количество символов в тексте рецензии должно быть от 1 до 10000", ErrBadRequest)
 	}
 	return nil
@@ -36,7 +37,7 @@ func ValidateReviewText(text string) error {
 
 // ValidateReviewTitle проверяет, что длина заголовка находится в диапазоне от 1 до 50 символов
 func ValidateReviewTitle(title string) error {
-	if utf8.RuneCountInString(title) < 1 || utf8.RuneCountInString(title) > 50 {
+	if utf8.RuneCountInString(strings.TrimSpace(title)) < 1 || utf8.RuneCountInString(strings.TrimSpace(title)) > 50 {
 		return NewClientError("Количество символов в заголовке рецензии должно быть от 1 до 50", ErrBadRequest)
 	}
 	return nil
