@@ -29,6 +29,21 @@ type ScanContent struct {
 	Marketing      sql.NullInt64
 }
 
+type ScanPerson struct {
+	ID            int
+	FirstName     string
+	LastName      string
+	BirthDate     sql.NullTime
+	DeathDate     sql.NullTime
+	StartCareer   sql.NullTime
+	EndCareer     sql.NullTime
+	Sex           string
+	Height        sql.NullInt64
+	Spouse        sql.NullString
+	Children      sql.NullString
+	PhotoStaticID sql.NullInt64
+}
+
 func NewContentRepository(database config.PostgresDatabase) (repository.Content, error) {
 	db, err := sql.Open("postgres", database.ConnectURL)
 	if err != nil {
@@ -466,12 +481,13 @@ func (c *ContentDB) GetPreviewContent(id int) (*entity.Content, error) {
 		Where(sq.Eq{"id": id}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
+	var scanContent ScanContent
 	var content entity.Content
 	err := c.DB.QueryRow(query, args...).Scan(
-		&content.ID,
-		&content.Title,
-		&content.OriginalTitle,
-		&content.PosterStaticID,
+		&scanContent.ID,
+		&scanContent.Title,
+		&scanContent.OriginalTitle,
+		&scanContent.PosterStaticID,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -479,6 +495,10 @@ func (c *ContentDB) GetPreviewContent(id int) (*entity.Content, error) {
 		}
 		return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при получении краткой информации о контенте"))
 	}
+	content.ID = scanContent.ID
+	content.Title = scanContent.Title
+	content.OriginalTitle = scanContent.OriginalTitle.String
+	content.PosterStaticID = scanContent.PosterStaticID
 	countries, err := c.getContentProductionCountries(id)
 	if err != nil {
 		return nil, err
@@ -542,20 +562,21 @@ func (c *ContentDB) GetPerson(id int) (*entity.Person, error) {
 		Where(sq.Eq{"id": id}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
+	var scanPerson ScanPerson
 	var person entity.Person
 	err := c.DB.QueryRow(query, args...).Scan(
-		&person.ID,
-		&person.FirstName,
-		&person.LastName,
-		&person.BirthDate,
-		&person.DeathDate,
-		&person.StartCareer,
-		&person.EndCareer,
-		&person.Sex,
-		&person.Height,
-		&person.Spouse,
-		&person.Children,
-		&person.PhotoStaticID,
+		&scanPerson.ID,
+		&scanPerson.FirstName,
+		&scanPerson.LastName,
+		&scanPerson.BirthDate,
+		&scanPerson.DeathDate,
+		&scanPerson.StartCareer,
+		&scanPerson.EndCareer,
+		&scanPerson.Sex,
+		&scanPerson.Height,
+		&scanPerson.Spouse,
+		&scanPerson.Children,
+		&scanPerson.PhotoStaticID,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -563,6 +584,23 @@ func (c *ContentDB) GetPerson(id int) (*entity.Person, error) {
 		}
 		return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при получении информации о персоне"))
 	}
+	person.ID = scanPerson.ID
+	person.FirstName = scanPerson.FirstName
+	person.LastName = scanPerson.LastName
+	person.BirthDate = scanPerson.BirthDate.Time
+	person.DeathDate = scanPerson.DeathDate.Time
+	person.StartCareer = scanPerson.StartCareer.Time
+	person.EndCareer = scanPerson.EndCareer.Time
+	person.Sex = scanPerson.Sex
+	if scanPerson.Height.Valid {
+		person.Height = int(scanPerson.Height.Int64)
+	}
+	person.Spouse = scanPerson.Spouse.String
+	person.Children = scanPerson.Children.String
+	if scanPerson.PhotoStaticID.Valid {
+		person.PhotoStaticID = int(scanPerson.PhotoStaticID.Int64)
+	}
+
 	return &person, nil
 }
 

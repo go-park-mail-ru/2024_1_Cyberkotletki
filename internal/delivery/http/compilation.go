@@ -18,9 +18,9 @@ func NewCompilationEndpoints(compilationUC usecase.Compilation) CompilationEndpo
 }
 
 func (h *CompilationEndpoints) Configure(server *echo.Group) {
-	server.GET("/compilation/types", h.GetCompilationTypes)
-	server.GET("/compilation/type/:compilationType", h.GetCompilationsByCompilationType)
-	server.GET("/compilation/content/:id", h.GetCompilationContent)
+	server.GET("/types", h.GetCompilationTypes)
+	server.GET("/type/:compilationType", h.GetCompilationsByCompilationType)
+	server.GET("/:id/:page", h.GetCompilationContent)
 }
 
 // GetCompilationTypes
@@ -82,7 +82,7 @@ func (h *CompilationEndpoints) GetCompilationsByCompilationType(ctx echo.Context
 // @Description Получение карточек контента подборки по id
 // @Accept json
 // @Produce json
-// @Param id path string true "id подборки"
+// @Param id path int true "id подборки"
 // @Param page path int true "номер страницы"
 // @Success 200 {object} dto.CompilationContent
 // @Failure 400 {object} echo.HTTPError

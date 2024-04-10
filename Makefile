@@ -59,6 +59,12 @@ run-db-container:
 	-docker exec -it db psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE kinoskop TO kinoskop_admin"
 	-docker exec -it db psql -U postgres -c "ALTER DATABASE kinoskop OWNER TO kinoskop_admin;"
 
+.PHONY: create-db-from-state
+create-db-from-state:
+	# Выполняем SQL-скрипт из файла state1.sql
+	docker cp $(PWD)/db/states/state1.sql db:/state.sql
+	docker exec -i db bash -c 'psql -U kinoskop_admin kinoskop < /state.sql'
+
 .PHONY: run-migrations
 run-migrations:
 	# Сначала нужно накатить goose

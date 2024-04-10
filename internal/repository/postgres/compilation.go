@@ -26,8 +26,8 @@ func NewCompilationRepository(database config.PostgresDatabase) (repository.Comp
 
 // GetCompilationsByTypeID получает все подборки по ID категории
 // подборок из бд отсортированные по алфавиту
-func (c *CompilationDB) GetCompilationsByTypeID(compilationTypeID int) ([]*entity.Compilation, error) {
-	query, args, _ := sq.Select("id", "title", "compilation_type_id", "poster").
+func (c *CompilationDB) GetCompilationsByTypeID(compilationTypeID int) ([]entity.Compilation, error) {
+	query, args, _ := sq.Select("id", "title", "compilation_type_id", "poster_upload_id").
 		From("compilation").
 		Where(sq.Eq{"compilation_type_id": compilationTypeID}).
 		OrderBy("title ASC").
@@ -38,9 +38,9 @@ func (c *CompilationDB) GetCompilationsByTypeID(compilationTypeID int) ([]*entit
 		return nil, entity.PSQLWrap(err, errors.New("ошибка при получении подборок"))
 	}
 	defer rows.Close()
-	compilations := make([]*entity.Compilation, 0)
+	compilations := make([]entity.Compilation, 0)
 	for rows.Next() {
-		compilation := &entity.Compilation{}
+		compilation := entity.Compilation{}
 		err = rows.Scan(
 			&compilation.ID,
 			&compilation.Title,
@@ -109,7 +109,7 @@ func (c *CompilationDB) GetCompilationContent(id, page, limit int) ([]int, error
 }
 
 // GetAllCompilationTypes получает все категории подборок в алфавитном порядке
-func (c *CompilationDB) GetAllCompilationTypes() ([]*entity.CompilationType, error) {
+func (c *CompilationDB) GetAllCompilationTypes() ([]entity.CompilationType, error) {
 	query, args, _ := sq.Select("id", "type").
 		From("compilation_type").
 		OrderBy("type ASC").
@@ -119,9 +119,9 @@ func (c *CompilationDB) GetAllCompilationTypes() ([]*entity.CompilationType, err
 		return nil, entity.PSQLWrap(err, errors.New("ошибка при получении категорий подборок"))
 	}
 	defer rows.Close()
-	compilationTypes := make([]*entity.CompilationType, 0)
+	compilationTypes := make([]entity.CompilationType, 0)
 	for rows.Next() {
-		compilationType := &entity.CompilationType{}
+		compilationType := entity.CompilationType{}
 		err = rows.Scan(&compilationType.ID, &compilationType.Type)
 		if err != nil {
 			return nil, entity.PSQLWrap(err, errors.New("ошибка при сканировании категорий подборок"))
