@@ -114,6 +114,44 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 			return next(ctx)
 		}
 	})
+	// СSRF
+	/*
+		echoServer.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+			return func(ctx echo.Context) error {
+				// Сетим новый токен
+				token, err := random.Bytes(32)
+				cookie := http.Cookie{
+					Name:     "session",
+					MaxAge:   86400,
+					HttpOnly: true,
+					Secure:   params.HTTP.SecureCookies,
+					Path:     "/",
+				}
+				if err != nil {
+					// в качестве исключительного случая будем сетить csrf константным значением
+					ctx.Response().Header().Set("X-Csrf-Token", "error")
+					cookie.Value = "error"
+					ctx.SetCookie(&cookie)
+				}
+				ctx.Response().Header().Set("X-Csrf-Token", string(token))
+				cookie.Value = string(token)
+				// новый токен устанавливаем только после остальных операций
+				defer ctx.SetCookie(&cookie)
+
+				// Обрабатываем токен, если необходимо
+				if ctx.Request().Method == http.MethodPost ||
+					ctx.Request().Method == http.MethodPut ||
+					ctx.Request().Method == http.MethodDelete {
+					token, err := ctx.Cookie("X-Csrf-Token")
+					if err != nil || token.Value != ctx.Request().Header.Get("X-Csrf-Token") {
+						return ctx.JSON(http.StatusForbidden, struct{ message string }{message: "Невалидный csrf токен"})
+					}
+				}
+
+				return next(ctx)
+			}
+		})
+	*/
 	// recover
 	echoServer.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
