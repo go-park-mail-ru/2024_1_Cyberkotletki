@@ -28,7 +28,7 @@ func NewCompilationService(
 }
 
 // compilationEntityToDTO конвертирует entity.Compilation в dto.Compilation добавляя поле длины контента в подборке
-func (c *CompilationService) compilationEntityToDTO(compEntity *entity.Compilation) (*dto.CompilationResponse, error) {
+func (c *CompilationService) compilationEntityToDTO(compEntity entity.Compilation) (*dto.CompilationResponse, error) {
 	contentLength, err := c.compilationRepo.GetCompilationContentLength(compEntity.ID)
 	if err != nil {
 		return nil, err
@@ -46,9 +46,9 @@ func (c *CompilationService) compilationEntityToDTO(compEntity *entity.Compilati
 
 // compilationTypeDTOToEntity конвертирует entity.CompilationType в dto.CompilationType
 func (c *CompilationService) compilationTypeDTOToEntity(
-	compTypeEntity *entity.CompilationType,
-) *dto.CompilationTypeResponse {
-	return &dto.CompilationTypeResponse{
+	compTypeEntity entity.CompilationType,
+) dto.CompilationTypeResponse {
+	return dto.CompilationTypeResponse{
 		CompilationType: dto.CompilationType{
 			ID:   compTypeEntity.ID,
 			Type: compTypeEntity.Type,
@@ -57,7 +57,7 @@ func (c *CompilationService) compilationTypeDTOToEntity(
 }
 
 // compilationEntitiesToDTO конвертирует массив entity.Compilation в массив dto.Compilation
-func (c *CompilationService) compilationEntitiesToDTO(compEntities []*entity.Compilation) (
+func (c *CompilationService) compilationEntitiesToDTO(compEntities []entity.Compilation) (
 	*dto.CompilationResponseList,
 	error,
 ) {
@@ -123,14 +123,13 @@ func (c *CompilationService) contentEntityToDTO(content *entity.Content) (*dto.P
 	return &card, nil
 }
 
-func (c *CompilationService) compilationTypeEntitiesToDTO(compTypeEntities []*entity.CompilationType) (
+func (c *CompilationService) compilationTypeEntitiesToDTO(compTypeEntities []entity.CompilationType) (
 	*dto.CompilationTypeResponseList,
 	error,
 ) {
 	compTypeDTOs := make([]dto.CompilationTypeResponse, 0, len(compTypeEntities))
-	for index, compTypeEntity := range compTypeEntities {
-		compTypeDTO := c.compilationTypeDTOToEntity(compTypeEntity)
-		compTypeDTOs[index] = *compTypeDTO
+	for _, compTypeEntity := range compTypeEntities {
+		compTypeDTOs = append(compTypeDTOs, c.compilationTypeDTOToEntity(compTypeEntity))
 	}
 	return &dto.CompilationTypeResponseList{CompilationTypes: compTypeDTOs}, nil
 }
@@ -160,7 +159,7 @@ func (c *CompilationService) GetCompilationContent(compID, page, limit int) ([]*
 	if err != nil {
 		return nil, err
 	}
-	contentCards := make([]*dto.PreviewContentCard, 0, limit)
+	contentCards := make([]*dto.PreviewContentCard, limit)
 	for index, contentID := range contentIDs {
 		content, err := c.contentRepo.GetPreviewContent(contentID)
 		if err != nil {
