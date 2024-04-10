@@ -109,6 +109,7 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 				echo.HeaderAccessControlRequestMethod,
 				echo.HeaderAccessControlRequestHeaders,
 				echo.HeaderCookie,
+				"X-Csrf",
 			}, ","))
 			ctx.Response().Header().Set(echo.HeaderAccessControlAllowCredentials, "true")
 			ctx.Response().Header().Set(echo.HeaderAccessControlMaxAge, "86400")
