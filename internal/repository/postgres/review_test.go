@@ -263,7 +263,7 @@ func TestReviewDB_GetReviewByID(t *testing.T) {
 			repo := &ReviewDB{
 				DB: db,
 			}
-			query, args, err := sq.Select(
+			query, args, _ := sq.Select(
 				"r.id",
 				"r.user_id",
 				"r.content_id",
@@ -272,11 +272,9 @@ func TestReviewDB_GetReviewByID(t *testing.T) {
 				"r.content_rating",
 				"r.created_at",
 				"r.updated_at",
-				"likes",
-				"dislikes",
 			).
-				Column(sq.Expr("SUM(CASE WHEN rl.value THEN 1 ELSE 0 END) as likes")).
-				Column(sq.Expr("SUM(CASE WHEN rl.value THEN 0 ELSE 1 END) as dislikes")).
+				Column(sq.Expr("SUM(CASE WHEN rl.value IS TRUE THEN 1 ELSE 0 END) as likes")).
+				Column(sq.Expr("SUM(CASE WHEN rl.value IS FALSE THEN 1 ELSE 0 END) as dislikes")).
 				From("review r").
 				LeftJoin("review_like rl ON r.id = rl.review_id").
 				Where(sq.Eq{"r.id": tc.RequestID}).
@@ -353,8 +351,9 @@ func TestReviewDB_GetReviewsByContentID(t *testing.T) {
 						"r.updated_at",
 						"likes",
 						"dislikes",
+						"rating",
 					}).
-						AddRows([]driver.Value{1, 1, 1, "title", "text", 5, fixedTime, fixedTime, 10, 100}))
+						AddRows([]driver.Value{1, 1, 1, "title", "text", 5, fixedTime, fixedTime, 10, 100, -90}))
 			},
 		},
 		{
@@ -404,7 +403,7 @@ func TestReviewDB_GetReviewsByContentID(t *testing.T) {
 			repo := &ReviewDB{
 				DB: db,
 			}
-			query, args, err := sq.Select(
+			query, args, _ := sq.Select(
 				"r.id",
 				"r.user_id",
 				"r.content_id",
@@ -413,12 +412,10 @@ func TestReviewDB_GetReviewsByContentID(t *testing.T) {
 				"r.content_rating",
 				"r.created_at",
 				"r.updated_at",
-				"likes",
-				"dislikes",
 			).
-				Column(sq.Expr("SUM(CASE WHEN rl.value THEN 1 ELSE 0 END) as likes")).
-				Column(sq.Expr("SUM(CASE WHEN rl.value THEN 0 ELSE 1 END) as dislikes")).
-				Column(sq.Expr("SUM(CASE WHEN rl.value THEN 1 ELSE -1 END) as rating")).
+				Column(sq.Expr("SUM(CASE WHEN rl.value IS TRUE THEN 1 ELSE 0 END) as likes")).
+				Column(sq.Expr("SUM(CASE WHEN rl.value IS FALSE THEN 1 ELSE 0 END) as dislikes")).
+				Column(sq.Expr("SUM(CASE WHEN rl.value IS TRUE THEN 1 WHEN rl.value IS FALSE THEN -1 ELSE 0 END) as rating")).
 				From("review r").
 				LeftJoin("review_like rl ON r.id = rl.review_id").
 				Where(sq.Eq{"r.content_id": tc.Request.ContentID}).
@@ -468,10 +465,48 @@ func TestReviewDB_UpdateReview(t *testing.T) {
 				Title:     "title",
 				Text:      "text",
 				Rating:    5,
+				Likes:     10,
+				Dislikes:  100,
 			},
 			ExpectedErr: nil,
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectExec(regexp.QuoteMeta(query)).WithArgs(args...).WillReturnResult(driver.ResultNoRows)
+				query, args_, _ := sq.Select(
+					"r.id",
+					"r.user_id",
+					"r.content_id",
+					"r.title",
+					"r.text",
+					"r.content_rating",
+					"r.created_at",
+					"r.updated_at",
+				).
+					Column(sq.Expr("SUM(CASE WHEN rl.value IS TRUE THEN 1 ELSE 0 END) as likes")).
+					Column(sq.Expr("SUM(CASE WHEN rl.value IS FALSE THEN 1 ELSE 0 END) as dislikes")).
+					From("review r").
+					LeftJoin("review_like rl ON r.id = rl.review_id").
+					Where(sq.Eq{"r.id": 1}).
+					GroupBy("r.id").
+					PlaceholderFormat(sq.Dollar).
+					ToSql()
+				driverValues := make([]driver.Value, len(args_))
+				for i, v := range args_ {
+					driverValues[i] = v
+				}
+				mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(driverValues...).WillReturnRows(
+					sqlmock.NewRows([]string{
+						"r.id",
+						"r.user_id",
+						"r.content_id",
+						"r.title",
+						"r.text",
+						"r.content_rating",
+						"r.created_at",
+						"r.updated_at",
+						"likes",
+						"dislikes",
+					}).
+						AddRow(1, 1, 1, "title", "text", 5, time.Time{}, time.Time{}, 10, 100))
 			},
 		},
 		{
@@ -557,8 +592,7 @@ func TestReviewDB_UpdateReview(t *testing.T) {
 			repo := &ReviewDB{
 				DB: db,
 			}
-			query, args, err := sq.Update("review").
-				Set("content_id", tc.RequestReview.ContentID).
+			query, args, _ := sq.Update("review").
 				Set("title", tc.RequestReview.Title).
 				Set("text", tc.RequestReview.Text).
 				Set("content_rating", tc.RequestReview.Rating).
@@ -686,8 +720,9 @@ func TestReviewDB_GetReviewsByAuthorID(t *testing.T) {
 						"r.updated_at",
 						"likes",
 						"dislikes",
+						"rating",
 					}).
-						AddRows([]driver.Value{1, 1, 1, "title", "text", 5, fixedTime, fixedTime, 10, 100}))
+						AddRows([]driver.Value{1, 1, 1, "title", "text", 5, fixedTime, fixedTime, 10, 100, -90}))
 			},
 		},
 		{
@@ -737,7 +772,7 @@ func TestReviewDB_GetReviewsByAuthorID(t *testing.T) {
 			repo := &ReviewDB{
 				DB: db,
 			}
-			query, args, err := sq.Select(
+			query, args, _ := sq.Select(
 				"r.id",
 				"r.user_id",
 				"r.content_id",
@@ -746,12 +781,10 @@ func TestReviewDB_GetReviewsByAuthorID(t *testing.T) {
 				"r.content_rating",
 				"r.created_at",
 				"r.updated_at",
-				"likes",
-				"dislikes",
 			).
-				Column(sq.Expr("SUM(CASE WHEN rl.value THEN 1 ELSE 0 END) as likes")).
-				Column(sq.Expr("SUM(CASE WHEN rl.value THEN 0 ELSE 1 END) as dislikes")).
-				Column(sq.Expr("SUM(CASE WHEN rl.value THEN 1 ELSE -1 END) as rating")).
+				Column(sq.Expr("SUM(CASE WHEN rl.value IS TRUE THEN 1 ELSE 0 END) as likes")).
+				Column(sq.Expr("SUM(CASE WHEN rl.value IS FALSE THEN 1 ELSE 0 END) as dislikes")).
+				Column(sq.Expr("SUM(CASE WHEN rl.value IS TRUE THEN 1 WHEN rl.value IS FALSE THEN -1 ELSE 0 END) as rating")).
 				From("review r").
 				LeftJoin("review_like rl ON r.id = rl.review_id").
 				Where(sq.Eq{"r.user_id": tc.Request.AuthorID}).
@@ -872,7 +905,7 @@ func TestReviewDB_GetContentReviewByAuthor(t *testing.T) {
 			repo := &ReviewDB{
 				DB: db,
 			}
-			query, args, err := sq.Select(
+			query, args, _ := sq.Select(
 				"r.id",
 				"r.user_id",
 				"r.content_id",
@@ -881,11 +914,9 @@ func TestReviewDB_GetContentReviewByAuthor(t *testing.T) {
 				"r.content_rating",
 				"r.created_at",
 				"r.updated_at",
-				"likes",
-				"dislikes",
 			).
-				Column(sq.Expr("SUM(CASE WHEN rl.value THEN 1 ELSE 0 END) as likes")).
-				Column(sq.Expr("SUM(CASE WHEN rl.value THEN 0 ELSE 1 END) as dislikes")).
+				Column(sq.Expr("SUM(CASE WHEN rl.value IS TRUE THEN 1 ELSE 0 END) as likes")).
+				Column(sq.Expr("SUM(CASE WHEN rl.value IS FALSE THEN 1 ELSE 0 END) as dislikes")).
 				From("review r").
 				LeftJoin("review_like rl ON r.id = rl.review_id").
 				Where(sq.Eq{"r.user_id": tc.Request.AuthorID, "r.content_id": tc.Request.ContentID}).
@@ -957,8 +988,8 @@ func TestReviewDB_GetAuthorRating(t *testing.T) {
 			repo := &ReviewDB{
 				DB: db,
 			}
-			query, args, err := sq.Select("r.user_id").
-				Column(sq.Expr("SUM(CASE WHEN rl.value THEN 1 ELSE -1 END) as user_rating")).
+			query, args, _ := sq.Select().
+				Column(sq.Expr("SUM(CASE WHEN rl.value IS TRUE THEN 1 WHEN rl.value IS FALSE THEN -1 ELSE 0 END) as user_rating")).
 				From("review r").
 				LeftJoin("review_like rl ON r.id = rl.review_id").
 				Where(sq.Eq{"r.user_id": tc.RequestID}).
@@ -1170,7 +1201,7 @@ func TestReviewDB_UnlikeReview(t *testing.T) {
 			},
 			ExpectedErr: nil,
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
-				mock.ExpectExec(regexp.QuoteMeta(query)).WithArgs(args...).WillReturnResult(driver.ResultNoRows)
+				mock.ExpectExec(regexp.QuoteMeta(query)).WithArgs(args...).WillReturnResult(sqlmock.NewResult(0, 1))
 			},
 		},
 		{

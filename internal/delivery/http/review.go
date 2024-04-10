@@ -75,7 +75,7 @@ func (h *ReviewEndpoints) GetReview(ctx echo.Context) error {
 // @Failure 500 {object} echo.HTTPError
 // @Router /review/myReview [get]
 func (h *ReviewEndpoints) GetMyContentReview(ctx echo.Context) error {
-	contentID, err := strconv.ParseInt(ctx.QueryParam("id"), 10, 64)
+	contentID, err := strconv.ParseInt(ctx.QueryParam("content_id"), 10, 64)
 	if err != nil {
 		return utils.NewError(ctx, http.StatusBadRequest, entity.NewClientError("невалидный id контента"))
 	}
@@ -105,6 +105,7 @@ func (h *ReviewEndpoints) GetMyContentReview(ctx echo.Context) error {
 // @Success 200 {object} dto.ReviewResponse
 // @Failure 400 {object} echo.HTTPError
 // @Failure 401 {object} echo.HTTPError
+// @Failure 409 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
 // @Router /review [post]
 func (h *ReviewEndpoints) CreateReview(ctx echo.Context) error {
@@ -125,6 +126,8 @@ func (h *ReviewEndpoints) CreateReview(ctx echo.Context) error {
 		switch {
 		case entity.Contains(err, entity.ErrBadRequest):
 			return utils.NewError(ctx, http.StatusBadRequest, err)
+		case entity.Contains(err, entity.ErrAlreadyExists):
+			return utils.NewError(ctx, http.StatusConflict, err)
 		default:
 			return utils.NewError(ctx, http.StatusInternalServerError, err)
 		}

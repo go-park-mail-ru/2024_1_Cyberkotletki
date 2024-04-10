@@ -14,6 +14,21 @@ type ContentDB struct {
 	DB *sql.DB
 }
 
+type ScanContent struct {
+	ID             int
+	Title          string
+	OriginalTitle  sql.NullString
+	Slogan         sql.NullString
+	Budget         sql.NullInt64
+	AgeRestriction int
+	Audience       sql.NullInt64
+	IMDBRating     float64
+	Description    string
+	PosterStaticID int
+	BoxOffice      sql.NullInt64
+	Marketing      sql.NullInt64
+}
+
 func NewContentRepository(database config.PostgresDatabase) (repository.Content, error) {
 	db, err := sql.Open("postgres", database.ConnectURL)
 	if err != nil {
@@ -343,21 +358,35 @@ func (c *ContentDB) GetContent(id int) (*entity.Content, error) {
 		Where(sq.Eq{"id": id}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
+	var scanContent ScanContent
 	var content entity.Content
 	err := c.DB.QueryRow(query, args...).Scan(
-		&content.ID,
-		&content.Title,
-		&content.OriginalTitle,
-		&content.Slogan,
-		&content.Budget,
-		&content.AgeRestriction,
-		&content.Audience,
-		&content.IMDBRating,
-		&content.Description,
-		&content.PosterStaticID,
-		&content.BoxOffice,
-		&content.Marketing,
+		&scanContent.ID,
+		&scanContent.Title,
+		&scanContent.OriginalTitle,
+		&scanContent.Slogan,
+		&scanContent.Budget,
+		&scanContent.AgeRestriction,
+		&scanContent.Audience,
+		&scanContent.IMDBRating,
+		&scanContent.Description,
+		&scanContent.PosterStaticID,
+		&scanContent.BoxOffice,
+		&scanContent.Marketing,
 	)
+	content.ID = scanContent.ID
+	content.Title = scanContent.Title
+	content.OriginalTitle = scanContent.OriginalTitle.String
+	content.Slogan = scanContent.Slogan.String
+	content.Budget = int(scanContent.Budget.Int64)
+	content.AgeRestriction = scanContent.AgeRestriction
+	content.Audience = int(scanContent.Audience.Int64)
+	content.IMDBRating = scanContent.IMDBRating
+	content.Description = scanContent.Description
+	content.PosterStaticID = scanContent.PosterStaticID
+	content.BoxOffice = int(scanContent.BoxOffice.Int64)
+	content.Marketing = int(scanContent.Marketing.Int64)
+
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, entity.NewClientError("Контент не найден", entity.ErrNotFound)
