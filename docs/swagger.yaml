@@ -541,7 +541,7 @@ paths:
             $ref: '#/definitions/echo.HTTPError'
       tags:
       - Auth
-  /compilation/{id}:
+  /compilation/{id}/{page}:
     get:
       consumes:
       - application/json
@@ -553,8 +553,9 @@ paths:
         required: true
         type: string
       - description: номер страницы
-        in: query
+        in: path
         name: page
+        required: true
         type: integer
       produces:
       - application/json
@@ -735,6 +736,10 @@ paths:
             $ref: '#/definitions/echo.HTTPError'
         "401":
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "409":
+          description: Conflict
           schema:
             $ref: '#/definitions/echo.HTTPError'
         "500":

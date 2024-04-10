@@ -83,18 +83,18 @@ func (h *CompilationEndpoints) GetCompilationsByCompilationType(ctx echo.Context
 // @Accept json
 // @Produce json
 // @Param id path string true "id подборки"
-// @Param page query int false "номер страницы"
+// @Param page path int true "номер страницы"
 // @Success 200 {object} dto.CompilationContent
 // @Failure 400 {object} echo.HTTPError
 // @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
-// @Router /compilation/{id} [get]
+// @Router /compilation/{id}/{page} [get]
 func (h *CompilationEndpoints) GetCompilationContent(ctx echo.Context) error {
 	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
 		return utils.NewError(ctx, http.StatusBadRequest, entity.NewClientError("невалидный id подборки"))
 	}
-	page, err := strconv.ParseInt(ctx.QueryParam("page"), 10, 64)
+	page, err := strconv.ParseInt(ctx.Param("page"), 10, 64)
 	if err != nil {
 		page = 1
 	}

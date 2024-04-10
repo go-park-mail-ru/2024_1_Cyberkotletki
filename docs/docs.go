@@ -193,7 +193,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/compilation/{id}": {
+        "/compilation/{id}/{page}": {
             "get": {
                 "description": "Получение карточек контента подборки по id",
                 "consumes": [
@@ -218,7 +218,8 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "номер страницы",
                         "name": "page",
-                        "in": "query"
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -460,6 +461,12 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
                             "$ref": "#/definitions/echo.HTTPError"
                         }
