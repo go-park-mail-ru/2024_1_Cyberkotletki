@@ -40,10 +40,10 @@ func (m *MockCompilation) EXPECT() *MockCompilationMockRecorder {
 }
 
 // GetAllCompilationTypes mocks base method.
-func (m *MockCompilation) GetAllCompilationTypes() ([]*entity.CompilationType, error) {
+func (m *MockCompilation) GetAllCompilationTypes() ([]entity.CompilationType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllCompilationTypes")
-	ret0, _ := ret[0].([]*entity.CompilationType)
+	ret0, _ := ret[0].([]entity.CompilationType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -85,10 +85,10 @@ func (mr *MockCompilationMockRecorder) GetCompilationContentLength(id any) *gomo
 }
 
 // GetCompilationsByTypeID mocks base method.
-func (m *MockCompilation) GetCompilationsByTypeID(compilationTypeID int) ([]*entity.Compilation, error) {
+func (m *MockCompilation) GetCompilationsByTypeID(compilationTypeID int) ([]entity.Compilation, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCompilationsByTypeID", compilationTypeID)
-	ret0, _ := ret[0].([]*entity.Compilation)
+	ret0, _ := ret[0].([]entity.Compilation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
