@@ -1,228 +1,165 @@
 ```mermaid
 erDiagram
-    AUDIENCE {
-        INT ID PK "Уникальный идентификатор аудитории"
-        INT CONTENT_ID FK "Идентификатор контента, который имеет эту аудиторию"
-        INT SIZE_IN_THOUSANDS "Размер аудитории в тысячах"
-        INT COUNTRY_ID "Идентификатор страны аудитории"
-        TIME created_at "время создания кортежа, для отладки"
+    STATIC {
+        INT id PK "Уникальный идентификатор"
+        STRING name "Имя"
+        STRING path "Путь"
+        TIMESTAMPTZ created_at "Время создания"
     }
     COUNTRY {
-        INT ID PK "Уникальный идентификатор страны"
-        STRING NAME "Название страны"
-        TIME created_at "время создания кортежа, для отладки"
-    }
-    BOXOFFICE {
-        INT ID PK "Уникальный идентификатор кассовых сборов"
-        INT CONTENT_ID FK "Идентификатор контента, который имеет этот кассовый сбор"
-        INT COUNTRY_ID "Идентификатор страны кассовых сборов"
-        INT REVENUE "Сумма сборов"
-        TIME created_at "время создания кортежа, для отладки"
+        INT id PK "Уникальный идентификатор страны"
+        STRING name "Название страны"
     }
     GENRE {
-        INT ID PK "Уникальный идентификатор жанра"
-        STRING NAME "Название жанра на английском"
-        STRING NAME_RU "Название жанра на русском"
-        TIME created_at "время создания кортежа, для отладки"
-    }
-    BIRTHPLACE{
-        INT ID PK "Уникальный идентификатор места рождения"
-	    STRING CITY "Город рождения"
-	    STRING REGION "Регион рождения"
-	    INT COUNTRY_ID "Идентификатор страны рождения"
-        TIME created_at "время создания кортежа, для отладки"
+        INT id PK "Уникальный идентификатор жанра"
+        STRING name "Название жанра"
     }
     PERSON {
-        INT ID PK "Уникальный идентификатор персоны"
-        STRING FIRST_NAME "Имя персоны"  
-	    STRING LAST_NAME "Фамилия персоны"  
-	    TIME BIRTH_DATE "Дата рождения персоны"  
-        INT BIRTHPLACE_ID FK "Идентификатор места рождения персоны"  
-	    TIME DEATH_DATE "Дата смерти персоны"  
-	    TIME START_CAREER "Дата начала карьеры персоны" 
-	    TIME END_CAREER "Дата окончания карьеры персоны" 
-	    STRING SEX "Пол персоны"
-	    STRING PHOTO "Фотография персоны"
-	    INT HEIGHT "Рост персоны"         
-	    STRING SPOUSE "Супруг(а) персоны"  
-	    STRING CHILDREN "Дети персоны"
-        TIME created_at "время создания кортежа, для отладки"
-        TIME updated_at "время изменения кортежа, для отладки"
-    }
-    ROLES{
-        INT ID PK "Уникальный идентификатор роли персоны в контенте"
-	    STRING NAME "Название роли (актер, режиссер, дублер и т.д.)"  
-        TIME created_at "время создания кортежа, для отладки"
-    }
-    FILM {
-        INT ID PK "Уникальный идентификатор фильма"
-        INT CONTENT_ID FK "Идентификатор контента, который относится к фильму"
-        INT YEAR "Год выпуска фильма"
-        TIME created_at "время создания кортежа, для отладки"
-        TIME updated_at "время изменения кортежа, для отладки"
+        INT id PK "Уникальный идентификатор персоны"
+        STRING first_name "Имя персоны"
+        STRING last_name "Фамилия персоны"
+        DATE birth_date "Дата рождения персоны"
+        DATE death_date "Дата смерти персоны"
+        DATE start_career "Дата начала карьеры персоны"
+        DATE end_career "Дата окончания карьеры персоны"
+        CHAR sex "Пол персоны"
+        INT height "Рост персоны"
+        STRING spouse "Супруг(а) персоны"
+        STRING children "Дети персоны"
+        INT photo_upload_id FK "Идентификатор загрузки фото"
+        TIMESTAMPTZ created_at "Время создания"
+        TIMESTAMPTZ updated_at "Время обновления"
     }
     CONTENT {
-        INT ID PK "Уникальный идентификатор контента"
-        STRING TITLE "Название контента"
-        STRING ORIGINAL_TITLE "Оригинальное название контента"
-        INT BUDGET "Бюджет контента"
-        INT MARKETING_BUDGET "Бюджет маркетинга контента"
-        TIME PREMIERE "Дата премьеры контента"
-        TIME RELEASE "Дата выпуска контента"
-        INT AGE_RESTRICTION "Возрастное ограничение контента"
-        INT IMDB "Рейтинг IMDB контента"
-        STRING DESCRIPTION "Описание контента"
-        STRING POSTER "Постер контента"
-        STRING PLAYBACK "Воспроизведение на заднем плане небольшого фрагмента видео контента"
-        INT DURATION "Продолжительность контента в минутах"
-        TIME created_at "время создания кортежа, для отладки"
-        TIME updated_at "время изменения кортежа, для отладки"
+        INT id PK "Уникальный идентификатор контента"
+        STRING title "Название контента"
+        STRING original_title "Оригинальное название контента"
+        STRING slogan "Слоган контента"
+        INT budget "Бюджет контента"
+        INT age_restriction "Ограничение по возрасту контента"
+        INT audience "Аудитория контента"
+        DECIMAL imdb "Рейтинг IMDB контента"
+        STRING description "Описание контента"
+        INT poster_upload_id FK "Идентификатор загрузки постера"
+        INT box_office "Кассовые сборы контента"
+        INT marketing_budget "Бюджет маркетинга контента"
+        TIMESTAMPTZ created_at "Время создания"
+        TIMESTAMPTZ updated_at "Время обновления"
     }
-    STATUS{
-        INT ID PK "Уникальный идентификатор статуса"
-        STRING STATUS "Статус контента (Viewed, Planned, Reconsidering, Favourites(избранное))"
-        TIME created_at "время создания кортежа, для отладки"
+    ROLES {
+        INT id PK "Уникальный идентификатор роли"
+        STRING name "Название роли"
     }
-    EPISODE {
-        INT ID PK "Уникальный идентификатор эпизода"
-        INT SEASON_ID FK "Идентификатор сезона, к которому относится эпизод"
-        STRING DESCRIPTION "Описание эпизода"
-        INT EPISODE_NUMBER "Номер эпизода"
-        STRING VIEWED "Просмотрен ли эпизод"
-        TIME created_at "время создания кортежа, для отладки"
-        TIME updated_at "время изменения кортежа, для отладки"
+    PERSON_ROLES {
+        INT id PK "Уникальный идентификатор роли персоны"
+        INT roles_id FK "Идентификатор роли"
+        INT person_id FK "Идентификатор персоны"
+        INT content_id FK "Идентификатор контента"
     }
-    SEASON {
-        INT ID PK "Уникальный идентификатор сезона"
-        INT SERIES_ID FK "Идентификатор сериала, к которому относится сезон"
-        INT YEAR_START "Год начала сезона"
-        INT YEAR_END "Год окончания сезона"
-        TIME created_at "время создания кортежа, для отладки"
-        TIME updated_at "время изменения кортежа, для отладки"
+    MOVIE {
+        INT id PK "Уникальный идентификатор фильма"
+        INT content_id FK "Идентификатор контента"
+        DATE premiere "Дата премьеры фильма"
+        DATE release "Дата выпуска фильма"
+        INT duration "Продолжительность фильма"
     }
     SERIES {
-        INT ID PK "Уникальный идентификатор сериала"
-        INT CONTENT_ID FK "Идентификатор контента, который относится к  сериалу"
-        STRING TITLE "Название сериала"
-        INT YEAR_START "Год начала сериала"
-        INT YEAR_END "Год окончания сериала"
-        TIME created_at "время создания кортежа, для отладки"
-        TIME updated_at "время изменения кортежа, для отладки"
+        INT id PK "Уникальный идентификатор сериала"
+        INT year_start "Год начала сериала"
+        INT year_end "Год окончания сериала"
+        INT content_id FK "Идентификатор контента"
+    }
+    SEASON {
+        INT id PK "Уникальный идентификатор сезона"
+        INT series_id FK "Идентификатор сериала"
+        INT year_start "Год начала сезона"
+        INT year_end "Год окончания сезона"
+    }
+    EPISODE {
+        INT id PK "Уникальный идентификатор эпизода"
+        INT season_id FK "Идентификатор сезона"
+        INT episode_number "Номер эпизода"
+        STRING title "Название эпизода"
     }
     USERS {
-        INT ID PK "Уникальный идентификатор пользователя"
-        STRING NAME "Имя пользователя"
-        STRING EMAIL "Электронная почта пользователя"
-        STRING PASSWORD_HASHED "Хэш пароля пользователя"
-        STRING SALT_PASSWORD "Соль для генерации хэша пароля"
-        TIME BIRTH_DATE "День рождения пользователя"
-        TIME created_at "время создания кортежа, для отладки"
-        TIME updated_at "время изменения кортежа, для отладки"
+        INT id PK "Уникальный идентификатор пользователя"
+        STRING name "Имя пользователя"
+        STRING email "Email пользователя"
+        BYTEA password_hashed "Хешированный пароль пользователя"
+        BYTEA salt_password "Соль для пароля пользователя"
+        INT avatar_upload_id FK "Идентификатор загрузки аватара"
+        TIMESTAMPTZ created_at "Время создания"
+        TIMESTAMPTZ updated_at "Время обновления"
     }
     REVIEW {
-        INT ID PK "Уникальный идентификатор комментария"
-        INT USERS_ID FK "Идентификатор пользователя, оставившего комментарий"
-        INT CONTENT_ID FK "Идентификатор контента, к которому относится комментарий"
-        STRING TITLE "Заголовок комментария"
-        STRING TEXT "Текст комментария"
-        INT RATING_UUSERS "Оценка контента пользователем, оставившим комментарий"
-        TIME created_at "время создания кортежа, для отладки"
-        TIME updated_at "время изменения кортежа, для отладки"
+        INT id PK "Уникальный идентификатор обзора"
+        INT user_id FK "Идентификатор пользователя"
+        INT content_id FK "Идентификатор контента"
+        STRING title "Название обзора"
+        STRING text "Текст обзора"
+        INT content_rating "Рейтинг контента"
+        TIMESTAMPTZ created_at "Время создания"
+        TIMESTAMPTZ updated_at "Время обновления"
     }
-    NOMINATION {
-        INT ID PK "Уникальный идентификатор номинации"
-        STRING TITLE "Название номинации"
-        INT CONTENT_ID FK "Идентификатор контента, за который дана номинация"
-        INT PERSON_ID FK  "Идентификатор персоны, которой присвоена номинация"
-        INT AWARD_ID FK  "Идентификатор награды"
-        TIME created_at "время создания кортежа, для отладки"
+    COMPILATION_TYPE {
+        INT id PK "Уникальный идентификатор типа подборки"
+        STRING type "Тип подборки"
     }
-    AWARD {
-        INT ID PK "Уникальный идентификатор награды"
-        INT YEAR "Год присуждения награды"
-        STRING NAME "Тип награды"
-        TIME created_at "время создания кортежа, для отладки"
+    COMPILATION {
+        INT id PK "Уникальный идентификатор подборки"
+        STRING title "Название подборки"
+        INT compilation_type_id FK "Идентификатор типа подборки"
+        INT poster_upload_id FK "Идентификатор загрузки постера"
     }
-    RATING_OF_CONTENT {
-        INT ID PK "Уникальный идентификатор рейтинга контента"
-        INT CONTENT_ID FK "Идентификатор контента, который имеет этот рейтинг"
-        INT USERS_ID FK "Идентификатор пользователя, который оценил контент"
-        INT VALUE "Рейтинг контента"
-        TIME created_at "время создания кортежа, для отладки"
+    COMPILATION_CONTENT {
+        INT compilation_id PK, FK "Идентификатор подборки"
+        INT content_id PK, FK "Идентификатор контента"
     }
-    RATING_OF_PERSON {
-        INT ID PK "Уникальный идентификатор рейтинга персоны"
-        INT PERSON_ID FK "Идентификатор персоны, которая имеет этот рейтинг"
-        INT USERS_ID FK "Идентификатор пользователя, который оценил персону"
-        INT VALUE "Рейтинг персоны"
-        TIME created_at "время создания кортежа, для отладки"
+    REVIEW_LIKE {
+        INT review_id PK, FK "Идентификатор обзора"
+        INT user_id PK, FK "Идентификатор пользователя"
+        BOOLEAN value "Значение лайка"
+        TIMESTAMPTZ updated_at "Время обновления"
     }
-
-    USERS ||--o{ CONTENT_STATUS : "USERS_ID"
-    CONTENT ||--o{ CONTENT_STATUS : "CONTENT_ID"
-    STATUS ||--o{ CONTENT_STATUS : "CONTENT_ID"
-    USERS ||--o{ SAVED_PERSON : "USERS_ID"
-    PERSON ||--o{ SAVED_PERSON : "PERSON_ID"
-    GENRE ||--o{ GENRE_CONTENT : "GENRE_ID"
-    CONTENT ||--o{ GENRE_CONTENT : "CONTENT_ID"
-    COUNTRY ||--o{ COUNTRY_CONTENT : "COUNTRY_ID"
-    CONTENT ||--o{ COUNTRY_CONTENT : "CONTENT_ID"
-    CONTENT ||--o{ CONTENT_PERSON : "CONTENT_ID"
-    PERSON ||--o{ CONTENT_PERSON : "PERSON_ID"
-    ROLES ||--o{ CONTENT_PERSON : "ROLES_ID"
-
-    CONTENT ||--o{ RATING_OF_CONTENT : "CONTENT_ID"
-    USERS ||--o{ RATING_OF_CONTENT : "USERS_ID"
-    PERSON ||--o{ RATING_OF_PERSON : "PERSON_ID"
-    USERS ||--o{ RATING_OF_PERSON : "USERS_ID"
-    BIRTHPLACE ||--o{ PERSON : "BIRTHPLACE_ID"
-    SERIES ||--o{ SEASON : "SERIES_ID"
-    SEASON ||--o{ EPISODE : "SEASON_ID"
-    USERS ||--o{ REVIEW : "USERS_ID"
-    CONTENT ||--o{ REVIEW : "CONTENT_ID"
-    CONTENT ||--o{ AUDIENCE : " CONTENT_ID"
-    CONTENT ||--o{ NOMINATION : "CONTENT_ID"
-    AWARD ||--o{ NOMINATION : "AWARD_ID"
-    PERSON ||--o{ NOMINATION : "PERSON_ID"
-    CONTENT ||--o{ BOXOFFICE : "CONTENT_ID"
-
-    REVIEW ||--o{ REVIEW_LIKES : "REVIEW_ID"
-    USERS ||--o{ REVIEW_LIKES : "USERS_ID"
+    GENRE_CONTENT {
+        INT genre_id PK, FK "Идентификатор жанра"
+        INT content_id PK, FK "Идентификатор контента"
+    }
+    COUNTRY_CONTENT {
+        INT country_id PK, FK "Идентификатор страны"
+        INT content_id PK, FK "Идентификатор контента"
+    }
+    CONTENT_TYPE {
+        INT id PK "Уникальный идентификатор типа контента"
+        INT content_id FK "Идентификатор контента"
+        STRING type "Тип контента"
+    }
     
-    CONTENT ||--|| SERIES : "CONTENT_ID"
-    CONTENT ||--|| FILM : "CONTENT_ID"
-    
-
-    REVIEW_LIKES{
-        INT REVIEW_ID FK "Идентификатор комментария"
-        INT USERS_ID FK "Идентификатор пользователя, оценившего комментарий"
-        INT VALUE "Значение оценки комментария (1 или -1, например)"
-        TIME created_at "время создания кортежа, для отладки"
-    }
-    SAVED_PERSON{
-        INT PERSON_ID FK "Идентификатор сохраненного персону"
-        INT USERS_ID FK "Идентификатор пользователя, сохранившего персону"
-        TIME created_at "время создания кортежа, для отладки"
-    }
-    CONTENT_STATUS{
-        INT CONTENT_ID FK "Идентификатор контента"
-        INT USERS_ID FK "Идентификатор пользователя"
-        INT STATUS_ID FK "Статус контента (Viewed, Planned, Reconsidering, Favourites(избранное))"
-        TIME created_at "время создания кортежа, для отладки"
-    }
-    GENRE_CONTENT{
-        INT GENRE_ID FK "Идентификатор жанра"
-        INT CONTENT_ID FK "Идентификатор контента"
-        TIME created_at "время создания кортежа, для отладки"
-    }
-    COUNTRY_CONTENT{
-        INT COUNTRY_ID FK "Идентификатор страны"
-        INT CONTENT_ID FK "Идентификатор контента"
-        TIME created_at "время создания кортежа, для отладки"
-    }
-    CONTENT_PERSON{
-        INT CONTENT_ID FK "Идентификатор контента"
-        INT PERSON_ID FK "Идентификатор персоны"
-        INT ROLES_ID FK "Роль персоны в контенте"
-        TIME created_at "время создания кортежа, для отладки"
-    }
+    STATIC ||--o{ PERSON : "photo_upload_id"
+    STATIC ||--o{ CONTENT : "poster_upload_id"
+    STATIC ||--o{ USERS : "avatar_upload_id"
+    STATIC ||--o{ COMPILATION : "poster_upload_id"
+    COUNTRY ||--o{ COUNTRY_CONTENT : "country_id"
+    GENRE ||--o{ GENRE_CONTENT : "genre_id"
+    PERSON ||--o{ PERSON_ROLES : "person_id"
+    PERSON ||--o{ USERS : "id"
+    PERSON ||--o{ REVIEW : "user_id"
+    PERSON ||--o{ SAVED_PERSON : "person_id"
+    CONTENT ||--o{ PERSON_ROLES : "content_id"
+    CONTENT ||--o{ CONTENT_STATUS : "content_id"
+    CONTENT ||--o{ REVIEW : "content_id"
+    CONTENT ||--o{ COMPILATION_CONTENT : "content_id"
+    CONTENT ||--o{ GENRE_CONTENT : "content_id"
+    CONTENT ||--o{ COUNTRY_CONTENT : "content_id"
+    CONTENT ||--o{ CONTENT_TYPE : "content_id"
+    CONTENT ||--o{ MOVIE : "content_id"
+    CONTENT ||--o{ SERIES : "content_id"
+    ROLES ||--o{ PERSON_ROLES : "roles_id"
+    USERS ||--o{ CONTENT_STATUS : "users_id"
+    USERS ||--o{ REVIEW : "user_id"
+    USERS ||--o{ SAVED_PERSON : "users_id"
+    USERS ||--o{ REVIEW_LIKE : "user_id"
+    COMPILATION_TYPE ||--o{ COMPILATION : "compilation_type_id"
+    REVIEW ||--o{ REVIEW_LIKE : "review_id"
+    SERIES ||--o{ SEASON : "series_id"
+    SEASON ||--o{ EPISODE : "season_id"
