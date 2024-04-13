@@ -31,6 +31,7 @@ erDiagram
 <p> Функциональные зависимости: </p>
 
 - `{id} -> {name}`
+- `{name} -> {id}`
 
 <p> Нормальные формы: <p>
 
@@ -43,7 +44,7 @@ erDiagram
 erDiagram
     COUNTRY {
         INT id PK "Уникальный идентификатор страны"
-        STRING name "Название страны"
+        STRING name "Название страны (AK1)"
     }
 ```
 
@@ -54,6 +55,7 @@ erDiagram
 <p> Функциональные зависимости: </p>
 
 - `{id} -> {name}`
+- `{name} -> {id}`
 
 <p> Нормальные формы: <p>
 
@@ -66,7 +68,7 @@ erDiagram
 erDiagram
     GENRE {
         INT id PK "Уникальный идентификатор жанра"
-        STRING name "Название жанра"
+        STRING name "Название жанра (AK1)"
     }
 ```
 
@@ -147,6 +149,7 @@ erDiagram
 <p> Функциональные зависимости: </p>
 
 - `{id} -> {name}`
+- `{name} -> {id}`
 
 <p> Нормальные формы: <p>
 
@@ -159,9 +162,135 @@ erDiagram
 erDiagram
     ROLES {
         INT id PK "Уникальный идентификатор роли"
-        STRING name "Название роли"
+        STRING name "Название роли (AK1)"
     }
 ```
+
+## Таблица PERSON_ROLES
+
+Таблица `PERSON_ROLES` содержит информацию о связи между персонами, ролями и контентом.
+
+<p> Функциональные зависимости:  - </p>
+
+<p> Нормальные формы: <p>
+
+- 1 НФ: Все атрибуты являются атомарными.
+- 2 НФ: Нет атрибутов, которые зависят от части составного ключа.
+- 3 НФ: Нет атрибутов, которые зависят от других атрибутов.
+- НФБК: 3 НФ + в таблице отсутствуют транзитивные зависимости.
+
+```mermaid
+erDiagram
+    PERSON_ROLES {
+        INT roles_id FK "Идентификатор роли (AK1.1)"
+        INT person_id FK "Идентификатор персоны (AK1.2)"
+        INT content_id FK "Идентификатор контента (AK1.3)"
+    }
+```
+
+## Таблица MOVIE
+
+Таблица `MOVIE` содержит информацию о фильмах.
+
+<p> Функциональные зависимости: </p>
+
+- `{id} -> {content_id, premiere, release, duration}`
+- `{content_id} -> {id, premiere, release, duration}`
+
+<p> Нормальные формы: <p>
+
+- 1 НФ: Все атрибуты являются атомарными.
+- 2 НФ: Все атрибуты полностью функционально зависят от первичного ключа id.
+- 3 НФ: Все атрибуты не зависят от других атрибутов.
+- НФБК: 3 НФ + в таблице отсутствуют составные ключи.
+
+```mermaid
+erDiagram
+    MOVIE {
+        INT id PK "Уникальный идентификатор фильма"
+        INT content_id FK "Идентификатор контента (AK1)"
+        DATE premiere "Дата премьеры фильма"
+        DATE release "Дата выпуска фильма"
+        INT duration "Продолжительность фильма"
+    }
+```
+
+## Таблица SERIES
+
+Таблица `SERIES` содержит информацию о сериалах.
+
+<p> Функциональные зависимости: </p>
+
+- `{id} -> {year_start, year_end, content_id}`
+- `{content_id} -> {id, year_start, year_end}`
+
+<p> Нормальные формы: <p>
+
+- 1 НФ: Все атрибуты являются атомарными.
+- 2 НФ: Все атрибуты полностью функционально зависят от первичного ключа id.
+- 3 НФ: Все атрибуты не зависят от других атрибутов.
+- НФБК: 3 НФ + в таблице отсутствуют составные ключи.
+
+```mermaid
+erDiagram
+    SERIES {
+        INT id PK "Уникальный идентификатор сериала"
+        INT year_start "Год начала сериала"
+        INT year_end "Год окончания сериала"
+        INT content_id FK "Идентификатор контента"
+    }
+```
+
+## Таблица SEASON
+
+Таблица `SEASON` содержит информацию о сезонах сериалов.
+
+<p> Функциональные зависимости: </p>
+
+- `{id} -> {series_id, year_start, year_end}`
+
+<p> Нормальные формы: <p>
+
+- 1 НФ: Все атрибуты являются атомарными.
+- 2 НФ: Все атрибуты полностью функционально зависят от первичного ключа id.
+- 3 НФ: Все атрибуты не зависят от других атрибутов.
+- НФБК: 3 НФ + в таблице отсутствуют составные ключи.
+
+```mermaid
+erDiagram
+    SEASON {
+        INT id PK "Уникальный идентификатор сезона"
+        INT series_id FK "Идентификатор сериала"
+        INT year_start "Год начала сезона"
+        INT year_end "Год окончания сезона"
+    }
+```
+
+## Таблица EPISODE
+
+Таблица `EPISODE` содержит информацию о сериях сериалов.
+
+<p> Функциональные зависимости: </p>
+
+- `{id} -> {season_id, episode_number, title}`
+
+<p> Нормальные формы: <p>
+
+- 1 НФ: Все атрибуты являются атомарными.
+- 2 НФ: Все атрибуты полностью функционально зависят от первичного ключа id.
+- 3 НФ: Все атрибуты не зависят от других атрибутов.
+- НФБК: 3 НФ + в таблице отсутствуют составные ключи.
+
+```mermaid
+erDiagram
+    EPISODE {
+        INT id PK "Уникальный идентификатор эпизода"
+        INT season_id FK "Идентификатор сезона"
+        INT episode_number "Номер эпизода"
+        STRING title "Название эпизода"
+    }
+```
+
 
 ## Таблица USERS
 
@@ -170,6 +299,7 @@ erDiagram
 <p> Функциональные зависимости: </p>
 
 - `{id} -> {name, email, password_hashed, salt_password, avatar_upload_id, created_at, updated_at}`
+- `{email} -> {id, name, password_hashed, salt_password, avatar_upload_id, created_at, updated_at}`
 
 <p> Нормальные формы: <p>
 
@@ -183,7 +313,7 @@ erDiagram
     USERS {
         INT id PK "Уникальный идентификатор пользователя"
         STRING name "Имя пользователя"
-        STRING email "Email пользователя"
+        STRING email "Email пользователя (AK1)"
         BYTEA password_hashed "Хешированный пароль пользователя"
         BYTEA salt_password "Соль для пароля пользователя"
         INT avatar_upload_id FK "Идентификатор загрузки аватара"
@@ -199,6 +329,7 @@ erDiagram
 <p> Функциональные зависимости: </p>
 
 - `{id} -> {user_id, content_id, title, text, content_rating, created_at, updated_at}`
+- `{user_id, content_id} -> {id, title, text, content_rating, created_at, updated_at}`
 
 <p> Нормальные формы: <p>
 
@@ -211,8 +342,8 @@ erDiagram
 erDiagram
     REVIEW {
         INT id PK "Уникальный идентификатор обзора"
-        INT user_id FK "Идентификатор пользователя"
-        INT content_id FK "Идентификатор контента"
+        INT user_id FK "Идентификатор пользователя (AK1.1)"
+        INT content_id FK "Идентификатор контента (AK1.2)"
         STRING title "Название обзора"
         STRING text "Текст обзора"
         INT content_rating "Рейтинг контента"
@@ -228,6 +359,7 @@ erDiagram
 <p> Функциональные зависимости: </p>
 
 - `{id} -> {type}`
+- `{type} -> {id}`
 
 <p> Нормальные формы: <p>
 
@@ -240,7 +372,7 @@ erDiagram
 erDiagram
     COMPILATION_TYPE {
         INT id PK "Уникальный идентификатор типа подборки"
-        STRING type "Тип подборки"
+        STRING type "Тип подборки (AK1)"
     }
 ```
 
@@ -273,9 +405,7 @@ erDiagram
 
 Таблица `COMPILATION_CONTENT` содержит информацию о связи между подборками и контентом.
 
-<p> Функциональные зависимости: </p>
-
-- `{compilation_id, content_id} -> {}`
+<p> Функциональные зависимости: - </p>
 
 <p> Нормальные формы: <p>
 
@@ -287,8 +417,8 @@ erDiagram
 ```mermaid
 erDiagram
     COMPILATION_CONTENT {
-        INT compilation_id PK, FK "Идентификатор подборки"
-        INT content_id PK, FK "Идентификатор контента"
+        INT compilation_id FK "Идентификатор подборки (AK1.1)"
+        INT content_id FK "Идентификатор контента (AK1.2)"
     }
 ```
 
@@ -310,8 +440,8 @@ erDiagram
 ```mermaid
 erDiagram
     REVIEW_LIKE {
-        INT review_id PK, FK "Идентификатор обзора"
-        INT user_id PK, FK "Идентификатор пользователя"
+        INT review_id FK "Идентификатор обзора  (AK1.1)"
+        INT user_id FK "Идентификатор пользователя (AK1.2)"
         BOOLEAN value "Значение лайка"
         TIMESTAMPTZ updated_at "Время обновления"
     }
@@ -321,9 +451,7 @@ erDiagram
 
 Таблица `GENRE_CONTENT` содержит информацию о связи между жанрами и контентом.
 
-<p> Функциональные зависимости: </p>
-
-- `{genre_id, content_id} -> {}`
+<p> Функциональные зависимости: - </p>
 
 <p> Нормальные формы: <p>
 
@@ -335,8 +463,8 @@ erDiagram
 ```mermaid
 erDiagram
     GENRE_CONTENT {
-        INT genre_id PK, FK "Идентификатор жанра"
-        INT content_id PK, FK "Идентификатор контента"
+        INT genre_id FK "Идентификатор жанра (AK1.1)"
+        INT content_id FK "Идентификатор контента (AK1.2)"
     }
 ```
 
@@ -344,9 +472,7 @@ erDiagram
 
 Таблица `COUNTRY_CONTENT` содержит информацию о связи между странами и контентом.
 
-<p> Функциональные зависимости: </p>
-
-- `{country_id, content_id} -> {}`
+<p> Функциональные зависимости: - </p>
 
 <p> Нормальные формы: <p>
 
@@ -358,8 +484,8 @@ erDiagram
 ```mermaid
 erDiagram
     COUNTRY_CONTENT {
-        INT country_id PK, FK "Идентификатор страны"
-        INT content_id PK, FK "Идентификатор контента"
+        INT country_id FK "Идентификатор страны (AK1.1)"
+        INT content_id FK "Идентификатор контента (AK1.2)"
     }
 ```
 
@@ -368,7 +494,7 @@ erDiagram
 Таблица `CONTENT_TYPE` содержит информацию о типах контента: фильм, сериал.
 <p> Функциональные зависимости: </p>
 
-- `{id} -> {content_id, type}`
+- `{id} -> {type}`
 
 <p> Нормальные формы: <p>
 
@@ -381,7 +507,27 @@ erDiagram
 erDiagram
     CONTENT_TYPE {
         INT id PK "Уникальный идентификатор типа контента"
-        INT content_id FK "Идентификатор контента"
         STRING type "Тип контента"
+    }
+```
+
+## Таблица CONTENT_CONTENT_TYPE
+
+Таблица `CONTENT_CONTENT_TYPE` содержит информацию о связи между контентом и его типом.
+
+<p> Функциональные зависимости: - </p>
+
+<p> Нормальные формы: <p>
+
+- 1 НФ: Все атрибуты являются атомарными.
+- 2 НФ: Нет атрибутов, которые зависят от части составного ключа.
+- 3 НФ: Нет атрибутов, которые зависят от других атрибутов.
+- НФБК: 3 НФ + в таблице отсутствуют транзитивные зависимости.
+
+```mermaid
+erDiagram
+    CONTENT_CONTENT_TYPE {
+        INT content_id FK "Идентификатор контента (AK1.1)"
+        INT content_type_id FK "Идентификатор типа контента (AK1.2)"
     }
 ```
