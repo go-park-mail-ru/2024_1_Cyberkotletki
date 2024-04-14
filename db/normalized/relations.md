@@ -417,8 +417,8 @@ erDiagram
 ```mermaid
 erDiagram
     COMPILATION_CONTENT {
-        INT compilation_id FK "Идентификатор подборки (AK1.1)"
-        INT content_id FK "Идентификатор контента (AK1.2)"
+        INT compilation_id FK "Идентификатор подборки (PK1.1)"
+        INT content_id FK "Идентификатор контента (PK1.2)"
     }
 ```
 
@@ -440,8 +440,8 @@ erDiagram
 ```mermaid
 erDiagram
     REVIEW_LIKE {
-        INT review_id FK "Идентификатор обзора  (AK1.1)"
-        INT user_id FK "Идентификатор пользователя (AK1.2)"
+        INT review_id FK "Идентификатор обзора  (PK1.1)"
+        INT user_id FK "Идентификатор пользователя (PK1.2)"
         BOOLEAN value "Значение лайка"
         TIMESTAMPTZ updated_at "Время обновления"
     }
@@ -463,8 +463,8 @@ erDiagram
 ```mermaid
 erDiagram
     GENRE_CONTENT {
-        INT genre_id FK "Идентификатор жанра (AK1.1)"
-        INT content_id FK "Идентификатор контента (AK1.2)"
+        INT genre_id FK "Идентификатор жанра (PK1.1)"
+        INT content_id FK "Идентификатор контента (PK1.2)"
     }
 ```
 
@@ -484,8 +484,8 @@ erDiagram
 ```mermaid
 erDiagram
     COUNTRY_CONTENT {
-        INT country_id FK "Идентификатор страны (AK1.1)"
-        INT content_id FK "Идентификатор контента (AK1.2)"
+        INT country_id FK "Идентификатор страны (PK1.1)"
+        INT content_id FK "Идентификатор контента (PK1.2)"
     }
 ```
 
@@ -507,7 +507,7 @@ erDiagram
 erDiagram
     CONTENT_TYPE {
         INT id PK "Уникальный идентификатор типа контента"
-        STRING type "Тип контента"
+        STRING type "Тип контента AK1"
     }
 ```
 
@@ -527,7 +527,7 @@ erDiagram
 ```mermaid
 erDiagram
     CONTENT_CONTENT_TYPE {
-        INT content_id FK "Идентификатор контента (AK1.1)"
-        INT content_type_id FK "Идентификатор типа контента (AK1.2)"
+        INT content_id FK "Идентификатор контента (PK1.1)"
+        INT content_type_id FK "Идентификатор типа контента (PK1.2)"
     }
 ```
