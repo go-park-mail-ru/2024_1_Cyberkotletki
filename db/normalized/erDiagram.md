@@ -46,12 +46,12 @@ erDiagram
         TIMESTAMPTZ created_at "Время создания"
         TIMESTAMPTZ updated_at "Время обновления"
     }
-    ROLES {
+    ROLE_DATA {
         INT id PK "Уникальный идентификатор роли"
         STRING name "Название роли (AK1)"
     }
-    PERSON_ROLES {
-        INT roles_id FK "Идентификатор роли (AK1.1)"
+    PERSON_ROLE {
+        INT role_id FK "Идентификатор роли (AK1.1)"
         INT person_id FK "Идентификатор персоны (AK1.2)"
         INT content_id FK "Идентификатор контента (AK1.3)"
     }
@@ -62,7 +62,7 @@ erDiagram
         DATE release "Дата выпуска фильма"
         INT duration "Продолжительность фильма"
     }
-    SERIES {
+    TV_SERIES {
         INT id PK "Уникальный идентификатор сериала"
         INT content_id FK "Идентификатор контента (AK1)"
         INT year_start "Год начала сериала"
@@ -70,7 +70,8 @@ erDiagram
     }
     SEASON {
         INT id PK "Уникальный идентификатор сезона"
-        INT series_id FK "Идентификатор сериала"
+        INT tv_series_id FK "Идентификатор сериала (АК1.2)"
+        STRING title "Название сезона (АК1.2)"
         INT year_start "Год начала сезона"
         INT year_end "Год окончания сезона"
     }
@@ -80,7 +81,7 @@ erDiagram
         INT episode_number "Номер эпизода"
         STRING title "Название эпизода"
     }
-    USERS {
+    USER_DATA {
         INT id PK "Уникальный идентификатор пользователя"
         STRING name "Имя пользователя"
         STRING email "Email пользователя (AK1)"
@@ -139,15 +140,15 @@ erDiagram
     
     STATIC ||--o{ PERSON : "photo_upload_id"
     STATIC ||--o{ CONTENT : "poster_upload_id"
-    STATIC ||--o{ USERS : "avatar_upload_id"
+    STATIC ||--o{ USER_DATA : "avatar_upload_id"
     STATIC ||--o{ COMPILATION : "poster_upload_id"
     COUNTRY ||--o{ COUNTRY_CONTENT : "country_id"
     GENRE ||--o{ GENRE_CONTENT : "genre_id"
-    PERSON ||--o{ PERSON_ROLES : "person_id"
-    PERSON ||--o{ USERS : "id"
+    PERSON ||--o{ PERSON_ROLE : "person_id"
+    PERSON ||--o{ USER_DATA : "id"
     PERSON ||--o{ REVIEW : "user_id"
     PERSON ||--o{ SAVED_PERSON : "person_id"
-    CONTENT ||--o{ PERSON_ROLES : "content_id"
+    CONTENT ||--o{ PERSON_ROLE : "content_id"
     CONTENT ||--o{ CONTENT_STATUS : "content_id"
     CONTENT ||--o{ REVIEW : "content_id"
     CONTENT ||--o{ COMPILATION_CONTENT : "content_id"
@@ -157,11 +158,11 @@ erDiagram
     CONTENT_TYPE ||--o{ CONTENT_CONTENT_TYPE : "content_type_id"
     CONTENT ||--o{ MOVIE : "content_id"
     CONTENT ||--o{ SERIES : "content_id"
-    ROLES ||--o{ PERSON_ROLES : "roles_id"
-    USERS ||--o{ CONTENT_STATUS : "users_id"
-    USERS ||--o{ REVIEW : "user_id"
-    USERS ||--o{ SAVED_PERSON : "users_id"
-    USERS ||--o{ REVIEW_LIKE : "user_id"
+    ROLE_DATA ||--o{ PERSON_ROLE : "role_id"
+    USER_DATA ||--o{ CONTENT_STATUS : "users_id"
+    USER_DATA ||--o{ REVIEW : "user_id"
+    USER_DATA ||--o{ SAVED_PERSON : "users_id"
+    USER_DATA ||--o{ REVIEW_LIKE : "user_id"
     COMPILATION_TYPE ||--o{ COMPILATION : "compilation_type_id"
     REVIEW ||--o{ REVIEW_LIKE : "review_id"
     SERIES ||--o{ SEASON : "series_id"
