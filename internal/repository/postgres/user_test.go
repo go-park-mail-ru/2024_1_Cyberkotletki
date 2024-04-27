@@ -7,6 +7,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/require"
 	"regexp"
@@ -32,9 +33,9 @@ func TestUsersDB_AddUser(t *testing.T) {
 			},
 			expectedErr: nil,
 			setupMock: func(mock sqlmock.Sqlmock, query string) {
-				mock.ExpectQuery(regexp.QuoteMeta(query)).
+				mock.ExpectExec(regexp.QuoteMeta(query)).
 					WithArgs("email@mail.ru", []byte("hashed"), []byte("salt")).
-					WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
+					WillReturnResult(sqlmock.NewResult(1, 1))
 			},
 			expectedOut: &entity.User{
 				ID:             1,
@@ -52,9 +53,9 @@ func TestUsersDB_AddUser(t *testing.T) {
 				PasswordHash: []byte("hashed"),
 				PasswordSalt: []byte("salt"),
 			},
-			expectedErr: entity.NewClientError("пользователь с таким email уже существует", entity.ErrAlreadyExists),
+			expectedErr: repository.ErrUserAlreadyExists,
 			setupMock: func(mock sqlmock.Sqlmock, query string) {
-				mock.ExpectQuery(regexp.QuoteMeta(query)).
+				mock.ExpectExec(regexp.QuoteMeta(query)).
 					WithArgs("email@mail.ru", []byte("hashed"), []byte("salt")).
 					WillReturnError(&pq.Error{Code: entity.PSQLUniqueViolation})
 			},
@@ -66,19 +67,51 @@ func TestUsersDB_AddUser(t *testing.T) {
 				PasswordHash: []byte("в этом хэше слишком много байт, из-за чего нарушается ограничение CHECK"),
 				PasswordSalt: []byte("salt"),
 			},
-			expectedErr: entity.NewClientError(
-				"одно или несколько полей заполнены некорректно",
-				entity.ErrBadRequest,
-				errors.New("ошибка при выполнении sql-запроса AddUser: нарушение целостности данных"),
-			),
+			expectedErr: repository.ErrUserIncorrectData,
 			setupMock: func(mock sqlmock.Sqlmock, query string) {
-				mock.ExpectQuery(regexp.QuoteMeta(query)).
+				mock.ExpectExec(regexp.QuoteMeta(query)).
 					WithArgs(
 						"тут мог бы быть длинный емейл длинной больше 255 символов, но его нет",
 						[]byte("в этом хэше слишком много байт, из-за чего нарушается ограничение CHECK"),
 						[]byte("salt"),
 					).
 					WillReturnError(&pq.Error{Code: entity.PSQLCheckViolation})
+			},
+		},
+		{
+			name: "Неизвестная ошибка psql",
+			user: &entity.User{
+				Email:        "тут мог бы быть длинный емейл длинной больше 255 символов, но его нет",
+				PasswordHash: []byte("в этом хэше слишком много байт, из-за чего нарушается ограничение CHECK"),
+				PasswordSalt: []byte("salt"),
+			},
+			expectedErr: entity.PSQLWrap(&pq.Error{Code: "123"}, errors.New("ошибка при выполнении запроса AddUser")),
+			setupMock: func(mock sqlmock.Sqlmock, query string) {
+				mock.ExpectExec(regexp.QuoteMeta(query)).
+					WithArgs(
+						"тут мог бы быть длинный емейл длинной больше 255 символов, но его нет",
+						[]byte("в этом хэше слишком много байт, из-за чего нарушается ограничение CHECK"),
+						[]byte("salt"),
+					).
+					WillReturnError(&pq.Error{Code: "123"})
+			},
+		},
+		{
+			name: "Неизвестная ошибка sql",
+			user: &entity.User{
+				Email:        "тут мог бы быть длинный емейл длинной больше 255 символов, но его нет",
+				PasswordHash: []byte("в этом хэше слишком много байт, из-за чего нарушается ограничение CHECK"),
+				PasswordSalt: []byte("salt"),
+			},
+			expectedErr: entity.PSQLWrap(sql.ErrConnDone, errors.New("ошибка при выполнении запроса AddUser")),
+			setupMock: func(mock sqlmock.Sqlmock, query string) {
+				mock.ExpectExec(regexp.QuoteMeta(query)).
+					WithArgs(
+						"тут мог бы быть длинный емейл длинной больше 255 символов, но его нет",
+						[]byte("в этом хэше слишком много байт, из-за чего нарушается ограничение CHECK"),
+						[]byte("salt"),
+					).
+					WillReturnError(sql.ErrConnDone)
 			},
 		},
 	}
@@ -93,14 +126,11 @@ func TestUsersDB_AddUser(t *testing.T) {
 				t.Fatalf("не удалось создать мок: %s", err)
 			}
 			// Создаем репозиторий с моком вместо реального подключения
-			repo := &UsersDB{
-				DB: db,
-			}
+			repo := NewUserRepository(db)
 			// Ожидаемый запрос
 			query, _, err := sq.Insert("users").
 				Columns("email", "password_hashed", "salt_password").
 				Values(tc.user.Email, tc.user.PasswordHash, tc.user.PasswordSalt).
-				Suffix("RETURNING id").
 				PlaceholderFormat(sq.Dollar).
 				ToSql()
 			tc.setupMock(mock, query)
@@ -111,21 +141,19 @@ func TestUsersDB_AddUser(t *testing.T) {
 	}
 }
 
-func TestUsersDB_GetUser(t *testing.T) {
+func TestUsersDB_GetUserByID(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
 		Name        string
-		Params      map[string]interface{}
+		Request     int
 		ExpectedErr error
 		ExpectedOut *entity.User
 		SetupMock   func(mock sqlmock.Sqlmock, query string, args []driver.Value)
 	}{
 		{
-			Name: "Пользователь найден",
-			Params: map[string]interface{}{
-				"email": "email@email.com",
-			},
+			Name:        "Пользователь найден",
+			Request:     1,
 			ExpectedErr: nil,
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
@@ -143,11 +171,9 @@ func TestUsersDB_GetUser(t *testing.T) {
 			},
 		},
 		{
-			Name: "Пользователь не найден",
-			Params: map[string]interface{}{
-				"email": "email@email.com",
-			},
-			ExpectedErr: entity.NewClientError("пользователь не найден", entity.ErrNotFound),
+			Name:        "Пользователь не найден",
+			Request:     1,
+			ExpectedErr: repository.ErrUserNotFound,
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
@@ -156,15 +182,13 @@ func TestUsersDB_GetUser(t *testing.T) {
 			ExpectedOut: nil,
 		},
 		{
-			Name: "Ошибка при выполнении запроса",
-			Params: map[string]interface{}{
-				"email": "email@email.com",
-			},
-			ExpectedErr: entity.PSQLWrap(errors.New("ошибка при выполнении sql-запроса GetUser"), errors.New("ошибка при выполнении sql-запроса GetUser")),
+			Name:        "Ошибка при выполнении запроса",
+			Request:     1,
+			ExpectedErr: entity.PSQLWrap(errors.New("ошибка при выполнении запроса GetUser"), errors.New("ошибка при выполнении запроса getUser")),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
-					WillReturnError(errors.New("ошибка при выполнении sql-запроса GetUser"))
+					WillReturnError(errors.New("ошибка при выполнении запроса GetUser"))
 			},
 			ExpectedOut: nil,
 		},
@@ -187,7 +211,7 @@ func TestUsersDB_GetUser(t *testing.T) {
 			query, args, err := sq.
 				Select("id", "email", "name", "password_hashed", "salt_password", "avatar_upload_id").
 				From("users").
-				Where(tc.Params).
+				Where(map[string]any{"id": tc.Request}).
 				PlaceholderFormat(sq.Dollar).
 				ToSql()
 			if err != nil {
@@ -198,7 +222,95 @@ func TestUsersDB_GetUser(t *testing.T) {
 				driverValues[i] = v
 			}
 			tc.SetupMock(mock, query, driverValues)
-			user, err := repo.GetUser(tc.Params)
+			user, err := repo.GetUserByID(tc.Request)
+			require.Equal(t, tc.ExpectedErr, err)
+			require.EqualValues(t, tc.ExpectedOut, user)
+		})
+	}
+}
+
+func TestUsersDB_GetUserByEmail(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		Name        string
+		Request     string
+		ExpectedErr error
+		ExpectedOut *entity.User
+		SetupMock   func(mock sqlmock.Sqlmock, query string, args []driver.Value)
+	}{
+		{
+			Name:        "Пользователь найден",
+			Request:     "email@email.com",
+			ExpectedErr: nil,
+			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
+				mock.ExpectQuery(regexp.QuoteMeta(query)).
+					WithArgs(args...).
+					WillReturnRows(sqlmock.NewRows([]string{"id", "email", "name", "password_hashed", "salt_password", "avatar_upload_id"}).
+						AddRow(1, "email@email.com", "", []byte("hashed"), []byte("salt"), 0))
+			},
+			ExpectedOut: &entity.User{
+				ID:             1,
+				Email:          "email@email.com",
+				Name:           "",
+				PasswordHash:   []byte("hashed"),
+				PasswordSalt:   []byte("salt"),
+				AvatarUploadID: 0,
+			},
+		},
+		{
+			Name:        "Пользователь не найден",
+			Request:     "email@email.com",
+			ExpectedErr: repository.ErrUserNotFound,
+			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
+				mock.ExpectQuery(regexp.QuoteMeta(query)).
+					WithArgs(args...).
+					WillReturnError(sql.ErrNoRows)
+			},
+			ExpectedOut: nil,
+		},
+		{
+			Name:        "Ошибка при выполнении запроса",
+			Request:     "email@email.com",
+			ExpectedErr: entity.PSQLWrap(sql.ErrConnDone, errors.New("ошибка при выполнении запроса getUser")),
+			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
+				mock.ExpectQuery(regexp.QuoteMeta(query)).
+					WithArgs(args...).
+					WillReturnError(sql.ErrConnDone)
+			},
+			ExpectedOut: nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+			// Создаем мок подключения к базе данных
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("не удалось создать мок: %s", err)
+			}
+			// Создаем репозиторий с моком вместо реального подключения
+			repo := &UsersDB{
+				DB: db,
+			}
+			// Ожидаемый запрос
+			query, args, err := sq.
+				Select("id", "email", "name", "password_hashed", "salt_password", "avatar_upload_id").
+				From("users").
+				Where(map[string]any{"email": tc.Request}).
+				PlaceholderFormat(sq.Dollar).
+				ToSql()
+			if err != nil {
+				t.Fatalf("ошибка при формировании sql-запроса GetUser: %s", err)
+			}
+			driverValues := make([]driver.Value, len(args))
+			for i, v := range args {
+				driverValues[i] = v
+			}
+			tc.SetupMock(mock, query, driverValues)
+			user, err := repo.GetUserByEmail(tc.Request)
 			require.Equal(t, tc.ExpectedErr, err)
 			require.EqualValues(t, tc.ExpectedOut, user)
 		})
@@ -222,7 +334,7 @@ func TestUsersDB_UpdateUser(t *testing.T) {
 				Name:           "name",
 				PasswordHash:   []byte("hashed"),
 				PasswordSalt:   []byte("salt"),
-				AvatarUploadID: 0,
+				AvatarUploadID: 1,
 			},
 			ExpectedErr: nil,
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
@@ -239,13 +351,13 @@ func TestUsersDB_UpdateUser(t *testing.T) {
 				Name:           "name",
 				PasswordHash:   []byte("hashed"),
 				PasswordSalt:   []byte("salt"),
-				AvatarUploadID: 0,
+				AvatarUploadID: 1,
 			},
-			ExpectedErr: entity.PSQLWrap(errors.New("ошибка при выполнении sql-запроса UpdateUser"), errors.New("ошибка при выполнении sql-запроса UpdateUser")),
+			ExpectedErr: entity.PSQLWrap(sql.ErrConnDone, errors.New("ошибка при выполнении запроса UpdateUser")),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectExec(regexp.QuoteMeta(query)).
 					WithArgs(args...).
-					WillReturnError(errors.New("ошибка при выполнении sql-запроса UpdateUser"))
+					WillReturnError(sql.ErrConnDone)
 			},
 		},
 	}
@@ -281,13 +393,7 @@ func TestUsersDB_UpdateUser(t *testing.T) {
 				driverValues[i] = v
 			}
 			tc.SetupMock(mock, query, driverValues)
-			err = repo.UpdateUser(map[string]interface{}{"id": 1}, map[string]interface{}{
-				"email":            tc.User.Email,
-				"name":             tc.User.Name,
-				"password_hashed":  tc.User.PasswordHash,
-				"salt_password":    tc.User.PasswordSalt,
-				"avatar_upload_id": tc.User.AvatarUploadID,
-			})
+			err = repo.UpdateUser(tc.User)
 			require.Equal(t, tc.ExpectedErr, err)
 		})
 	}

@@ -4,7 +4,7 @@ import "unicode/utf8"
 
 type CompilationType struct {
 	ID   int    `json:"id"   example:"1" format:"int"`
-	Type string `json:"type" example:"C" format:"string"`
+	Type string `json:"type" example:"фильмы" format:"string"`
 }
 
 func ValidateCompilationTypeID(id int) error {

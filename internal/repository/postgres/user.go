@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	sq "github.com/Masterminds/squirrel"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/config"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
 	"github.com/lib/pq"
@@ -34,17 +33,10 @@ func (u *User) GetEntity() *entity.User {
 	}
 }
 
-func NewUserRepository(database config.PostgresDatabase) (repository.User, error) {
-	db, err := sql.Open("postgres", database.ConnectURL)
-	if err != nil {
-		return nil, err
-	}
-	if err := db.Ping(); err != nil {
-		return nil, err
-	}
+func NewUserRepository(db *sql.DB) repository.User {
 	return &UsersDB{
 		DB: db,
-	}, nil
+	}
 }
 
 // AddUser добавляет пользователя в базу данных.
@@ -52,69 +44,107 @@ func NewUserRepository(database config.PostgresDatabase) (repository.User, error
 // Если операция происходит успешно, то в переданный по указателю user будет записан id и вернется указатель на
 // этого же пользователя
 func (u *UsersDB) AddUser(user *entity.User) (*entity.User, error) {
-	// no-lint
-	query, args, _ := sq.Insert("users").
+	query, args, err := sq.Insert("users").
 		Columns("email", "password_hashed", "salt_password").
 		Values(user.Email, user.PasswordHash, user.PasswordSalt).
-		Suffix("RETURNING id").
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-
-	err := u.DB.QueryRow(query, args...).Scan(&user.ID)
 	if err != nil {
-		var pqErr *pq.Error
-		if errors.As(err, &pqErr) {
-			switch pqErr.Code {
-			case entity.PSQLUniqueViolation:
-				return nil, entity.NewClientError("пользователь с таким email уже существует", entity.ErrAlreadyExists)
-			case entity.PSQLCheckViolation:
-				return nil, entity.NewClientError(
-					"одно или несколько полей заполнены некорректно",
-					entity.ErrBadRequest,
-					errors.New("ошибка при выполнении sql-запроса AddUser: нарушение целостности данных"),
-				)
-			default:
-				return nil, entity.PSQLWrap(err, errors.New("ошибка при выполнении sql-запроса AddUser"), pqErr)
-			}
-		}
-		return nil, entity.PSQLWrap(err, errors.New("ошибка при выполнении sql-запроса AddUser"))
+		return nil, errors.Join(errors.New("ошибка при составлении запроса AddUser"), err)
 	}
-
+	result, err := u.DB.Exec(query, args...)
+	var pqErr *pq.Error
+	if errors.As(err, &pqErr) {
+		switch pqErr.Code {
+		case entity.PSQLUniqueViolation:
+			return nil, repository.ErrUserAlreadyExists
+		case entity.PSQLCheckViolation:
+			return nil, repository.ErrUserIncorrectData
+		default:
+			return nil, entity.PSQLWrap(pqErr, errors.New("ошибка при выполнении запроса AddUser"))
+		}
+	} else if err != nil {
+		// неизвестная ошибка
+		return nil, entity.PSQLWrap(err, errors.New("ошибка при выполнении запроса AddUser"))
+	}
+	lastID, err := result.LastInsertId()
+	if err != nil {
+		return nil, entity.PSQLWrap(err, errors.New("ошибка при выполнении запроса AddUser"))
+	}
+	user.ID = int(lastID)
 	return user, nil
 }
 
-// GetUser возвращает пользователя из базы данных по переданным параметрам.
-// Если пользователь не найден, то возвращается ошибка ErrNotFound
-func (u *UsersDB) GetUser(params map[string]interface{}) (*entity.User, error) {
-	// no-lint
-	query, args, _ := sq.
-		Select("id", "email", "name", "password_hashed", "salt_password", "avatar_upload_id").
-		From("users").
-		Where(params).
-		PlaceholderFormat(sq.Dollar).
-		ToSql()
+func (u *UsersDB) getUser(query string, args ...any) (*entity.User, error) {
 	user := User{}
-	err := u.DB.QueryRow(query, args...).
+	err := u.DB.
+		QueryRow(query, args...).
 		Scan(&user.ID, &user.Email, &user.Name, &user.PasswordHash, &user.PasswordSalt, &user.AvatarUploadID)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, entity.NewClientError("пользователь не найден", entity.ErrNotFound)
-		}
-		return nil, entity.PSQLWrap(err, errors.New("ошибка при выполнении sql-запроса GetUser"))
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, repository.ErrUserNotFound
+	} else if err != nil {
+		return nil, entity.PSQLWrap(err, errors.New("ошибка при выполнении запроса getUser"))
 	}
 	return user.GetEntity(), nil
 }
 
-// UpdateUser обновляет пользователя в базе данных по переданным параметрам
-func (u *UsersDB) UpdateUser(params map[string]interface{}, values map[string]interface{}) error {
-	// no-lint
-	query, args, _ := sq.Update("users").
-		Where(params).
-		SetMap(values).
+// GetUserByID возвращает пользователя из базы данных по айди
+func (u *UsersDB) GetUserByID(userID int) (*entity.User, error) {
+	query, args, err := sq.
+		Select("id", "email", "name", "password_hashed", "salt_password", "avatar_upload_id").
+		From("users").
+		Where(map[string]any{"id": userID}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-	if _, err := u.DB.Exec(query, args...); err != nil {
-		return entity.PSQLWrap(err, errors.New("ошибка при выполнении sql-запроса UpdateUser"))
+	if err != nil {
+		return nil, errors.Join(errors.New("ошибка при составлении запроса GetUserByID"), err)
+	}
+	return u.getUser(query, args...)
+}
+
+// GetUserByEmail возвращает пользователя из базы данных по почте
+func (u *UsersDB) GetUserByEmail(userEmail string) (*entity.User, error) {
+	query, args, err := sq.
+		Select("id", "email", "name", "password_hashed", "salt_password", "avatar_upload_id").
+		From("users").
+		Where(map[string]any{"email": userEmail}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return nil, errors.Join(errors.New("ошибка при составлении запроса GetUserByEmail"), err)
+	}
+	return u.getUser(query, args...)
+}
+
+// UpdateUser обновляет пользователя в базе данных по переданным параметрам
+func (u *UsersDB) UpdateUser(user *entity.User) error {
+	setMap := make(map[string]any)
+	if user.Email != "" {
+		setMap["email"] = user.Email
+	}
+	if user.Name != "" {
+		setMap["name"] = user.Name
+	}
+	if len(user.PasswordHash) > 0 {
+		setMap["password_hashed"] = user.PasswordHash
+	}
+	if len(user.PasswordSalt) > 0 {
+		setMap["salt_password"] = user.PasswordSalt
+	}
+	if user.AvatarUploadID != 0 {
+		setMap["avatar_upload_id"] = user.AvatarUploadID
+	}
+	query, args, err := sq.Update("users").
+		Where(map[string]any{"id": user.ID}).
+		SetMap(setMap).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return errors.Join(errors.New("ошибка при составлении запроса UpdateUser"), err)
+	}
+	// ни одна колонка может быть не изменена, но будем считать, что это успешное обновление
+	if _, err = u.DB.Exec(query, args...); err != nil {
+		return entity.PSQLWrap(err, errors.New("ошибка при выполнении запроса UpdateUser"))
 	}
 	return nil
 }

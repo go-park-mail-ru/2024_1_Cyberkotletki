@@ -41,18 +41,33 @@ gen-example-config:
 
 .PHONY: run-session-storage-container
 run-session-storage-container:
-	# Хранилище сессий запустится в redis на дефолтном порту 6379. Если контейнер уже запущен, то ничего не произойдёт
-	if ! docker inspect -f '{{.State.Running}}' session-storage 2>/dev/null ; then \
-		docker run --publish=6379:6379 --name session-storage -d redis redis-server --maxmemory 1gb; \
-    fi
+	@if [ $$(docker ps -q -f name=session-storage) ]; then \
+		echo "Контейнер с сессиями уже запущен"; \
+	else \
+		if [ $$(docker ps -aq -f name=session-storage) ]; then \
+			echo "Контейнер с сессиями существует, но не запущен. Запускаем..."; \
+			docker start session-storage; \
+		else \
+			echo "Создаём и запускаем контейнер с сессиями..."; \
+			docker run -d --publish=6379:6379 --name session-storage redis --maxmemory 1gb; \
+		fi \
+	fi
 
 .PHONY: run-db-container
 run-db-container:
-	# PostgreSQL запустится на дефолтном порту 5432. Если контейнер уже запущен, то ничего не произойдёт
-	if ! docker inspect -f '{{.State.Running}}' db 2>/dev/null ; then \
-		docker run --publish=5432:5432 --name db -e POSTGRES_PASSWORD=default_password -d postgres; \
+	@if [ $$(docker ps -q -f name=db) ]; then \
+		echo "Контейнер с базой данных уже запущен"; \
+	else \
+		if [ $$(docker ps -aq -f name=db) ]; then \
+			echo "Контейнер с базой данных существует, но не запущен. Запускаем..."; \
+			docker start db; \
+		else \
+			echo "Создаём и запускаем контейнер с базой данных..."; \
+			docker create --publish=5432:5432 --name db -e POSTGRES_PASSWORD=default_password postgres; \
+			docker start db; \
+		fi \
 	fi
-	sleep 2
+	sleep 1
 	# создаём базу данных и пользователя, выдаём права
 	-docker exec -it db psql -U postgres -c "CREATE USER kinoskop_admin PASSWORD 'admin_secret_password'"
 	-docker exec -it db psql -U postgres -c "CREATE DATABASE kinoskop"

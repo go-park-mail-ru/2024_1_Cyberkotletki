@@ -35,7 +35,7 @@ func Contains(err error, target error) bool {
 }
 
 func PSQLWrap(errs ...error) error {
-	return NewClientError("внутренняя ошибка сервера", ErrPSQL, errors.Join(errs...))
+	return errors.Join(ErrPSQL, errors.Join(errs...))
 }
 
 var (

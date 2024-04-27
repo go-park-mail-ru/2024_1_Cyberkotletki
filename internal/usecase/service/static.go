@@ -9,10 +9,12 @@ import (
 	"github.com/google/uuid"
 	"image"
 	"image/draw"
-	_ "image/gif" // для поддержки формата gif
-	"image/jpeg"
-	_ "image/png" // для поддержки формата png
 	"net/http"
+
+	"github.com/chai2010/webp"
+	_ "image/gif"  // для поддержки формата gif
+	_ "image/jpeg" // для поддержки формата jpeg
+	_ "image/png"  // для поддержки формата png
 )
 
 type StaticService struct {
@@ -39,13 +41,13 @@ func (s *StaticService) UploadAvatar(data []byte) (int, error) {
 
 	// Проверка, является ли файл изображением
 	if contentType != "image/jpeg" && contentType != "image/png" && contentType != "image/gif" {
-		return -1, entity.NewClientError("файл не является изображением", entity.ErrBadRequest)
+		return -1, entity.NewClientError("файл не является валидным изображением", entity.ErrBadRequest)
 	}
 
 	// Чтение данных файла в структуру изображения
 	img, _, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
-		return -1, entity.NewClientError("файл не является изображением", entity.ErrBadRequest, err)
+		return -1, entity.NewClientError("файл не является валидным изображением", entity.ErrBadRequest, err)
 	}
 
 	// Проверка размеров изображения
@@ -72,17 +74,17 @@ func (s *StaticService) UploadAvatar(data []byte) (int, error) {
 	squareImage = image.NewRGBA(image.Rect(0, 0, squareSize, squareSize))
 	draw.Draw(squareImage, squareImage.Bounds(), img, start, draw.Src)
 
-	// Конвертация изображения в формат JPEG и запись в переменную
+	// Конвертация изображения в формат WEBP и запись в переменную
 	var out bytes.Buffer
-	var opts jpeg.Options
+	var opts webp.Options
+	opts.Lossless = false
 	opts.Quality = 60
-	err = jpeg.Encode(&out, squareImage, &opts)
-	if err != nil {
+	if err = webp.Encode(&out, squareImage, &opts); err != nil {
 		return -1, entity.NewClientError("ошибка при обработке изображения", entity.ErrBadRequest, err)
 	}
 
 	// Загрузка обработанного изображения на сервер
-	id, err := s.staticRepo.UploadStatic("avatars", uuid.New().String()+".jpg", out.Bytes())
+	id, err := s.staticRepo.UploadStatic("avatars", uuid.New().String()+".webp", out.Bytes())
 	if err != nil {
 		return -1, err
 	}

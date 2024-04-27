@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	sq "github.com/Masterminds/squirrel"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/config"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
 )
@@ -14,25 +13,24 @@ type CompilationDB struct {
 }
 
 // NewCompilationRepository создает новый репозиторий подборок
-func NewCompilationRepository(database config.PostgresDatabase) (repository.Compilation, error) {
-	db, err := sql.Open("postgres", database.ConnectURL)
-	if err != nil {
-		return nil, err
-	}
+func NewCompilationRepository(db *sql.DB) repository.Compilation {
 	return &CompilationDB{
 		DB: db,
-	}, nil
+	}
 }
 
 // GetCompilationsByTypeID получает все подборки по ID категории
 // подборок из бд отсортированные по алфавиту
 func (c *CompilationDB) GetCompilationsByTypeID(compilationTypeID int) ([]entity.Compilation, error) {
-	query, args, _ := sq.Select("id", "title", "compilation_type_id", "poster_upload_id").
+	query, args, err := sq.Select("id", "title", "compilation_type_id", "poster_upload_id").
 		From("compilation").
 		Where(sq.Eq{"compilation_type_id": compilationTypeID}).
 		OrderBy("title ASC").
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
+	if err != nil {
+		return nil, errors.Join(errors.New("ошибка при составлении запроса GetCompilationsByTypeID"))
+	}
 	rows, err := c.DB.Query(query, args...)
 	if err != nil {
 		return nil, entity.PSQLWrap(err, errors.New("ошибка при получении подборок"))
@@ -110,10 +108,13 @@ func (c *CompilationDB) GetCompilationContent(id, page, limit int) ([]int, error
 
 // GetAllCompilationTypes получает все категории подборок в алфавитном порядке
 func (c *CompilationDB) GetAllCompilationTypes() ([]entity.CompilationType, error) {
-	query, args, _ := sq.Select("id", "type").
+	query, args, err := sq.Select("id", "type").
 		From("compilation_type").
 		OrderBy("type ASC").
 		PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		return nil, errors.Join(errors.New("ошибка при составлении запроса GetAllCompilationTypes"), err)
+	}
 	rows, err := c.DB.Query(query, args...)
 	if err != nil {
 		return nil, entity.PSQLWrap(err, errors.New("ошибка при получении категорий подборок"))
