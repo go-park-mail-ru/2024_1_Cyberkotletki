@@ -10,6 +10,7 @@
 package mock_usecase
 
 import (
+	io "io"
 	reflect "reflect"
 
 	dto "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
@@ -85,17 +86,17 @@ func (mr *MockUserMockRecorder) Register(arg0 any) *gomock.Call {
 }
 
 // UpdateAvatar mocks base method.
-func (m *MockUser) UpdateAvatar(userID, uploadID int) error {
+func (m *MockUser) UpdateAvatar(userID int, reader io.Reader) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateAvatar", userID, uploadID)
+	ret := m.ctrl.Call(m, "UpdateAvatar", userID, reader)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateAvatar indicates an expected call of UpdateAvatar.
-func (mr *MockUserMockRecorder) UpdateAvatar(userID, uploadID any) *gomock.Call {
+func (mr *MockUserMockRecorder) UpdateAvatar(userID, reader any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAvatar", reflect.TypeOf((*MockUser)(nil).UpdateAvatar), userID, uploadID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAvatar", reflect.TypeOf((*MockUser)(nil).UpdateAvatar), userID, reader)
 }
 
 // UpdateInfo mocks base method.

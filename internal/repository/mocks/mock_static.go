@@ -10,6 +10,7 @@
 package mock_repository
 
 import (
+	bytes "bytes"
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"
@@ -38,6 +39,34 @@ func (m *MockStatic) EXPECT() *MockStaticMockRecorder {
 	return m.recorder
 }
 
+// GetBasicPath mocks base method.
+func (m *MockStatic) GetBasicPath() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBasicPath")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetBasicPath indicates an expected call of GetBasicPath.
+func (mr *MockStaticMockRecorder) GetBasicPath() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBasicPath", reflect.TypeOf((*MockStatic)(nil).GetBasicPath))
+}
+
+// GetMaxSize mocks base method.
+func (m *MockStatic) GetMaxSize() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMaxSize")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// GetMaxSize indicates an expected call of GetMaxSize.
+func (mr *MockStaticMockRecorder) GetMaxSize() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxSize", reflect.TypeOf((*MockStatic)(nil).GetMaxSize))
+}
+
 // GetStatic mocks base method.
 func (m *MockStatic) GetStatic(staticID int) (string, error) {
 	m.ctrl.T.Helper()
@@ -54,16 +83,16 @@ func (mr *MockStaticMockRecorder) GetStatic(staticID any) *gomock.Call {
 }
 
 // UploadStatic mocks base method.
-func (m *MockStatic) UploadStatic(path, filename string, data []byte) (int, error) {
+func (m *MockStatic) UploadStatic(path, filename string, buf bytes.Buffer) (int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UploadStatic", path, filename, data)
+	ret := m.ctrl.Call(m, "UploadStatic", path, filename, buf)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UploadStatic indicates an expected call of UploadStatic.
-func (mr *MockStaticMockRecorder) UploadStatic(path, filename, data any) *gomock.Call {
+func (mr *MockStaticMockRecorder) UploadStatic(path, filename, buf any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadStatic", reflect.TypeOf((*MockStatic)(nil).UploadStatic), path, filename, data)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadStatic", reflect.TypeOf((*MockStatic)(nil).UploadStatic), path, filename, buf)
 }

@@ -316,7 +316,7 @@ EXECUTE FUNCTION update_updated_at_column();
 
 -- +goose StatementBegin
 -- Триггер для обработки вставки и удаления записей в таблице review_like
-CREATE OR REPLACE FUNCTION update_review_likes()
+CREATE OR REPLACE FUNCTION update_review_votes()
     RETURNS TRIGGER AS
 $$
 BEGIN
@@ -383,11 +383,11 @@ END;
 $$ LANGUAGE 'plpgsql';
 -- +goose StatementEnd
 
-CREATE TRIGGER update_likes
+CREATE TRIGGER update_votes
     AFTER INSERT OR DELETE OR UPDATE
     ON review_vote
     FOR EACH ROW
-EXECUTE FUNCTION update_review_likes();
+EXECUTE FUNCTION update_review_votes();
 
 
 -- +goose StatementBegin

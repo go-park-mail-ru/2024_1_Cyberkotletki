@@ -1,58 +1,60 @@
 package service
 
 import (
+	"errors"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
+)
+
+const (
+	compilationContentLimit = 10
 )
 
 type CompilationService struct {
 	compilationRepo repository.Compilation
 	staticRepo      repository.Static
 	contentRepo     repository.Content
-	reviewRepo      repository.Review
 }
 
 func NewCompilationService(
 	compilationRepo repository.Compilation,
 	staticRepo repository.Static,
 	contentRepo repository.Content,
-	reviewRepo repository.Review,
 ) *CompilationService {
 	return &CompilationService{
 		compilationRepo: compilationRepo,
 		staticRepo:      staticRepo,
 		contentRepo:     contentRepo,
-		reviewRepo:      reviewRepo,
 	}
 }
 
 // compilationEntityToDTO конвертирует entity.Compilation в dto.Compilation добавляя поле длины контента в подборке
-func (c *CompilationService) compilationEntityToDTO(compEntity entity.Compilation) (*dto.CompilationResponse, error) {
-	contentLength, err := c.compilationRepo.GetCompilationContentLength(compEntity.ID)
-	if err != nil {
-		return nil, err
+func (c *CompilationService) compilationEntityToDTO(compEntity entity.Compilation) (*dto.Compilation, error) {
+	posterURL, err := c.staticRepo.GetStatic(compEntity.PosterUploadID)
+	switch {
+	case errors.Is(err, repository.ErrStaticNotFound):
+		posterURL = ""
+	case err != nil:
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении статики"), err)
 	}
-	return &dto.CompilationResponse{
-		Compilation: dto.Compilation{
-			ID:                compEntity.ID,
-			Title:             compEntity.Title,
-			CompilationTypeID: compEntity.CompilationTypeID,
-			PosterUploadID:    compEntity.PosterUploadID,
-		},
-		ContentLength: contentLength,
-	}, nil
+	compilationDTO := dto.Compilation{
+		ID:                compEntity.ID,
+		Title:             compEntity.Title,
+		CompilationTypeID: compEntity.CompilationTypeID,
+		PosterURL:         posterURL,
+	}
+	return &compilationDTO, nil
 }
 
 // compilationTypeDTOToEntity конвертирует entity.CompilationType в dto.CompilationType
 func (c *CompilationService) compilationTypeDTOToEntity(
 	compTypeEntity entity.CompilationType,
-) dto.CompilationTypeResponse {
-	return dto.CompilationTypeResponse{
-		CompilationType: dto.CompilationType{
-			ID:   compTypeEntity.ID,
-			Type: compTypeEntity.Type,
-		},
+) dto.CompilationType {
+	return dto.CompilationType{
+		ID:   compTypeEntity.ID,
+		Type: compTypeEntity.Name,
 	}
 }
 
@@ -61,75 +63,24 @@ func (c *CompilationService) compilationEntitiesToDTO(compEntities []entity.Comp
 	*dto.CompilationResponseList,
 	error,
 ) {
-	compDTOs := make([]dto.CompilationResponse, 0)
-	for _, compEntity := range compEntities {
+	compDTOs := make([]dto.Compilation, 0, len(compEntities))
+	for i, compEntity := range compEntities {
 		compDTO, err := c.compilationEntityToDTO(compEntity)
 		if err != nil {
 			return nil, err
 		}
-		compDTOs = append(compDTOs, *compDTO)
+		compDTOs[i] = *compDTO
 	}
 	return &dto.CompilationResponseList{Compilations: compDTOs}, nil
-}
-
-func (c *CompilationService) contentEntityToDTO(content *entity.Content) (*dto.PreviewContentCard, error) {
-	preview, err := c.contentRepo.GetPreviewContent(content.ID)
-	if err != nil {
-		return nil, err
-	}
-	actors := make([]string, len(preview.Actors))
-	for i, actor := range preview.Actors {
-		actors[i] = actor.FirstName + " " + actor.LastName
-	}
-	poster, err := c.staticRepo.GetStatic(preview.PosterStaticID)
-	if err != nil {
-		return nil, err
-	}
-	rating, err := c.reviewRepo.GetContentRating(preview.ID)
-	if err != nil {
-		return nil, err
-	}
-	var country string
-	if len(preview.Country) > 0 {
-		country = preview.Country[0].Name
-	}
-	var genre string
-	if len(preview.Genres) > 0 {
-		genre = preview.Genres[0].Name
-	}
-	var director string
-	if len(preview.Directors) > 0 {
-		director = preview.Directors[0].FirstName + " " + preview.Directors[0].LastName
-	}
-	card := dto.PreviewContentCard{
-		ID:            preview.ID,
-		Title:         preview.Title,
-		OriginalTitle: preview.OriginalTitle,
-		Country:       country,
-		Genre:         genre,
-		Director:      director,
-		Actors:        actors,
-		Poster:        poster,
-		Rating:        rating,
-	}
-	if preview.Type == entity.ContentTypeMovie {
-		card.Duration = preview.Movie.Duration
-	} else if preview.Type == entity.ContentTypeSeries {
-		card.SeasonsNumber = len(preview.Series.Seasons)
-		card.YearStart = preview.Series.YearStart
-		card.YearEnd = preview.Series.YearEnd
-	}
-
-	return &card, nil
 }
 
 func (c *CompilationService) compilationTypeEntitiesToDTO(compTypeEntities []entity.CompilationType) (
 	*dto.CompilationTypeResponseList,
 	error,
 ) {
-	compTypeDTOs := make([]dto.CompilationTypeResponse, 0, len(compTypeEntities))
-	for _, compTypeEntity := range compTypeEntities {
-		compTypeDTOs = append(compTypeDTOs, c.compilationTypeDTOToEntity(compTypeEntity))
+	compTypeDTOs := make([]dto.CompilationType, 0, len(compTypeEntities))
+	for i, compTypeEntity := range compTypeEntities {
+		compTypeDTOs[i] = c.compilationTypeDTOToEntity(compTypeEntity)
 	}
 	return &dto.CompilationTypeResponseList{CompilationTypes: compTypeDTOs}, nil
 }
@@ -138,7 +89,7 @@ func (c *CompilationService) compilationTypeEntitiesToDTO(compTypeEntities []ent
 func (c *CompilationService) GetCompilationTypes() (*dto.CompilationTypeResponseList, error) {
 	compTypes, err := c.compilationRepo.GetAllCompilationTypes()
 	if err != nil {
-		return nil, err
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении типов подборок"), err)
 	}
 	return c.compilationTypeEntitiesToDTO(compTypes)
 }
@@ -149,28 +100,36 @@ func (c *CompilationService) GetCompilationsByCompilationType(compTypeID int) (
 ) {
 	compEntities, err := c.compilationRepo.GetCompilationsByTypeID(compTypeID)
 	if err != nil {
-		return nil, err
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении подборок по типу"), err)
 	}
 	return c.compilationEntitiesToDTO(compEntities)
 }
 
-func (c *CompilationService) GetCompilationContent(compID, page, limit int) ([]*dto.PreviewContentCard, error) {
-	contentIDs, err := c.compilationRepo.GetCompilationContent(compID, page, limit)
+func (c *CompilationService) GetCompilationContent(compID, page int) (*dto.CompilationResponse, error) {
+	compilation, err := c.compilationRepo.GetCompilation(compID)
+	switch {
+	case errors.Is(err, repository.ErrCompilationNotFound):
+		return nil, usecase.ErrCompilationNotFound
+	case err != nil:
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении подборки"), err)
+	}
+	contentIDs, err := c.compilationRepo.GetCompilationContent(compID, page, compilationContentLimit)
+	switch {
+	case errors.Is(err, repository.ErrCompilationNotFound):
+		return nil, usecase.ErrCompilationNotFound
+	case err != nil:
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении контента подборки"), err)
+	}
+	compilationDTO, err := c.compilationEntityToDTO(compilation)
 	if err != nil {
 		return nil, err
 	}
-	contentCards := make([]*dto.PreviewContentCard, limit)
-	for index, contentID := range contentIDs {
-		content, err := c.contentRepo.GetPreviewContent(contentID)
-		if err != nil {
-			return nil, err
-		}
-		contentCard, err := c.contentEntityToDTO(content)
-		if err != nil {
-			return nil, err
-		}
-		contentCards[index] = contentCard
-	}
-
-	return contentCards, nil
+	return &dto.CompilationResponse{
+		Compilation:   *compilationDTO,
+		ContentIDs:    contentIDs,
+		ContentLength: len(contentIDs),
+		Page:          page,
+		PerPage:       compilationContentLimit,
+		TotalPages:    (len(contentIDs) + compilationContentLimit - 1) / compilationContentLimit,
+	}, nil
 }

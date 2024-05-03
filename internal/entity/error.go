@@ -16,37 +16,26 @@ func (err ClientError) Error() string {
 	return fmt.Sprint(err.Msg)
 }
 
-// NewClientError генерирует ошибку, содержащую сообщение для клиента и вспомогательные ошибки
-func NewClientError(msg string, errs ...error) error {
-	return ClientError{
-		Msg:        msg,
-		Additional: errors.Join(errs...),
-	}
-}
-
-// Contains позволяет проверить, содержит ли ошибка другую ошибку. В отличие от errors.Is, корректно работает с
-// ClientError и проверяет, содержится ли ошибка в поле ClientError.Additional
-func Contains(err error, target error) bool {
-	var er ClientError
-	if errors.As(err, &er) {
-		return errors.Is(er.Additional, target)
-	}
-	return errors.Is(err, target)
-}
-
 func PSQLWrap(errs ...error) error {
 	return errors.Join(ErrPSQL, errors.Join(errs...))
 }
 
+func PSQLQueryErr(queryName string, err error) error {
+	return PSQLWrap(fmt.Errorf("ошибка при выполнении запроса %s", queryName), err)
+}
+
+func RedisWrap(errs ...error) error {
+	return errors.Join(ErrRedis, errors.Join(errs...))
+}
+
+func UsecaseWrap(errs ...error) error {
+	return errors.Join(ErrInternal, errors.Join(errs...))
+}
+
 var (
-	ErrNotFound      = errors.New("not found")
-	ErrBadRequest    = errors.New("bad request")
-	ErrForbidden     = errors.New("forbidden")
-	ErrUnauthorized  = errors.New("unauthorized")
-	ErrAlreadyExists = errors.New("already exists")
-	ErrRedis         = errors.New("redis error")
-	ErrPSQL          = errors.New("postgres error")
-	ErrInternal      = errors.New("internal server error")
+	ErrRedis    = errors.New("redis error")
+	ErrPSQL     = errors.New("postgres error")
+	ErrInternal = errors.New("internal server error")
 )
 
 const (

@@ -6,19 +6,25 @@ import (
 
 type Person struct {
 	ID            int       `json:"id"`
-	FirstName     string    `json:"first_name"`
-	LastName      string    `json:"last_name"`
+	Name          string    `json:"name"`
+	EnName        string    `json:"en_name"`
 	BirthDate     time.Time `json:"birth_date,omitempty"`
 	DeathDate     time.Time `json:"death_date,omitempty"`
-	StartCareer   time.Time `json:"start_career,omitempty"`
-	EndCareer     time.Time `json:"end_career,omitempty"`
 	Sex           string    `json:"sex"`
-	PhotoStaticID int       `json:"photo_static_id,omitempty"`
-	BirthPlace    string    `json:"birth_place,omitempty"`
 	Height        int       `json:"height,omitempty"`
-	// Жена/муж
-	Spouse   string `json:"spouse,omitempty"`
-	Children string `json:"children,omitempty"`
+	PhotoStaticID int       `json:"photo_static_id,omitempty"`
+}
+
+type PersonRole struct {
+	PersonID  int  `json:"person_id"`
+	Role      Role `json:"role"`
+	ContentID int  `json:"content_id"`
+}
+
+type Role struct {
+	ID     int    `json:"id"`
+	Name   string `json:"name"`
+	EnName string `json:"en_name"`
 }
 
 const (

@@ -67,7 +67,7 @@ run-db-container:
 			docker start db; \
 		fi \
 	fi
-	sleep 1
+	sleep 3
 	# создаём базу данных и пользователя, выдаём права
 	-docker exec -it db psql -U postgres -c "CREATE USER kinoskop_admin PASSWORD 'admin_secret_password'"
 	-docker exec -it db psql -U postgres -c "CREATE DATABASE kinoskop"

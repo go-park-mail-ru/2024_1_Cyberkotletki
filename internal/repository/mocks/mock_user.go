@@ -40,18 +40,18 @@ func (m *MockUser) EXPECT() *MockUserMockRecorder {
 }
 
 // AddUser mocks base method.
-func (m *MockUser) AddUser(arg0 *entity.User) (*entity.User, error) {
+func (m *MockUser) AddUser(email string, passwordHash, passwordSalt []byte) (*entity.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddUser", arg0)
+	ret := m.ctrl.Call(m, "AddUser", email, passwordHash, passwordSalt)
 	ret0, _ := ret[0].(*entity.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // AddUser indicates an expected call of AddUser.
-func (mr *MockUserMockRecorder) AddUser(arg0 any) *gomock.Call {
+func (mr *MockUserMockRecorder) AddUser(email, passwordHash, passwordSalt any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddUser", reflect.TypeOf((*MockUser)(nil).AddUser), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddUser", reflect.TypeOf((*MockUser)(nil).AddUser), email, passwordHash, passwordSalt)
 }
 
 // GetUserByEmail mocks base method.

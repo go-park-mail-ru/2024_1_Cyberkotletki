@@ -116,7 +116,7 @@ func TestHashPassword(t *testing.T) {
 
 func TestCheckPassword(t *testing.T) {
 	t.Parallel()
-	user := NewUserEmpty()
+	user := new(User)
 	salt, hash, err := HashPassword("AmazingPassword1!")
 	user.PasswordSalt = salt
 	user.PasswordHash = hash

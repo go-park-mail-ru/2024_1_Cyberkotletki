@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
@@ -9,23 +10,17 @@ import (
 
 type ContentService struct {
 	contentRepo repository.Content
-	reviewRepo  repository.Review
 	staticRepo  repository.Static
 }
 
-func NewContentService(
-	contentRepo repository.Content,
-	reviewRepo repository.Review,
-	staticRepo repository.Static,
-) usecase.Content {
+func NewContentService(contentRepo repository.Content, staticRepo repository.Static) usecase.Content {
 	return &ContentService{
 		contentRepo: contentRepo,
-		reviewRepo:  reviewRepo,
 		staticRepo:  staticRepo,
 	}
 }
 
-func CountryEntityToDTO(countryEntity []entity.Country) []string {
+func countryEntityToDTO(countryEntity []entity.Country) []string {
 	countries := make([]string, len(countryEntity))
 	for i, country := range countryEntity {
 		countries[i] = country.Name
@@ -33,7 +28,7 @@ func CountryEntityToDTO(countryEntity []entity.Country) []string {
 	return countries
 }
 
-func GenreEntityToDTO(genreEntity []entity.Genre) []string {
+func genreEntityToDTO(genreEntity []entity.Genre) []string {
 	genres := make([]string, len(genreEntity))
 	for i, genre := range genreEntity {
 		genres[i] = genre.Name
@@ -41,27 +36,26 @@ func GenreEntityToDTO(genreEntity []entity.Genre) []string {
 	return genres
 }
 
-func PersonEntityToPreviewDTO(personEntity []entity.Person) []dto.PersonPreview {
+func personEntityToPreviewDTO(personEntity []entity.Person) []dto.PersonPreview {
 	persons := make([]dto.PersonPreview, len(personEntity))
 	for i, person := range personEntity {
 		persons[i] = dto.PersonPreview{
-			ID:        person.ID,
-			FirstName: person.FirstName,
-			LastName:  person.LastName,
+			ID:     person.ID,
+			Name:   person.Name,
+			EnName: person.EnName,
 		}
 	}
 	return persons
 }
 
-func MovieEntityToDTO(movieEntity entity.Movie) dto.MovieContent {
+func movieEntityToDTO(movieEntity entity.Movie) dto.MovieContent {
 	return dto.MovieContent{
 		Premiere: movieEntity.Premiere,
-		Release:  movieEntity.Release,
 		Duration: movieEntity.Duration,
 	}
 }
 
-func SeriesEntityToDTO(seriesEntity entity.Series) dto.SeriesContent {
+func seriesEntityToDTO(seriesEntity entity.Series) dto.SeriesContent {
 	seasons := make([]dto.Season, len(seriesEntity.Seasons))
 	for seasonIndex, season := range seriesEntity.Seasons {
 		episodes := make([]dto.Episode, len(season.Episodes))
@@ -70,13 +64,12 @@ func SeriesEntityToDTO(seriesEntity entity.Series) dto.SeriesContent {
 				ID:            episode.ID,
 				EpisodeNumber: episode.EpisodeNumber,
 				Title:         episode.Title,
+				Duration:      episode.Duration,
 			}
 		}
 		seasons[seasonIndex] = dto.Season{
-			ID:        season.ID,
-			YearStart: season.YearStart,
-			YearEnd:   season.YearEnd,
-			Episodes:  episodes,
+			ID:       season.ID,
+			Episodes: episodes,
 		}
 	}
 	return dto.SeriesContent{
@@ -90,16 +83,39 @@ func SeriesEntityToDTO(seriesEntity entity.Series) dto.SeriesContent {
 // GetContentByID возвращает dto.Content по его ID
 func (c *ContentService) GetContentByID(id int) (*dto.Content, error) {
 	contentEntity, err := c.contentRepo.GetContent(id)
-	if err != nil {
-		return nil, err
+	switch {
+	case errors.Is(err, repository.ErrContentNotFound):
+		return nil, usecase.ErrContentNotFound
+	case err != nil:
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении контента"), err)
 	}
 	posterURL, err := c.staticRepo.GetStatic(contentEntity.PosterStaticID)
-	if err != nil {
-		return nil, err
+	switch {
+	case errors.Is(err, repository.ErrStaticNotFound):
+		// Если постер не найден, возвращаем пустую строку
+		posterURL = ""
+	case err != nil:
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении постера"), err)
 	}
-	rating, err := c.reviewRepo.GetContentRating(id)
-	if err != nil {
-		return nil, err
+	backdropURL, err := c.staticRepo.GetStatic(contentEntity.BackdropStaticID)
+	switch {
+	case errors.Is(err, repository.ErrStaticNotFound):
+		// Если фоновое изображение не найдено, возвращаем пустую строку
+		backdropURL = ""
+	case err != nil:
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении фонового изображения"), err)
+	}
+	pictures := make([]string, len(contentEntity.PicturesStaticID))
+	for i, pictureID := range contentEntity.PicturesStaticID {
+		pictureURL, err := c.staticRepo.GetStatic(pictureID)
+		switch {
+		case errors.Is(err, repository.ErrStaticNotFound):
+			// Если изображение не найдено, возвращаем пустую строку
+			pictures[i] = ""
+		case err != nil:
+			return nil, entity.UsecaseWrap(errors.New("ошибка при получении изображения"), err)
+		}
+		pictures[i] = pictureURL
 	}
 	contentDTO := dto.Content{
 		ID:             contentEntity.ID,
@@ -108,28 +124,30 @@ func (c *ContentService) GetContentByID(id int) (*dto.Content, error) {
 		Slogan:         contentEntity.Slogan,
 		Budget:         contentEntity.Budget,
 		AgeRestriction: contentEntity.AgeRestriction,
-		Audience:       contentEntity.Audience,
-		Rating:         rating,
+		Rating:         contentEntity.Rating,
 		IMDBRating:     contentEntity.IMDBRating,
 		Description:    contentEntity.Description,
 		PosterURL:      posterURL,
-		BoxOffice:      contentEntity.BoxOffice,
-		Marketing:      contentEntity.Marketing,
-		Countries:      CountryEntityToDTO(contentEntity.Country),
-		Genres:         GenreEntityToDTO(contentEntity.Genres),
-		Actors:         PersonEntityToPreviewDTO(contentEntity.Actors),
-		Directors:      PersonEntityToPreviewDTO(contentEntity.Directors),
-		Producers:      PersonEntityToPreviewDTO(contentEntity.Producers),
-		Writers:        PersonEntityToPreviewDTO(contentEntity.Writers),
-		Operators:      PersonEntityToPreviewDTO(contentEntity.Operators),
-		Composers:      PersonEntityToPreviewDTO(contentEntity.Composers),
-		Editors:        PersonEntityToPreviewDTO(contentEntity.Editors),
+		TrailerLink:    contentEntity.TrailerLink,
+		BackdropURL:    backdropURL,
+		PicturesURL:    pictures,
+		Facts:          contentEntity.Facts,
+		Countries:      countryEntityToDTO(contentEntity.Country),
+		Genres:         genreEntityToDTO(contentEntity.Genres),
+		Actors:         personEntityToPreviewDTO(contentEntity.Actors),
+		Directors:      personEntityToPreviewDTO(contentEntity.Directors),
+		Producers:      personEntityToPreviewDTO(contentEntity.Producers),
+		Writers:        personEntityToPreviewDTO(contentEntity.Writers),
+		Operators:      personEntityToPreviewDTO(contentEntity.Operators),
+		Composers:      personEntityToPreviewDTO(contentEntity.Composers),
+		Editors:        personEntityToPreviewDTO(contentEntity.Editors),
 		Type:           contentEntity.Type,
 	}
-	if contentEntity.Type == entity.ContentTypeMovie {
-		contentDTO.Movie = MovieEntityToDTO(*contentEntity.Movie)
-	} else if contentEntity.Type == entity.ContentTypeSeries {
-		contentDTO.Series = SeriesEntityToDTO(*contentEntity.Series)
+	switch contentEntity.Type {
+	case entity.ContentTypeMovie:
+		contentDTO.Movie = movieEntityToDTO(*contentEntity.Movie)
+	case entity.ContentTypeSeries:
+		contentDTO.Series = seriesEntityToDTO(*contentEntity.Series)
 	}
 
 	return &contentDTO, nil
@@ -138,46 +156,58 @@ func (c *ContentService) GetContentByID(id int) (*dto.Content, error) {
 // GetPersonByID возвращает dto.Person по его ID
 func (c *ContentService) GetPersonByID(id int) (*dto.Person, error) {
 	personEntity, err := c.contentRepo.GetPerson(id)
-	if err != nil {
-		return nil, err
+	switch {
+	case errors.Is(err, repository.ErrPersonNotFound):
+		return nil, usecase.ErrPersonNotFound
+	case err != nil:
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении персоны"), err)
 	}
 	personDTO := dto.Person{
-		ID:          personEntity.ID,
-		FirstName:   personEntity.FirstName,
-		LastName:    personEntity.LastName,
-		BirthDate:   personEntity.BirthDate,
-		DeathDate:   personEntity.DeathDate,
-		StartCareer: personEntity.StartCareer,
-		EndCareer:   personEntity.EndCareer,
-		Sex:         personEntity.Sex,
-		BirthPlace:  personEntity.BirthPlace,
-		Height:      personEntity.Height,
-		Spouse:      personEntity.Spouse,
-		Children:    personEntity.Children,
+		ID:        personEntity.ID,
+		Name:      personEntity.Name,
+		EnName:    personEntity.EnName,
+		BirthDate: personEntity.BirthDate,
+		DeathDate: personEntity.DeathDate,
+		Sex:       personEntity.Sex,
+		Height:    personEntity.Height,
 	}
 	contentRoles, err := c.contentRepo.GetPersonRoles(personEntity.ID)
 	if err != nil {
-		return nil, err
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении ролей персоны"), err)
 	}
-	personDTO.Roles = make([]dto.PreviewContentCard, len(contentRoles))
-	for roleIndex, role := range contentRoles {
-		personDTO.Roles[roleIndex] = dto.PreviewContentCard{
-			ID:            role.ID,
-			Title:         role.Title,
-			OriginalTitle: role.OriginalTitle,
+	personDTO.Roles = make(map[string]dto.PreviewContentCardVertical, len(contentRoles))
+	for _, role := range contentRoles {
+		content, err := c.contentRepo.GetPreviewContent(role.ContentID)
+		switch {
+		case errors.Is(err, repository.ErrContentNotFound):
+			continue
+		case err != nil:
+			return nil, entity.UsecaseWrap(errors.New("ошибка при получении контента"), err)
 		}
-		posterURL, err := c.staticRepo.GetStatic(role.PosterStaticID)
-		if err != nil {
-			return nil, err
+		posterURL, err := c.staticRepo.GetStatic(content.PosterStaticID)
+		switch {
+		case errors.Is(err, repository.ErrStaticNotFound):
+			// Если постер не найден, возвращаем пустую строку
+			posterURL = ""
+		case err != nil:
+			return nil, entity.UsecaseWrap(errors.New("ошибка при получении постера"), err)
 		}
-		personDTO.Roles[roleIndex].Poster = posterURL
-	}
-	if personEntity.PhotoStaticID != 0 {
-		static, err := c.staticRepo.GetStatic(personEntity.PhotoStaticID)
-		if err != nil {
-			return nil, err
+		roleContent := dto.PreviewContentCardVertical{
+			ID:     content.ID,
+			Title:  content.Title,
+			Genres: genreEntityToDTO(content.Genres),
+			Poster: posterURL,
+			Rating: content.Rating,
+			Type:   content.Type,
 		}
-		personDTO.PhotoURL = static
+		switch content.Type {
+		case entity.ContentTypeMovie:
+			roleContent.ReleaseYear = content.Movie.Premiere.Year()
+		case entity.ContentTypeSeries:
+			roleContent.YearStart = content.Series.YearStart
+			roleContent.YearEnd = content.Series.YearEnd
+		}
+		personDTO.Roles[role.Role.Name] = roleContent
 	}
 	return &personDTO, nil
 }

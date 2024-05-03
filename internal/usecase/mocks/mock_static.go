@@ -10,6 +10,7 @@
 package mock_usecase
 
 import (
+	io "io"
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"
@@ -38,19 +39,19 @@ func (m *MockStatic) EXPECT() *MockStaticMockRecorder {
 	return m.recorder
 }
 
-// GetAvatar mocks base method.
-func (m *MockStatic) GetAvatar(staticID int) (string, error) {
+// GetStatic mocks base method.
+func (m *MockStatic) GetStatic(staticID int) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAvatar", staticID)
+	ret := m.ctrl.Call(m, "GetStatic", staticID)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetAvatar indicates an expected call of GetAvatar.
-func (mr *MockStaticMockRecorder) GetAvatar(staticID any) *gomock.Call {
+// GetStatic indicates an expected call of GetStatic.
+func (mr *MockStaticMockRecorder) GetStatic(staticID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAvatar", reflect.TypeOf((*MockStatic)(nil).GetAvatar), staticID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatic", reflect.TypeOf((*MockStatic)(nil).GetStatic), staticID)
 }
 
 // GetStaticURL mocks base method.
@@ -69,16 +70,16 @@ func (mr *MockStaticMockRecorder) GetStaticURL(id any) *gomock.Call {
 }
 
 // UploadAvatar mocks base method.
-func (m *MockStatic) UploadAvatar(data []byte) (int, error) {
+func (m *MockStatic) UploadAvatar(reader io.Reader) (int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UploadAvatar", data)
+	ret := m.ctrl.Call(m, "UploadAvatar", reader)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UploadAvatar indicates an expected call of UploadAvatar.
-func (mr *MockStaticMockRecorder) UploadAvatar(data any) *gomock.Call {
+func (mr *MockStaticMockRecorder) UploadAvatar(reader any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadAvatar", reflect.TypeOf((*MockStatic)(nil).UploadAvatar), data)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadAvatar", reflect.TypeOf((*MockStatic)(nil).UploadAvatar), reader)
 }

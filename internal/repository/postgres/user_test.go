@@ -85,7 +85,7 @@ func TestUsersDB_AddUser(t *testing.T) {
 				PasswordHash: []byte("в этом хэше слишком много байт, из-за чего нарушается ограничение CHECK"),
 				PasswordSalt: []byte("salt"),
 			},
-			expectedErr: entity.PSQLWrap(&pq.Error{Code: "123"}, errors.New("ошибка при выполнении запроса AddUser")),
+			expectedErr: entity.PSQLQueryErr("AddUser", &pq.Error{Code: "123"}),
 			setupMock: func(mock sqlmock.Sqlmock, query string) {
 				mock.ExpectExec(regexp.QuoteMeta(query)).
 					WithArgs(
@@ -103,7 +103,7 @@ func TestUsersDB_AddUser(t *testing.T) {
 				PasswordHash: []byte("в этом хэше слишком много байт, из-за чего нарушается ограничение CHECK"),
 				PasswordSalt: []byte("salt"),
 			},
-			expectedErr: entity.PSQLWrap(sql.ErrConnDone, errors.New("ошибка при выполнении запроса AddUser")),
+			expectedErr: entity.PSQLQueryErr("AddUser", sql.ErrConnDone),
 			setupMock: func(mock sqlmock.Sqlmock, query string) {
 				mock.ExpectExec(regexp.QuoteMeta(query)).
 					WithArgs(
@@ -134,7 +134,7 @@ func TestUsersDB_AddUser(t *testing.T) {
 				PlaceholderFormat(sq.Dollar).
 				ToSql()
 			tc.setupMock(mock, query)
-			user, err := repo.AddUser(tc.user)
+			user, err := repo.AddUser(tc.user.Email, tc.user.PasswordHash, tc.user.PasswordSalt)
 			require.Equal(t, tc.expectedErr, err)
 			require.EqualValues(t, tc.expectedOut, user)
 		})
@@ -158,8 +158,8 @@ func TestUsersDB_GetUserByID(t *testing.T) {
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
-					WillReturnRows(sqlmock.NewRows([]string{"id", "email", "name", "password_hashed", "salt_password", "avatar_upload_id"}).
-						AddRow(1, "email@email.com", "", []byte("hashed"), []byte("salt"), 0))
+					WillReturnRows(sqlmock.NewRows([]string{"id", "email", "name", "password_hashed", "salt_password", "avatar_upload_id", "rating"}).
+						AddRow(1, "email@email.com", "", []byte("hashed"), []byte("salt"), 0, 0))
 			},
 			ExpectedOut: &entity.User{
 				ID:             1,
@@ -184,7 +184,7 @@ func TestUsersDB_GetUserByID(t *testing.T) {
 		{
 			Name:        "Ошибка при выполнении запроса",
 			Request:     1,
-			ExpectedErr: entity.PSQLWrap(errors.New("ошибка при выполнении запроса GetUser"), errors.New("ошибка при выполнении запроса getUser")),
+			ExpectedErr: entity.PSQLWrap(errors.New("ошибка при выполнении запроса getUser"), errors.New("ошибка при выполнении запроса GetUser")),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
@@ -209,7 +209,7 @@ func TestUsersDB_GetUserByID(t *testing.T) {
 			}
 			// Ожидаемый запрос
 			query, args, err := sq.
-				Select("id", "email", "name", "password_hashed", "salt_password", "avatar_upload_id").
+				Select("id", "email", "name", "password_hashed", "salt_password", "avatar_upload_id", "rating").
 				From("users").
 				Where(map[string]any{"id": tc.Request}).
 				PlaceholderFormat(sq.Dollar).
@@ -246,8 +246,8 @@ func TestUsersDB_GetUserByEmail(t *testing.T) {
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
-					WillReturnRows(sqlmock.NewRows([]string{"id", "email", "name", "password_hashed", "salt_password", "avatar_upload_id"}).
-						AddRow(1, "email@email.com", "", []byte("hashed"), []byte("salt"), 0))
+					WillReturnRows(sqlmock.NewRows([]string{"id", "email", "name", "password_hashed", "salt_password", "avatar_upload_id", "rating"}).
+						AddRow(1, "email@email.com", "", []byte("hashed"), []byte("salt"), 0, 0))
 			},
 			ExpectedOut: &entity.User{
 				ID:             1,
@@ -272,7 +272,7 @@ func TestUsersDB_GetUserByEmail(t *testing.T) {
 		{
 			Name:        "Ошибка при выполнении запроса",
 			Request:     "email@email.com",
-			ExpectedErr: entity.PSQLWrap(sql.ErrConnDone, errors.New("ошибка при выполнении запроса getUser")),
+			ExpectedErr: entity.PSQLQueryErr("getUser", sql.ErrConnDone),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
@@ -297,7 +297,7 @@ func TestUsersDB_GetUserByEmail(t *testing.T) {
 			}
 			// Ожидаемый запрос
 			query, args, err := sq.
-				Select("id", "email", "name", "password_hashed", "salt_password", "avatar_upload_id").
+				Select("id", "email", "name", "password_hashed", "salt_password", "avatar_upload_id", "rating").
 				From("users").
 				Where(map[string]any{"email": tc.Request}).
 				PlaceholderFormat(sq.Dollar).
@@ -353,7 +353,7 @@ func TestUsersDB_UpdateUser(t *testing.T) {
 				PasswordSalt:   []byte("salt"),
 				AvatarUploadID: 1,
 			},
-			ExpectedErr: entity.PSQLWrap(sql.ErrConnDone, errors.New("ошибка при выполнении запроса UpdateUser")),
+			ExpectedErr: entity.PSQLQueryErr("UpdateUser", sql.ErrConnDone),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectExec(regexp.QuoteMeta(query)).
 					WithArgs(args...).

@@ -3,11 +3,11 @@ package postgres
 import (
 	"database/sql"
 	"database/sql/driver"
-	"errors"
 	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
 	"github.com/stretchr/testify/require"
 	"regexp"
 	"testing"
@@ -35,21 +35,10 @@ func TestCompilationDB_GetCompilationsByTypeID(t *testing.T) {
 			},
 		},
 		{
-			Name:           "Несуществующая подборка",
+			Name:           "Неизвестная ошибка",
 			RequestID:      2,
 			ExpectedOutput: nil,
-			ExpectedErr:    entity.PSQLWrap(sql.ErrNoRows, errors.New("ошибка при получении подборок")),
-			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
-				mock.ExpectQuery(regexp.QuoteMeta(query)).
-					WithArgs(args...).
-					WillReturnError(sql.ErrNoRows)
-			},
-		},
-		{
-			Name:           "Неизвестная ошибка",
-			RequestID:      3,
-			ExpectedOutput: nil,
-			ExpectedErr:    entity.PSQLWrap(fmt.Errorf("ошибка"), errors.New("ошибка при получении подборок")),
+			ExpectedErr:    entity.PSQLQueryErr("GetCompilationsByTypeID", fmt.Errorf("ошибка")),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
@@ -64,13 +53,11 @@ func TestCompilationDB_GetCompilationsByTypeID(t *testing.T) {
 			t.Parallel()
 			db, mock, err := sqlmock.New()
 			require.NoError(t, err)
-			repo := &CompilationDB{
-				DB: db,
-			}
-			query, args, _ := sq.Select("id", "title", "compilation_type_id", "poster_upload_id").
+			repo := NewCompilationRepository(db)
+			query, args, err := sq.Select("id", "title", "compilation_type_id", "poster_upload_id").
 				From("compilation").
 				Where(sq.Eq{"compilation_type_id": tc.RequestID}).
-				OrderBy("title ASC").
+				OrderBy("id ASC").
 				PlaceholderFormat(sq.Dollar).
 				ToSql()
 			require.NoError(t, err)
@@ -108,21 +95,10 @@ func TestCompilationDB_GetCompilationContentLength(t *testing.T) {
 			},
 		},
 		{
-			Name:           "Несуществующая подборка/ подборка без контента",
-			RequestID:      1,
-			ExpectedOutput: 0,
-			ExpectedErr:    entity.PSQLWrap(sql.ErrNoRows, errors.New("ошибка при получении числа контента в подборке")),
-			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
-				mock.ExpectQuery(regexp.QuoteMeta(query)).
-					WithArgs(args...).
-					WillReturnError(sql.ErrNoRows)
-			},
-		},
-		{
 			Name:           "Неизвестная ошибка",
 			RequestID:      1,
 			ExpectedOutput: 0,
-			ExpectedErr:    entity.PSQLWrap(fmt.Errorf("ошибка"), errors.New("ошибка при получении числа контента в подборке")),
+			ExpectedErr:    entity.PSQLQueryErr("GetCompilationContentLength", fmt.Errorf("ошибка")),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
@@ -194,7 +170,7 @@ func TestCompilationDB_GetCompilationContent(t *testing.T) {
 			Page:           1,
 			Limit:          5,
 			ExpectedOutput: nil,
-			ExpectedErr:    entity.PSQLWrap(sql.ErrNoRows, errors.New("контент подборки не найден"), entity.ErrNotFound),
+			ExpectedErr:    repository.ErrCompilationNotFound,
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
@@ -207,24 +183,11 @@ func TestCompilationDB_GetCompilationContent(t *testing.T) {
 			Page:           1,
 			Limit:          5,
 			ExpectedOutput: nil,
-			ExpectedErr:    entity.PSQLWrap(fmt.Errorf("ошибка"), errors.New("ошибка при получении контента подборки")),
+			ExpectedErr:    entity.PSQLQueryErr("GetCompilationContent", fmt.Errorf("ошибка")),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
 					WillReturnError(fmt.Errorf("ошибка"))
-			},
-		},
-		{
-			Name:           "Страница больше общего числа страниц",
-			RequestID:      1,
-			Page:           3,
-			Limit:          2,
-			ExpectedOutput: nil,
-			ExpectedErr:    entity.PSQLWrap(sql.ErrNoRows, errors.New("контент подборки не найден"), entity.ErrNotFound),
-			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
-				mock.ExpectQuery(regexp.QuoteMeta(query)).
-					WithArgs(args...).
-					WillReturnError(sql.ErrNoRows)
 			},
 		},
 	}
@@ -238,9 +201,11 @@ func TestCompilationDB_GetCompilationContent(t *testing.T) {
 			repo := &CompilationDB{
 				DB: db,
 			}
-			query, args, _ := sq.Select("content_id").
+			query, args, err := sq.Select("content_id").
 				From("compilation_content").
+				Join("content ON compilation_content.content_id = content.id").
 				Where(sq.Eq{"compilation_id": tc.RequestID}).
+				OrderBy("content.rating DESC").
 				Limit(uint64(tc.Limit)).
 				Offset(uint64((tc.Page - 1) * tc.Limit)).
 				PlaceholderFormat(sq.Dollar).
@@ -269,7 +234,7 @@ func TestCompilationDB_GetAllCompilationTypes(t *testing.T) {
 	}{
 		{
 			Name:           "Успешное получение",
-			ExpectedOutput: []entity.CompilationType{{ID: 1, Type: "Test"}},
+			ExpectedOutput: []entity.CompilationType{{ID: 1, Name: "Test"}},
 			ExpectedErr:    nil,
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
@@ -279,7 +244,7 @@ func TestCompilationDB_GetAllCompilationTypes(t *testing.T) {
 		{
 			Name:           "Неизвестная ошибка",
 			ExpectedOutput: nil,
-			ExpectedErr:    entity.PSQLWrap(fmt.Errorf("ошибка"), errors.New("ошибка при получении категорий подборок")),
+			ExpectedErr:    entity.PSQLQueryErr("GetAllCompilationTypes", fmt.Errorf("ошибка")),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WillReturnError(fmt.Errorf("ошибка"))
@@ -298,7 +263,7 @@ func TestCompilationDB_GetAllCompilationTypes(t *testing.T) {
 			}
 			query, _, _ := sq.Select("id", "type").
 				From("compilation_type").
-				OrderBy("type ASC").
+				OrderBy("id ASC").
 				PlaceholderFormat(sq.Dollar).
 				ToSql()
 			tc.SetupMock(mock, query, nil)

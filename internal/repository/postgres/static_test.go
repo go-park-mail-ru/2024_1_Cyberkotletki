@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"database/sql"
-	"errors"
 	"github.com/DATA-DOG/go-sqlmock"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
@@ -48,7 +47,7 @@ func TestStaticDB_GetStatic(t *testing.T) {
 			name:           "Неизвестная ошибка",
 			requestId:      1,
 			expectedOutput: "",
-			expectedErr:    entity.PSQLWrap(sql.ErrConnDone, errors.New("ошибка при выполнении запроса GetStatic")),
+			expectedErr:    entity.PSQLQueryErr("GetStatic", sql.ErrConnDone),
 			setupMock: func(mock sqlmock.Sqlmock, query string) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(1).

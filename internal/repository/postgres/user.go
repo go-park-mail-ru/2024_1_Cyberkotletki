@@ -13,16 +13,17 @@ type UsersDB struct {
 	DB *sql.DB
 }
 
-type User struct {
+type DBUser struct {
 	ID             int
 	Email          string
 	Name           sql.NullString
 	PasswordHash   []byte
 	PasswordSalt   []byte
 	AvatarUploadID sql.NullInt64
+	Rating         int
 }
 
-func (u *User) GetEntity() *entity.User {
+func (u *DBUser) GetEntity() *entity.User {
 	return &entity.User{
 		ID:             u.ID,
 		Email:          u.Email,
@@ -40,17 +41,15 @@ func NewUserRepository(db *sql.DB) repository.User {
 }
 
 // AddUser добавляет пользователя в базу данных.
-// У переданного пользователя должен быть заполнен email, passwordHash, passwordSalt.
-// Если операция происходит успешно, то в переданный по указателю user будет записан id и вернется указатель на
-// этого же пользователя
-func (u *UsersDB) AddUser(user *entity.User) (*entity.User, error) {
+// Если операция происходит успешно, то в переданный по указателю user будет записан id нового пользователя.
+func (u *UsersDB) AddUser(email string, passwordHash, passwordSalt []byte) (*entity.User, error) {
 	query, args, err := sq.Insert("users").
 		Columns("email", "password_hashed", "salt_password").
-		Values(user.Email, user.PasswordHash, user.PasswordSalt).
+		Values(email, passwordHash, passwordSalt).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
-		return nil, errors.Join(errors.New("ошибка при составлении запроса AddUser"), err)
+		return nil, entity.PSQLWrap(errors.New("ошибка при составлении запроса AddUser"), err)
 	}
 	result, err := u.DB.Exec(query, args...)
 	var pqErr *pq.Error
@@ -60,63 +59,66 @@ func (u *UsersDB) AddUser(user *entity.User) (*entity.User, error) {
 			return nil, repository.ErrUserAlreadyExists
 		case entity.PSQLCheckViolation:
 			return nil, repository.ErrUserIncorrectData
-		default:
-			return nil, entity.PSQLWrap(pqErr, errors.New("ошибка при выполнении запроса AddUser"))
 		}
-	} else if err != nil {
+	}
+	if err != nil {
 		// неизвестная ошибка
-		return nil, entity.PSQLWrap(err, errors.New("ошибка при выполнении запроса AddUser"))
+		return nil, entity.PSQLQueryErr("AddUser", err)
 	}
 	lastID, err := result.LastInsertId()
 	if err != nil {
-		return nil, entity.PSQLWrap(err, errors.New("ошибка при выполнении запроса AddUser"))
+		return nil, entity.PSQLQueryErr("AddUser", err)
 	}
+	user := new(entity.User)
 	user.ID = int(lastID)
+	user.Email = email
+	user.PasswordHash = passwordHash
+	user.PasswordSalt = passwordSalt
 	return user, nil
 }
 
-func (u *UsersDB) getUser(query string, args ...any) (*entity.User, error) {
-	user := User{}
-	err := u.DB.
+func (u *UsersDB) getUser(where map[string]any) (*entity.User, error) {
+	query, args, err := sq.
+		Select("id", "email", "name", "password_hashed", "salt_password", "avatar_upload_id", "rating").
+		From("users").
+		Where(where).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return nil, entity.PSQLWrap(errors.New("ошибка при составлении запроса getUser"), err)
+	}
+	user := DBUser{}
+	err = u.DB.
 		QueryRow(query, args...).
-		Scan(&user.ID, &user.Email, &user.Name, &user.PasswordHash, &user.PasswordSalt, &user.AvatarUploadID)
+		Scan(
+			&user.ID,
+			&user.Email,
+			&user.Name,
+			&user.PasswordHash,
+			&user.PasswordSalt,
+			&user.AvatarUploadID,
+			&user.Rating,
+		)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, repository.ErrUserNotFound
-	} else if err != nil {
-		return nil, entity.PSQLWrap(err, errors.New("ошибка при выполнении запроса getUser"))
+	}
+	if err != nil {
+		return nil, entity.PSQLQueryErr("getUser", err)
 	}
 	return user.GetEntity(), nil
 }
 
 // GetUserByID возвращает пользователя из базы данных по айди
 func (u *UsersDB) GetUserByID(userID int) (*entity.User, error) {
-	query, args, err := sq.
-		Select("id", "email", "name", "password_hashed", "salt_password", "avatar_upload_id").
-		From("users").
-		Where(map[string]any{"id": userID}).
-		PlaceholderFormat(sq.Dollar).
-		ToSql()
-	if err != nil {
-		return nil, errors.Join(errors.New("ошибка при составлении запроса GetUserByID"), err)
-	}
-	return u.getUser(query, args...)
+	return u.getUser(map[string]any{"id": userID})
 }
 
 // GetUserByEmail возвращает пользователя из базы данных по почте
 func (u *UsersDB) GetUserByEmail(userEmail string) (*entity.User, error) {
-	query, args, err := sq.
-		Select("id", "email", "name", "password_hashed", "salt_password", "avatar_upload_id").
-		From("users").
-		Where(map[string]any{"email": userEmail}).
-		PlaceholderFormat(sq.Dollar).
-		ToSql()
-	if err != nil {
-		return nil, errors.Join(errors.New("ошибка при составлении запроса GetUserByEmail"), err)
-	}
-	return u.getUser(query, args...)
+	return u.getUser(map[string]any{"email": userEmail})
 }
 
-// UpdateUser обновляет пользователя в базе данных по переданным параметрам
+// UpdateUser обновляет пользователя в базе данных по переданной структуре
 func (u *UsersDB) UpdateUser(user *entity.User) error {
 	setMap := make(map[string]any)
 	if user.Email != "" {
@@ -140,11 +142,11 @@ func (u *UsersDB) UpdateUser(user *entity.User) error {
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
-		return errors.Join(errors.New("ошибка при составлении запроса UpdateUser"), err)
+		return entity.PSQLWrap(errors.New("ошибка при составлении запроса UpdateUser"), err)
 	}
 	// ни одна колонка может быть не изменена, но будем считать, что это успешное обновление
 	if _, err = u.DB.Exec(query, args...); err != nil {
-		return entity.PSQLWrap(err, errors.New("ошибка при выполнении запроса UpdateUser"))
+		return entity.PSQLQueryErr("UpdateUser", err)
 	}
 	return nil
 }

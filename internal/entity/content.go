@@ -5,18 +5,21 @@ import "time"
 // Content представляет основную структуру для хранения информации о контенте.
 // В зависимости от типа контента, некоторые поля могут быть пустыми.
 type Content struct {
-	ID             int     `json:"id"`               // Уникальный идентификатор
-	Title          string  `json:"title"`            // Название
-	OriginalTitle  string  `json:"original_title"`   // Название
-	Slogan         string  `json:"slogan"`           // Слоган
-	Budget         int     `json:"budget"`           // Бюджет
-	AgeRestriction int     `json:"age_restriction"`  // Возрастное ограничение
-	Audience       int     `json:"audience"`         // Аудитория
-	IMDBRating     float64 `json:"imdb_rating"`      // Рейтинг IMDB
-	Description    string  `json:"description"`      // Описание
-	PosterStaticID int     `json:"poster_static_id"` // Постер
-	BoxOffice      int     `json:"box_office"`       // Кассовые сборы
-	Marketing      int     `json:"marketing"`        // Маркетинговые затраты
+	ID               int     // Уникальный идентификатор
+	Title            string  // Название
+	OriginalTitle    string  // Название
+	Slogan           string  // Слоган
+	Budget           string  // Бюджет
+	AgeRestriction   int     // Возрастное ограничение
+	IMDBRating       float64 // Рейтинг IMDB
+	Rating           float64 // Рейтинг
+	Description      string  // Описание
+	PosterStaticID   int     // Постер
+	TrailerLink      string  // Ссылка на трейлер
+	BackdropStaticID int     // Фоновое изображение
+
+	PicturesStaticID []int    // Изображения
+	Facts            []string // Интересные факты
 
 	Country   []Country `json:"country"`   // Страны, где был произведен контент
 	Genres    []Genre   `json:"genres"`    // Жанры
@@ -37,7 +40,6 @@ type Content struct {
 
 type Movie struct {
 	Premiere time.Time `json:"premiere"` // Дата премьеры
-	Release  time.Time `json:"release"`  // Дата выпуска
 	Duration int       `json:"duration"` // Продолжительность
 }
 
@@ -52,14 +54,14 @@ type Episode struct {
 	ID            int    `json:"id"`             // Уникальный идентификатор
 	EpisodeNumber int    `json:"episode_number"` // Номер эпизода
 	Title         string `json:"title"`          // Название эпизода
+	Duration      int    `json:"duration"`       // Продолжительность
 }
 
 // Season представляет сезон сериала
 type Season struct {
-	ID        int       `json:"id"`         // Уникальный идентификатор
-	YearStart int       `json:"year_start"` // Год начала сезона
-	YearEnd   int       `json:"year_end"`   // Год окончания сезона
-	Episodes  []Episode `json:"episodes"`   // Эпизоды в сезоне
+	ID       int       `json:"id"`       // Уникальный идентификатор
+	Title    string    `json:"title"`    // Название сезона
+	Episodes []Episode `json:"episodes"` // Эпизоды в сезоне
 }
 
 const (

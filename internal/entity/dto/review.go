@@ -22,6 +22,10 @@ type ReviewResponse struct {
 
 type ReviewResponseList struct {
 	Reviews []ReviewResponse `json:"reviews"`
+	Page    int              `json:"page"    example:"1"  format:"int"`
+	Count   int              `json:"count"   example:"10" format:"int"`
+	Pages   int              `json:"pages"   example:"1"  format:"int"`
+	Total   int              `json:"total"   example:"1"  format:"int"`
 }
 
 type UserReviewResponseList struct {

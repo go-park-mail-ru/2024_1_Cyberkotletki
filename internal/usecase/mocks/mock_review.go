@@ -68,20 +68,6 @@ func (mr *MockReviewMockRecorder) DeleteReview(reviewID, userID any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteReview", reflect.TypeOf((*MockReview)(nil).DeleteReview), reviewID, userID)
 }
 
-// DislikeReview mocks base method.
-func (m *MockReview) DislikeReview(userID, reviewID int) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DislikeReview", userID, reviewID)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DislikeReview indicates an expected call of DislikeReview.
-func (mr *MockReviewMockRecorder) DislikeReview(userID, reviewID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DislikeReview", reflect.TypeOf((*MockReview)(nil).DislikeReview), userID, reviewID)
-}
-
 // EditReview mocks base method.
 func (m *MockReview) EditReview(update dto.ReviewUpdate) (*dto.ReviewResponse, error) {
 	m.ctrl.T.Helper()
@@ -172,45 +158,45 @@ func (mr *MockReviewMockRecorder) GetUserReviews(userID, count, page any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserReviews", reflect.TypeOf((*MockReview)(nil).GetUserReviews), userID, count, page)
 }
 
-// IsLikedByUser mocks base method.
-func (m *MockReview) IsLikedByUser(userID, reviewID int) (int, error) {
+// IsVotedByUser mocks base method.
+func (m *MockReview) IsVotedByUser(userID, reviewID int) (int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IsLikedByUser", userID, reviewID)
+	ret := m.ctrl.Call(m, "IsVotedByUser", userID, reviewID)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// IsLikedByUser indicates an expected call of IsLikedByUser.
-func (mr *MockReviewMockRecorder) IsLikedByUser(userID, reviewID any) *gomock.Call {
+// IsVotedByUser indicates an expected call of IsVotedByUser.
+func (mr *MockReviewMockRecorder) IsVotedByUser(userID, reviewID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsLikedByUser", reflect.TypeOf((*MockReview)(nil).IsLikedByUser), userID, reviewID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsVotedByUser", reflect.TypeOf((*MockReview)(nil).IsVotedByUser), userID, reviewID)
 }
 
-// LikeReview mocks base method.
-func (m *MockReview) LikeReview(userID, reviewID int) error {
+// UnVoteReview mocks base method.
+func (m *MockReview) UnVoteReview(userID, reviewID int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LikeReview", userID, reviewID)
+	ret := m.ctrl.Call(m, "UnVoteReview", userID, reviewID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// LikeReview indicates an expected call of LikeReview.
-func (mr *MockReviewMockRecorder) LikeReview(userID, reviewID any) *gomock.Call {
+// UnVoteReview indicates an expected call of UnVoteReview.
+func (mr *MockReviewMockRecorder) UnVoteReview(userID, reviewID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LikeReview", reflect.TypeOf((*MockReview)(nil).LikeReview), userID, reviewID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnVoteReview", reflect.TypeOf((*MockReview)(nil).UnVoteReview), userID, reviewID)
 }
 
-// UnlikeReview mocks base method.
-func (m *MockReview) UnlikeReview(userID, reviewID int) error {
+// VoteReview mocks base method.
+func (m *MockReview) VoteReview(userID, reviewID int, vote bool) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UnlikeReview", userID, reviewID)
+	ret := m.ctrl.Call(m, "VoteReview", userID, reviewID, vote)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// UnlikeReview indicates an expected call of UnlikeReview.
-func (mr *MockReviewMockRecorder) UnlikeReview(userID, reviewID any) *gomock.Call {
+// VoteReview indicates an expected call of VoteReview.
+func (mr *MockReviewMockRecorder) VoteReview(userID, reviewID, vote any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnlikeReview", reflect.TypeOf((*MockReview)(nil).UnlikeReview), userID, reviewID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VoteReview", reflect.TypeOf((*MockReview)(nil).VoteReview), userID, reviewID, vote)
 }

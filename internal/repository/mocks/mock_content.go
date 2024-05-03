@@ -70,18 +70,18 @@ func (mr *MockContentMockRecorder) GetPerson(id any) *gomock.Call {
 }
 
 // GetPersonRoles mocks base method.
-func (m *MockContent) GetPersonRoles(id int) ([]entity.Content, error) {
+func (m *MockContent) GetPersonRoles(personID int) ([]entity.PersonRole, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPersonRoles", id)
-	ret0, _ := ret[0].([]entity.Content)
+	ret := m.ctrl.Call(m, "GetPersonRoles", personID)
+	ret0, _ := ret[0].([]entity.PersonRole)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPersonRoles indicates an expected call of GetPersonRoles.
-func (mr *MockContentMockRecorder) GetPersonRoles(id any) *gomock.Call {
+func (mr *MockContentMockRecorder) GetPersonRoles(personID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPersonRoles", reflect.TypeOf((*MockContent)(nil).GetPersonRoles), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPersonRoles", reflect.TypeOf((*MockContent)(nil).GetPersonRoles), personID)
 }
 
 // GetPreviewContent mocks base method.

@@ -3,11 +3,11 @@ package postgres
 import (
 	"database/sql"
 	"database/sql/driver"
-	"errors"
 	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/require"
 	"regexp"
@@ -30,22 +30,22 @@ func TestReviewDB_AddReview(t *testing.T) {
 		{
 			Name: "Успешное добавление",
 			RequestReview: &entity.Review{
-				ID:        1,
-				AuthorID:  1,
-				ContentID: 1,
-				Title:     "title",
-				Text:      "text",
-				Rating:    5,
+				ID:            1,
+				AuthorID:      1,
+				ContentID:     1,
+				Title:         "title",
+				Text:          "text",
+				ContentRating: 5,
 			},
 			ExpectedOutput: &entity.Review{
-				ID:        1,
-				AuthorID:  1,
-				ContentID: 1,
-				Title:     "title",
-				Text:      "text",
-				Rating:    5,
-				CreatedAt: fixedTime,
-				UpdatedAt: fixedTime,
+				ID:            1,
+				AuthorID:      1,
+				ContentID:     1,
+				Title:         "title",
+				Text:          "text",
+				ContentRating: 5,
+				CreatedAt:     fixedTime,
+				UpdatedAt:     fixedTime,
 			},
 			ExpectedErr: nil,
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
@@ -58,15 +58,15 @@ func TestReviewDB_AddReview(t *testing.T) {
 		{
 			Name: "Невалидные данные",
 			RequestReview: &entity.Review{
-				ID:        1,
-				AuthorID:  1,
-				ContentID: 1,
-				Title:     "title",
-				Text:      "text",
-				Rating:    11,
+				ID:            1,
+				AuthorID:      1,
+				ContentID:     1,
+				Title:         "title",
+				Text:          "text",
+				ContentRating: 11,
 			},
 			ExpectedOutput: nil,
-			ExpectedErr:    entity.NewClientError("указаны некорректные данные", entity.ErrBadRequest),
+			ExpectedErr:    repository.ErrReviewBadRequest,
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
@@ -74,18 +74,18 @@ func TestReviewDB_AddReview(t *testing.T) {
 			},
 		},
 		{
-			Name: "Отзыв уже добавлен",
+			Name: "Рецензия уже существует",
 			RequestReview: &entity.Review{
-				ID:        1,
-				AuthorID:  1,
-				ContentID: 1,
-				Title:     "title",
-				Text:      "text",
-				Rating:    5,
-				UpdatedAt: fixedTime,
+				ID:            1,
+				AuthorID:      1,
+				ContentID:     1,
+				Title:         "title",
+				Text:          "text",
+				ContentRating: 5,
+				UpdatedAt:     fixedTime,
 			},
 			ExpectedOutput: nil,
-			ExpectedErr:    entity.NewClientError("рецензия уже существует", entity.ErrAlreadyExists),
+			ExpectedErr:    repository.ErrReviewAlreadyExists,
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
@@ -95,15 +95,15 @@ func TestReviewDB_AddReview(t *testing.T) {
 		{
 			Name: "Несуществующий content_id",
 			RequestReview: &entity.Review{
-				ID:        1,
-				AuthorID:  1,
-				ContentID: -1,
-				Title:     "title",
-				Text:      "text",
-				Rating:    5,
+				ID:            1,
+				AuthorID:      1,
+				ContentID:     -1,
+				Title:         "title",
+				Text:          "text",
+				ContentRating: 5,
 			},
 			ExpectedOutput: nil,
-			ExpectedErr:    entity.NewClientError("контент с таким id не существует, либо такого пользователя не существует", entity.ErrNotFound),
+			ExpectedErr:    repository.ErrReviewViolation,
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
@@ -113,15 +113,15 @@ func TestReviewDB_AddReview(t *testing.T) {
 		{
 			Name: "Несуществующий user_id",
 			RequestReview: &entity.Review{
-				ID:        1,
-				AuthorID:  -1,
-				ContentID: 1,
-				Title:     "title",
-				Text:      "text",
-				Rating:    5,
+				ID:            1,
+				AuthorID:      -1,
+				ContentID:     1,
+				Title:         "title",
+				Text:          "text",
+				ContentRating: 5,
 			},
 			ExpectedOutput: nil,
-			ExpectedErr:    entity.NewClientError("контент с таким id не существует, либо такого пользователя не существует", entity.ErrNotFound),
+			ExpectedErr:    repository.ErrReviewViolation,
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
@@ -131,15 +131,15 @@ func TestReviewDB_AddReview(t *testing.T) {
 		{
 			Name: "Неизвестная ошибка postgres",
 			RequestReview: &entity.Review{
-				ID:        1,
-				AuthorID:  1,
-				ContentID: 1,
-				Title:     "title",
-				Text:      "text",
-				Rating:    5,
+				ID:            1,
+				AuthorID:      1,
+				ContentID:     1,
+				Title:         "title",
+				Text:          "text",
+				ContentRating: 5,
 			},
 			ExpectedOutput: nil,
-			ExpectedErr:    entity.PSQLWrap(&pq.Error{Code: "42P01"}, errors.New("ошибка при добавлении рецензии")),
+			ExpectedErr:    entity.PSQLQueryErr("AddReview", &pq.Error{Code: "42P01"}),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
@@ -149,15 +149,15 @@ func TestReviewDB_AddReview(t *testing.T) {
 		{
 			Name: "Неизвестная не-postgres ошибка",
 			RequestReview: &entity.Review{
-				ID:        1,
-				AuthorID:  1,
-				ContentID: 1,
-				Title:     "title",
-				Text:      "text",
-				Rating:    5,
+				ID:            1,
+				AuthorID:      1,
+				ContentID:     1,
+				Title:         "title",
+				Text:          "text",
+				ContentRating: 5,
 			},
 			ExpectedOutput: nil,
-			ExpectedErr:    entity.PSQLWrap(fmt.Errorf("ошибка"), errors.New("ошибка при добавлении рецензии")),
+			ExpectedErr:    entity.PSQLQueryErr("AddReview", fmt.Errorf("ошибка")),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
@@ -177,7 +177,7 @@ func TestReviewDB_AddReview(t *testing.T) {
 			}
 			query, args, err := sq.Insert("review").
 				Columns("user_id", "content_id", "title", "text", "content_rating").
-				Values(tc.RequestReview.AuthorID, tc.RequestReview.ContentID, tc.RequestReview.Title, tc.RequestReview.Text, tc.RequestReview.Rating).
+				Values(tc.RequestReview.AuthorID, tc.RequestReview.ContentID, tc.RequestReview.Title, tc.RequestReview.Text, tc.RequestReview.ContentRating).
 				Suffix("RETURNING id, created_at, updated_at").
 				PlaceholderFormat(sq.Dollar).
 				ToSql()
@@ -211,30 +211,43 @@ func TestReviewDB_GetReviewByID(t *testing.T) {
 			Name:      "Успешное получение",
 			RequestID: 1,
 			ExpectedOutput: &entity.Review{
-				ID:        1,
-				AuthorID:  1,
-				ContentID: 1,
-				Title:     "title",
-				Text:      "text",
-				Rating:    5,
-				CreatedAt: fixedTime,
-				UpdatedAt: fixedTime,
-				Likes:     5,
-				Dislikes:  100,
+				ID:            1,
+				AuthorID:      1,
+				ContentID:     1,
+				Title:         "title",
+				Text:          "text",
+				ContentRating: 5,
+				CreatedAt:     fixedTime,
+				UpdatedAt:     fixedTime,
+				Rating:        -95,
+				Likes:         5,
+				Dislikes:      100,
 			},
 			ExpectedErr: nil,
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
-					WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "content_id", "title", "text", "content_rating", "created_at", "updated_at", "likes", "dislikes"}).
-						AddRow(1, 1, 1, "title", "text", 5, fixedTime, fixedTime, 5, 100))
+					WillReturnRows(sqlmock.NewRows([]string{
+						"id",
+						"user_id",
+						"content_id",
+						"title",
+						"text",
+						"content_rating",
+						"created_at",
+						"updated_at",
+						"likes",
+						"dislikes",
+						"rating",
+					}).
+						AddRow(1, 1, 1, "title", "text", 5, fixedTime, fixedTime, 5, 100, -95))
 			},
 		},
 		{
 			Name:           "Несуществующая рецензия",
 			RequestID:      1,
 			ExpectedOutput: nil,
-			ExpectedErr:    entity.NewClientError("рецензия не найдена", entity.ErrNotFound),
+			ExpectedErr:    repository.ErrReviewNotFound,
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
@@ -245,7 +258,7 @@ func TestReviewDB_GetReviewByID(t *testing.T) {
 			Name:           "Неизвестная ошибка",
 			RequestID:      1,
 			ExpectedOutput: nil,
-			ExpectedErr:    entity.PSQLWrap(fmt.Errorf("ошибка"), errors.New("ошибка при получении рецензии")),
+			ExpectedErr:    entity.PSQLQueryErr("GetReviewByID", fmt.Errorf("ошибка")),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
@@ -260,28 +273,12 @@ func TestReviewDB_GetReviewByID(t *testing.T) {
 			t.Parallel()
 			db, mock, err := sqlmock.New()
 			require.NoError(t, err)
-			repo := &ReviewDB{
-				DB: db,
-			}
-			query, args, _ := sq.Select(
-				"r.id",
-				"r.user_id",
-				"r.content_id",
-				"r.title",
-				"r.text",
-				"r.content_rating",
-				"r.created_at",
-				"r.updated_at",
-			).
-				Column(sq.Expr("SUM(CASE WHEN rl.value IS TRUE THEN 1 ELSE 0 END) as likes")).
-				Column(sq.Expr("SUM(CASE WHEN rl.value IS FALSE THEN 1 ELSE 0 END) as dislikes")).
-				From("review r").
-				LeftJoin("review_like rl ON r.id = rl.review_id").
-				Where(sq.Eq{"r.id": tc.RequestID}).
-				GroupBy("r.id").
+			repo := NewReviewRepository(db)
+			query, args, err := selectAllFields().
+				From("review").
+				Where(sq.Eq{"id": tc.RequestID}).
 				PlaceholderFormat(sq.Dollar).
 				ToSql()
-			fmt.Println(query)
 			require.NoError(t, err)
 			driverValues := make([]driver.Value, len(args))
 			for i, v := range args {
@@ -289,6 +286,66 @@ func TestReviewDB_GetReviewByID(t *testing.T) {
 			}
 			tc.SetupMock(mock, query, driverValues)
 			output, err := repo.GetReviewByID(tc.RequestID)
+			require.Equal(t, tc.ExpectedOutput, output)
+			require.Equal(t, tc.ExpectedErr, err)
+		})
+	}
+}
+
+func TestReviewDB_GetReviewsCountByContentID(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		Name             string
+		RequestContentID int
+		ExpectedOutput   int
+		ExpectedErr      error
+		SetupMock        func(mock sqlmock.Sqlmock, query string, args []driver.Value)
+	}{
+		{
+			Name:             "Успешное получение",
+			RequestContentID: 1,
+			ExpectedOutput:   1,
+			ExpectedErr:      nil,
+			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
+				mock.ExpectQuery(regexp.QuoteMeta(query)).
+					WithArgs(args...).
+					WillReturnRows(sqlmock.NewRows([]string{"count"}).
+						AddRow(1))
+			},
+		},
+		{
+			Name:             "Неизвестная ошибка",
+			RequestContentID: 1,
+			ExpectedOutput:   0,
+			ExpectedErr:      entity.PSQLQueryErr("GetReviewsCountByContentID", fmt.Errorf("ошибка")),
+			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
+				mock.ExpectQuery(regexp.QuoteMeta(query)).
+					WithArgs(args...).
+					WillReturnError(fmt.Errorf("ошибка")) // или любой другой непредусмотренный код ошибки
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+			db, mock, err := sqlmock.New()
+			require.NoError(t, err)
+			repo := NewReviewRepository(db)
+			query, args, err := sq.Select("COUNT(*)").
+				From("review").
+				Where(sq.Eq{"content_id": tc.RequestContentID}).
+				PlaceholderFormat(sq.Dollar).
+				ToSql()
+			require.NoError(t, err)
+			driverValues := make([]driver.Value, len(args))
+			for i, v := range args {
+				driverValues[i] = v
+			}
+			tc.SetupMock(mock, query, driverValues)
+			output, err := repo.GetReviewsCountByContentID(tc.RequestContentID)
 			require.Equal(t, tc.ExpectedOutput, output)
 			require.Equal(t, tc.ExpectedErr, err)
 		})
@@ -324,16 +381,17 @@ func TestReviewDB_GetReviewsByContentID(t *testing.T) {
 			},
 			ExpectedOutput: []*entity.Review{
 				{
-					ID:        1,
-					AuthorID:  1,
-					ContentID: 1,
-					Title:     "title",
-					Text:      "text",
-					Rating:    5,
-					CreatedAt: fixedTime,
-					UpdatedAt: fixedTime,
-					Likes:     10,
-					Dislikes:  100,
+					ID:            1,
+					AuthorID:      1,
+					ContentID:     1,
+					Title:         "title",
+					Text:          "text",
+					ContentRating: 5,
+					CreatedAt:     fixedTime,
+					UpdatedAt:     fixedTime,
+					Likes:         10,
+					Dislikes:      100,
+					Rating:        -90,
 				},
 			},
 			ExpectedErr: nil,
@@ -341,14 +399,14 @@ func TestReviewDB_GetReviewsByContentID(t *testing.T) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
 					WillReturnRows(sqlmock.NewRows([]string{
-						"r.id",
-						"r.user_id",
-						"r.content_id",
-						"r.title",
-						"r.text",
-						"r.content_rating",
-						"r.created_at",
-						"r.updated_at",
+						"id",
+						"user_id",
+						"content_id",
+						"title",
+						"text",
+						"content_rating",
+						"created_at",
+						"updated_at",
 						"likes",
 						"dislikes",
 						"rating",
@@ -385,7 +443,7 @@ func TestReviewDB_GetReviewsByContentID(t *testing.T) {
 				Limit:     1,
 			},
 			ExpectedOutput: nil,
-			ExpectedErr:    entity.PSQLWrap(fmt.Errorf("ошибка"), errors.New("ошибка при получении рецензий")),
+			ExpectedErr:    entity.PSQLQueryErr("GetReviewsByContentID", fmt.Errorf("ошибка")),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
@@ -403,23 +461,9 @@ func TestReviewDB_GetReviewsByContentID(t *testing.T) {
 			repo := &ReviewDB{
 				DB: db,
 			}
-			query, args, _ := sq.Select(
-				"r.id",
-				"r.user_id",
-				"r.content_id",
-				"r.title",
-				"r.text",
-				"r.content_rating",
-				"r.created_at",
-				"r.updated_at",
-			).
-				Column(sq.Expr("SUM(CASE WHEN rl.value IS TRUE THEN 1 ELSE 0 END) as likes")).
-				Column(sq.Expr("SUM(CASE WHEN rl.value IS FALSE THEN 1 ELSE 0 END) as dislikes")).
-				Column(sq.Expr("SUM(CASE WHEN rl.value IS TRUE THEN 1 WHEN rl.value IS FALSE THEN -1 ELSE 0 END) as rating")).
-				From("review r").
-				LeftJoin("review_like rl ON r.id = rl.review_id").
-				Where(sq.Eq{"r.content_id": tc.Request.ContentID}).
-				GroupBy("r.id").
+			query, args, err := selectAllFields().
+				From("review").
+				Where(sq.Eq{"content_id": tc.Request.ContentID}).
 				OrderBy("rating DESC").
 				Limit(uint64(tc.Request.Limit)).
 				Offset(uint64((tc.Request.Page - 1) * tc.Request.Limit)).
@@ -442,85 +486,37 @@ func TestReviewDB_UpdateReview(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		Name           string
-		RequestReview  *entity.Review
-		ExpectedOutput *entity.Review
-		ExpectedErr    error
-		SetupMock      func(mock sqlmock.Sqlmock, query string, args []driver.Value)
+		Name          string
+		RequestReview *entity.Review
+		ExpectedErr   error
+		SetupMock     func(mock sqlmock.Sqlmock, query string, args []driver.Value)
 	}{
 		{
 			Name: "Успешное обновление",
 			RequestReview: &entity.Review{
-				ID:        1,
-				AuthorID:  1,
-				ContentID: 1,
-				Title:     "title",
-				Text:      "text",
-				Rating:    5,
-			},
-			ExpectedOutput: &entity.Review{
-				ID:        1,
-				AuthorID:  1,
-				ContentID: 1,
-				Title:     "title",
-				Text:      "text",
-				Rating:    5,
-				Likes:     10,
-				Dislikes:  100,
+				ID:            1,
+				AuthorID:      1,
+				ContentID:     1,
+				Title:         "title",
+				Text:          "text",
+				ContentRating: 5,
 			},
 			ExpectedErr: nil,
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
-				mock.ExpectExec(regexp.QuoteMeta(query)).WithArgs(args...).WillReturnResult(driver.ResultNoRows)
-				query, args_, _ := sq.Select(
-					"r.id",
-					"r.user_id",
-					"r.content_id",
-					"r.title",
-					"r.text",
-					"r.content_rating",
-					"r.created_at",
-					"r.updated_at",
-				).
-					Column(sq.Expr("SUM(CASE WHEN rl.value IS TRUE THEN 1 ELSE 0 END) as likes")).
-					Column(sq.Expr("SUM(CASE WHEN rl.value IS FALSE THEN 1 ELSE 0 END) as dislikes")).
-					From("review r").
-					LeftJoin("review_like rl ON r.id = rl.review_id").
-					Where(sq.Eq{"r.id": 1}).
-					GroupBy("r.id").
-					PlaceholderFormat(sq.Dollar).
-					ToSql()
-				driverValues := make([]driver.Value, len(args_))
-				for i, v := range args_ {
-					driverValues[i] = v
-				}
-				mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(driverValues...).WillReturnRows(
-					sqlmock.NewRows([]string{
-						"r.id",
-						"r.user_id",
-						"r.content_id",
-						"r.title",
-						"r.text",
-						"r.content_rating",
-						"r.created_at",
-						"r.updated_at",
-						"likes",
-						"dislikes",
-					}).
-						AddRow(1, 1, 1, "title", "text", 5, time.Time{}, time.Time{}, 10, 100))
+				mock.ExpectExec(regexp.QuoteMeta(query)).WithArgs(args...).WillReturnResult(sqlmock.NewResult(1, 1))
 			},
 		},
 		{
 			Name: "Невалидные данные",
 			RequestReview: &entity.Review{
-				ID:        1,
-				AuthorID:  1,
-				ContentID: 1,
-				Title:     "title",
-				Text:      "text",
-				Rating:    11,
+				ID:            1,
+				AuthorID:      1,
+				ContentID:     1,
+				Title:         "title",
+				Text:          "text",
+				ContentRating: 11,
 			},
-			ExpectedOutput: nil,
-			ExpectedErr:    entity.NewClientError("указаны некорректные данные", entity.ErrBadRequest),
+			ExpectedErr: repository.ErrReviewBadRequest,
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectExec(regexp.QuoteMeta(query)).
 					WithArgs(args...).
@@ -530,15 +526,14 @@ func TestReviewDB_UpdateReview(t *testing.T) {
 		{
 			Name: "Рецензия или автор рецензии не найдены",
 			RequestReview: &entity.Review{
-				ID:        1,
-				AuthorID:  1,
-				ContentID: 1,
-				Title:     "title",
-				Text:      "text",
-				Rating:    5,
+				ID:            1,
+				AuthorID:      1,
+				ContentID:     1,
+				Title:         "title",
+				Text:          "text",
+				ContentRating: 5,
 			},
-			ExpectedOutput: nil,
-			ExpectedErr:    entity.NewClientError("контент с таким id не существует, либо такого пользователя не существует", entity.ErrNotFound),
+			ExpectedErr: repository.ErrReviewNotFound,
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectExec(regexp.QuoteMeta(query)).
 					WithArgs(args...).
@@ -548,15 +543,14 @@ func TestReviewDB_UpdateReview(t *testing.T) {
 		{
 			Name: "Неизвестная ошибка postgres",
 			RequestReview: &entity.Review{
-				ID:        1,
-				AuthorID:  1,
-				ContentID: 1,
-				Title:     "title",
-				Text:      "text",
-				Rating:    5,
+				ID:            1,
+				AuthorID:      1,
+				ContentID:     1,
+				Title:         "title",
+				Text:          "text",
+				ContentRating: 5,
 			},
-			ExpectedOutput: nil,
-			ExpectedErr:    entity.PSQLWrap(&pq.Error{Code: "42P01"}, errors.New("ошибка при обновлении рецензии")),
+			ExpectedErr: entity.PSQLQueryErr("UpdateReview", &pq.Error{Code: "42P01"}),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectExec(regexp.QuoteMeta(query)).
 					WithArgs(args...).
@@ -566,15 +560,14 @@ func TestReviewDB_UpdateReview(t *testing.T) {
 		{
 			Name: "Неизвестная не-postgres ошибка",
 			RequestReview: &entity.Review{
-				ID:        1,
-				AuthorID:  1,
-				ContentID: 1,
-				Title:     "title",
-				Text:      "text",
-				Rating:    5,
+				ID:            1,
+				AuthorID:      1,
+				ContentID:     1,
+				Title:         "title",
+				Text:          "text",
+				ContentRating: 5,
 			},
-			ExpectedOutput: nil,
-			ExpectedErr:    entity.PSQLWrap(fmt.Errorf("ошибка"), errors.New("ошибка при обновлении рецензии")),
+			ExpectedErr: entity.PSQLQueryErr("UpdateReview", fmt.Errorf("ошибка")),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectExec(regexp.QuoteMeta(query)).
 					WithArgs(args...).
@@ -592,11 +585,11 @@ func TestReviewDB_UpdateReview(t *testing.T) {
 			repo := &ReviewDB{
 				DB: db,
 			}
-			query, args, _ := sq.Update("review").
+			query, args, err := sq.Update("review").
 				Set("title", tc.RequestReview.Title).
 				Set("text", tc.RequestReview.Text).
-				Set("content_rating", tc.RequestReview.Rating).
-				Where(sq.Eq{"id": tc.RequestReview.ID}).
+				Set("content_rating", tc.RequestReview.ContentRating).
+				Where(sq.Eq{"id": tc.RequestReview.ContentID}).
 				PlaceholderFormat(sq.Dollar).
 				ToSql()
 			require.NoError(t, err)
@@ -605,8 +598,7 @@ func TestReviewDB_UpdateReview(t *testing.T) {
 				driverValues[i] = v
 			}
 			tc.SetupMock(mock, query, driverValues)
-			output, err := repo.UpdateReview(tc.RequestReview)
-			require.Equal(t, tc.ExpectedOutput, output)
+			err = repo.UpdateReview(tc.RequestReview)
 			require.Equal(t, tc.ExpectedErr, err)
 		})
 	}
@@ -630,9 +622,17 @@ func TestReviewDB_DeleteReviewByID(t *testing.T) {
 			},
 		},
 		{
+			Name:        "Рецензия не найдена",
+			RequestID:   1,
+			ExpectedErr: repository.ErrReviewNotFound,
+			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
+				mock.ExpectExec(regexp.QuoteMeta(query)).WithArgs(args...).WillReturnError(sql.ErrNoRows)
+			},
+		},
+		{
 			Name:        "Неизвестная ошибка",
 			RequestID:   1,
-			ExpectedErr: entity.PSQLWrap(fmt.Errorf("ошибка"), errors.New("ошибка при удалении рецензии")),
+			ExpectedErr: entity.PSQLQueryErr("DeleteReviewByID", fmt.Errorf("ошибка")),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectExec(regexp.QuoteMeta(query)).WithArgs(args...).WillReturnError(fmt.Errorf("ошибка"))
 			},
@@ -693,16 +693,17 @@ func TestReviewDB_GetReviewsByAuthorID(t *testing.T) {
 			},
 			ExpectedOutput: []*entity.Review{
 				{
-					ID:        1,
-					AuthorID:  1,
-					ContentID: 1,
-					Title:     "title",
-					Text:      "text",
-					Rating:    5,
-					CreatedAt: fixedTime,
-					UpdatedAt: fixedTime,
-					Likes:     10,
-					Dislikes:  100,
+					ID:            1,
+					AuthorID:      1,
+					ContentID:     1,
+					Title:         "title",
+					Text:          "text",
+					ContentRating: 5,
+					CreatedAt:     fixedTime,
+					UpdatedAt:     fixedTime,
+					Likes:         10,
+					Dislikes:      100,
+					Rating:        -90,
 				},
 			},
 			ExpectedErr: nil,
@@ -710,14 +711,14 @@ func TestReviewDB_GetReviewsByAuthorID(t *testing.T) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
 					WillReturnRows(sqlmock.NewRows([]string{
-						"r.id",
-						"r.user_id",
-						"r.content_id",
-						"r.title",
-						"r.text",
-						"r.content_rating",
-						"r.created_at",
-						"r.updated_at",
+						"id",
+						"user_id",
+						"content_id",
+						"title",
+						"text",
+						"content_rating",
+						"created_at",
+						"updated_at",
 						"likes",
 						"dislikes",
 						"rating",
@@ -754,7 +755,7 @@ func TestReviewDB_GetReviewsByAuthorID(t *testing.T) {
 				Limit:    1,
 			},
 			ExpectedOutput: nil,
-			ExpectedErr:    entity.PSQLWrap(fmt.Errorf("ошибка"), errors.New("ошибка при получении рецензий")),
+			ExpectedErr:    entity.PSQLQueryErr("GetReviewsByAuthorID", fmt.Errorf("ошибка")),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
@@ -772,24 +773,10 @@ func TestReviewDB_GetReviewsByAuthorID(t *testing.T) {
 			repo := &ReviewDB{
 				DB: db,
 			}
-			query, args, _ := sq.Select(
-				"r.id",
-				"r.user_id",
-				"r.content_id",
-				"r.title",
-				"r.text",
-				"r.content_rating",
-				"r.created_at",
-				"r.updated_at",
-			).
-				Column(sq.Expr("SUM(CASE WHEN rl.value IS TRUE THEN 1 ELSE 0 END) as likes")).
-				Column(sq.Expr("SUM(CASE WHEN rl.value IS FALSE THEN 1 ELSE 0 END) as dislikes")).
-				Column(sq.Expr("SUM(CASE WHEN rl.value IS TRUE THEN 1 WHEN rl.value IS FALSE THEN -1 ELSE 0 END) as rating")).
-				From("review r").
-				LeftJoin("review_like rl ON r.id = rl.review_id").
-				Where(sq.Eq{"r.user_id": tc.Request.AuthorID}).
-				GroupBy("r.id").
-				OrderBy("rating DESC").
+			query, args, err := selectAllFields().
+				From("review").
+				Where(sq.Eq{"user_id": tc.Request.AuthorID}).
+				OrderBy("created_at DESC").
 				Limit(uint64(tc.Request.Limit)).
 				Offset(uint64((tc.Request.Page - 1) * tc.Request.Limit)).
 				PlaceholderFormat(sq.Dollar).
@@ -832,34 +819,36 @@ func TestReviewDB_GetContentReviewByAuthor(t *testing.T) {
 				ContentID: 1,
 			},
 			ExpectedOutput: &entity.Review{
-				ID:        1,
-				AuthorID:  1,
-				ContentID: 1,
-				Title:     "title",
-				Text:      "text",
-				Rating:    5,
-				CreatedAt: fixedTime,
-				UpdatedAt: fixedTime,
-				Likes:     10,
-				Dislikes:  100,
+				ID:            1,
+				AuthorID:      1,
+				ContentID:     1,
+				Title:         "title",
+				Text:          "text",
+				ContentRating: 5,
+				CreatedAt:     fixedTime,
+				UpdatedAt:     fixedTime,
+				Likes:         10,
+				Dislikes:      100,
+				Rating:        -90,
 			},
 			ExpectedErr: nil,
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
 					WillReturnRows(sqlmock.NewRows([]string{
-						"r.id",
-						"r.user_id",
-						"r.content_id",
-						"r.title",
-						"r.text",
-						"r.content_rating",
-						"r.created_at",
-						"r.updated_at",
+						"id",
+						"user_id",
+						"content_id",
+						"title",
+						"text",
+						"content_rating",
+						"created_at",
+						"updated_at",
 						"likes",
 						"dislikes",
+						"rating",
 					}).
-						AddRows([]driver.Value{1, 1, 1, "title", "text", 5, fixedTime, fixedTime, 10, 100}))
+						AddRows([]driver.Value{1, 1, 1, "title", "text", 5, fixedTime, fixedTime, 10, 100, -90}))
 			},
 		},
 		{
@@ -872,7 +861,7 @@ func TestReviewDB_GetContentReviewByAuthor(t *testing.T) {
 				ContentID: 1,
 			},
 			ExpectedOutput: nil,
-			ExpectedErr:    entity.NewClientError("рецензия не найдена", entity.ErrNotFound),
+			ExpectedErr:    repository.ErrReviewNotFound,
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(args...).WillReturnError(sql.ErrNoRows)
 			},
@@ -887,7 +876,7 @@ func TestReviewDB_GetContentReviewByAuthor(t *testing.T) {
 				ContentID: 1,
 			},
 			ExpectedOutput: nil,
-			ExpectedErr:    entity.PSQLWrap(fmt.Errorf("ошибка"), errors.New("ошибка при получении рецензии")),
+			ExpectedErr:    entity.PSQLQueryErr("GetContentReviewByAuthor", fmt.Errorf("ошибка")),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
@@ -905,22 +894,9 @@ func TestReviewDB_GetContentReviewByAuthor(t *testing.T) {
 			repo := &ReviewDB{
 				DB: db,
 			}
-			query, args, _ := sq.Select(
-				"r.id",
-				"r.user_id",
-				"r.content_id",
-				"r.title",
-				"r.text",
-				"r.content_rating",
-				"r.created_at",
-				"r.updated_at",
-			).
-				Column(sq.Expr("SUM(CASE WHEN rl.value IS TRUE THEN 1 ELSE 0 END) as likes")).
-				Column(sq.Expr("SUM(CASE WHEN rl.value IS FALSE THEN 1 ELSE 0 END) as dislikes")).
-				From("review r").
-				LeftJoin("review_like rl ON r.id = rl.review_id").
-				Where(sq.Eq{"r.user_id": tc.Request.AuthorID, "r.content_id": tc.Request.ContentID}).
-				GroupBy("r.id").
+			query, args, err := selectAllFields().
+				From("review").
+				Where(sq.Eq{"user_id": tc.Request.AuthorID, "content_id": tc.Request.ContentID}).
 				PlaceholderFormat(sq.Dollar).
 				ToSql()
 			require.NoError(t, err)
@@ -931,79 +907,6 @@ func TestReviewDB_GetContentReviewByAuthor(t *testing.T) {
 			tc.SetupMock(mock, query, driverValues)
 			output, err := repo.GetContentReviewByAuthor(tc.Request.AuthorID, tc.Request.ContentID)
 			require.Equal(t, tc.ExpectedOutput, output)
-			require.Equal(t, tc.ExpectedErr, err)
-		})
-	}
-}
-
-func TestReviewDB_GetAuthorRating(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		Name        string
-		RequestID   int
-		Expected    int
-		ExpectedErr error
-		SetupMock   func(mock sqlmock.Sqlmock, query string, args []driver.Value)
-	}{
-		{
-			Name:        "Успешное получение",
-			RequestID:   1,
-			Expected:    5,
-			ExpectedErr: nil,
-			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
-				mock.ExpectQuery(regexp.QuoteMeta(query)).
-					WithArgs(args...).
-					WillReturnRows(sqlmock.NewRows([]string{"rating"}).AddRow(5))
-			},
-		},
-		{
-			Name:        "Неизвестная ошибка",
-			RequestID:   1,
-			Expected:    0,
-			ExpectedErr: entity.PSQLWrap(fmt.Errorf("ошибка"), errors.New("ошибка при получении рейтинга автора")),
-			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
-				mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(args...).WillReturnError(fmt.Errorf("ошибка"))
-			},
-		},
-		{
-			Name:        "Автора никто не оценивал",
-			RequestID:   1,
-			Expected:    0,
-			ExpectedErr: nil,
-			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
-				mock.ExpectQuery(regexp.QuoteMeta(query)).
-					WithArgs(args...).
-					WillReturnError(sql.ErrNoRows)
-			},
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.Name, func(t *testing.T) {
-			t.Parallel()
-			db, mock, err := sqlmock.New()
-			require.NoError(t, err)
-			repo := &ReviewDB{
-				DB: db,
-			}
-			query, args, _ := sq.Select().
-				Column(sq.Expr("SUM(CASE WHEN rl.value IS TRUE THEN 1 WHEN rl.value IS FALSE THEN -1 ELSE 0 END) as user_rating")).
-				From("review r").
-				LeftJoin("review_like rl ON r.id = rl.review_id").
-				Where(sq.Eq{"r.user_id": tc.RequestID}).
-				GroupBy("r.user_id").
-				PlaceholderFormat(sq.Dollar).
-				ToSql()
-			require.NoError(t, err)
-			driverValues := make([]driver.Value, len(args))
-			for i, v := range args {
-				driverValues[i] = v
-			}
-			tc.SetupMock(mock, query, driverValues)
-			output, err := repo.GetAuthorRating(tc.RequestID)
-			require.Equal(t, tc.Expected, output)
 			require.Equal(t, tc.ExpectedErr, err)
 		})
 	}
@@ -1026,14 +929,17 @@ func TestReviewDB_GetLatestReviews(t *testing.T) {
 			RequestLimit: 1,
 			ExpectedOutput: []*entity.Review{
 				{
-					ID:        1,
-					AuthorID:  1,
-					ContentID: 1,
-					Title:     "title",
-					Text:      "text",
-					Rating:    5,
-					CreatedAt: fixedTime,
-					UpdatedAt: fixedTime,
+					ID:            1,
+					AuthorID:      1,
+					ContentID:     1,
+					Title:         "title",
+					Text:          "text",
+					ContentRating: 5,
+					CreatedAt:     fixedTime,
+					UpdatedAt:     fixedTime,
+					Likes:         10,
+					Dislikes:      100,
+					Rating:        -90,
 				},
 			},
 			ExpectedErr: nil,
@@ -1041,16 +947,19 @@ func TestReviewDB_GetLatestReviews(t *testing.T) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
 					WillReturnRows(sqlmock.NewRows([]string{
-						"r.id",
-						"r.user_id",
-						"r.content_id",
-						"r.title",
-						"r.text",
-						"r.content_rating",
-						"r.created_at",
-						"r.updated_at",
+						"id",
+						"user_id",
+						"content_id",
+						"title",
+						"text",
+						"content_rating",
+						"created_at",
+						"updated_at",
+						"likes",
+						"dislikes",
+						"rating",
 					}).
-						AddRows([]driver.Value{1, 1, 1, "title", "text", 5, fixedTime, fixedTime}))
+						AddRows([]driver.Value{1, 1, 1, "title", "text", 5, fixedTime, fixedTime, 10, 100, -90}))
 			},
 		},
 		{
@@ -1066,7 +975,7 @@ func TestReviewDB_GetLatestReviews(t *testing.T) {
 			Name:           "Неизвестная ошибка",
 			RequestLimit:   1,
 			ExpectedOutput: nil,
-			ExpectedErr:    entity.PSQLWrap(fmt.Errorf("ошибка"), errors.New("ошибка при получении рецензий")),
+			ExpectedErr:    entity.PSQLQueryErr("GetLatestReviews", fmt.Errorf("ошибка")),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
@@ -1084,9 +993,9 @@ func TestReviewDB_GetLatestReviews(t *testing.T) {
 			repo := &ReviewDB{
 				DB: db,
 			}
-			query, args, err := sq.Select("id", "user_id", "content_id", "title", "text", "content_rating", "created_at", "updated_at").
+			query, args, err := selectAllFields().
 				From("review").
-				OrderBy("id DESC").
+				OrderBy("created_at DESC").
 				Limit(uint64(tc.RequestLimit)).
 				PlaceholderFormat(sq.Dollar).
 				ToSql()
@@ -1103,7 +1012,7 @@ func TestReviewDB_GetLatestReviews(t *testing.T) {
 	}
 }
 
-func TestReviewDB_LikeReview(t *testing.T) {
+func TestReviewDB_VoteReview(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -1133,6 +1042,54 @@ func TestReviewDB_LikeReview(t *testing.T) {
 			},
 		},
 		{
+			Name: "Успешное добавление дизлайка",
+			Request: struct {
+				ReviewID int
+				UserID   int
+				Value    bool
+			}{
+				ReviewID: 1,
+				UserID:   1,
+				Value:    false,
+			},
+			ExpectedErr: nil,
+			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
+				mock.ExpectExec(regexp.QuoteMeta(query)).WithArgs(args...).WillReturnResult(driver.ResultNoRows)
+			},
+		},
+		{
+			Name: "Несуществующая рецензия",
+			Request: struct {
+				ReviewID int
+				UserID   int
+				Value    bool
+			}{
+				ReviewID: 1,
+				UserID:   1,
+				Value:    false,
+			},
+			ExpectedErr: repository.ErrReviewNotFound,
+			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
+				mock.ExpectExec(regexp.QuoteMeta(query)).WithArgs(args...).WillReturnError(&pq.Error{Code: entity.PSQLForeignKeyViolation})
+			},
+		},
+		{
+			Name: "Оценка уже стоит",
+			Request: struct {
+				ReviewID int
+				UserID   int
+				Value    bool
+			}{
+				ReviewID: 1,
+				UserID:   1,
+				Value:    false,
+			},
+			ExpectedErr: repository.ErrReviewVoteAlreadyExists,
+			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
+				mock.ExpectExec(regexp.QuoteMeta(query)).WithArgs(args...).WillReturnError(&pq.Error{Code: entity.PSQLUniqueViolation})
+			},
+		},
+		{
 			Name: "Неизвестная ошибка",
 			Request: struct {
 				ReviewID int
@@ -1143,7 +1100,7 @@ func TestReviewDB_LikeReview(t *testing.T) {
 				UserID:   1,
 				Value:    true,
 			},
-			ExpectedErr: entity.PSQLWrap(fmt.Errorf("ошибка"), errors.New("ошибка при добавлении лайка")),
+			ExpectedErr: entity.PSQLQueryErr("VoteReview", fmt.Errorf("ошибка")),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectExec(regexp.QuoteMeta(query)).
 					WithArgs(args...).
@@ -1161,7 +1118,7 @@ func TestReviewDB_LikeReview(t *testing.T) {
 			repo := &ReviewDB{
 				DB: db,
 			}
-			query, args, err := sq.Insert("review_like").
+			query, args, err := sq.Insert("review_vote").
 				Columns("review_id", "user_id", "value").
 				Values(tc.Request.ReviewID, tc.Request.UserID, tc.Request.Value).
 				PlaceholderFormat(sq.Dollar).
@@ -1172,13 +1129,13 @@ func TestReviewDB_LikeReview(t *testing.T) {
 				driverValues[i] = v
 			}
 			tc.SetupMock(mock, query, driverValues)
-			err = repo.LikeReview(tc.Request.ReviewID, tc.Request.UserID, tc.Request.Value)
+			err = repo.VoteReview(tc.Request.ReviewID, tc.Request.UserID, tc.Request.Value)
 			require.Equal(t, tc.ExpectedErr, err)
 		})
 	}
 }
 
-func TestReviewDB_UnlikeReview(t *testing.T) {
+func TestReviewDB_UnVoteReview(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -1191,7 +1148,7 @@ func TestReviewDB_UnlikeReview(t *testing.T) {
 		SetupMock   func(mock sqlmock.Sqlmock, query string, args []driver.Value)
 	}{
 		{
-			Name: "Успешное удаление лайка",
+			Name: "Успешное удаление оценки",
 			Request: struct {
 				ReviewID int
 				UserID   int
@@ -1205,6 +1162,22 @@ func TestReviewDB_UnlikeReview(t *testing.T) {
 			},
 		},
 		{
+			Name: "Оценка на рецензию не найдена",
+			Request: struct {
+				ReviewID int
+				UserID   int
+			}{
+				ReviewID: 1,
+				UserID:   1,
+			},
+			ExpectedErr: repository.ErrReviewVoteNotFound,
+			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
+				mock.ExpectExec(regexp.QuoteMeta(query)).
+					WithArgs(args...).
+					WillReturnError(&pq.Error{Code: entity.PSQLForeignKeyViolation})
+			},
+		},
+		{
 			Name: "Неизвестная ошибка",
 			Request: struct {
 				ReviewID int
@@ -1213,7 +1186,7 @@ func TestReviewDB_UnlikeReview(t *testing.T) {
 				ReviewID: 1,
 				UserID:   1,
 			},
-			ExpectedErr: entity.PSQLWrap(fmt.Errorf("ошибка"), errors.New("ошибка при удалении лайка")),
+			ExpectedErr: entity.PSQLQueryErr("UnVoteReview", fmt.Errorf("ошибка")),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectExec(regexp.QuoteMeta(query)).
 					WithArgs(args...).
@@ -1228,10 +1201,8 @@ func TestReviewDB_UnlikeReview(t *testing.T) {
 			t.Parallel()
 			db, mock, err := sqlmock.New()
 			require.NoError(t, err)
-			repo := &ReviewDB{
-				DB: db,
-			}
-			query, args, err := sq.Delete("review_like").
+			repo := NewReviewRepository(db)
+			query, args, err := sq.Delete("review_vote").
 				Where(sq.Eq{"review_id": tc.Request.ReviewID, "user_id": tc.Request.UserID}).
 				PlaceholderFormat(sq.Dollar).
 				ToSql()
@@ -1241,13 +1212,13 @@ func TestReviewDB_UnlikeReview(t *testing.T) {
 				driverValues[i] = v
 			}
 			tc.SetupMock(mock, query, driverValues)
-			err = repo.UnlikeReview(tc.Request.ReviewID, tc.Request.UserID)
+			err = repo.UnVoteReview(tc.Request.ReviewID, tc.Request.UserID)
 			require.Equal(t, tc.ExpectedErr, err)
 		})
 	}
 }
 
-func TestReviewDB_IsLikedByUser(t *testing.T) {
+func TestReviewDB_IsVotedByUser(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -1321,7 +1292,7 @@ func TestReviewDB_IsLikedByUser(t *testing.T) {
 				UserID:   1,
 			},
 			Expected:    0,
-			ExpectedErr: entity.PSQLWrap(fmt.Errorf("ошибка"), errors.New("ошибка при получении лайка")),
+			ExpectedErr: entity.PSQLQueryErr("IsVotedByUser", fmt.Errorf("ошибка")),
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(args...).WillReturnError(fmt.Errorf("ошибка"))
 			},
@@ -1334,11 +1305,9 @@ func TestReviewDB_IsLikedByUser(t *testing.T) {
 			t.Parallel()
 			db, mock, err := sqlmock.New()
 			require.NoError(t, err)
-			repo := &ReviewDB{
-				DB: db,
-			}
+			repo := NewReviewRepository(db)
 			query, args, err := sq.Select("value").
-				From("review_like").
+				From("review_vote").
 				Where(sq.Eq{"review_id": tc.Request.ReviewID, "user_id": tc.Request.UserID}).
 				PlaceholderFormat(sq.Dollar).
 				ToSql()
@@ -1348,77 +1317,7 @@ func TestReviewDB_IsLikedByUser(t *testing.T) {
 				driverValues[i] = v
 			}
 			tc.SetupMock(mock, query, driverValues)
-			output, err := repo.IsLikedByUser(tc.Request.ReviewID, tc.Request.UserID)
-			require.Equal(t, tc.Expected, output)
-			require.Equal(t, tc.ExpectedErr, err)
-		})
-	}
-}
-
-func TestReviewDB_GetContentRating(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		Name        string
-		RequestID   int
-		Expected    float64
-		ExpectedErr error
-		SetupMock   func(mock sqlmock.Sqlmock, query string, args []driver.Value)
-	}{
-		{
-			Name:        "Успешное получение",
-			RequestID:   1,
-			Expected:    5.0,
-			ExpectedErr: nil,
-			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
-				mock.ExpectQuery(regexp.QuoteMeta(query)).
-					WithArgs(args...).
-					WillReturnRows(sqlmock.NewRows([]string{"rating"}).AddRow(5.0))
-			},
-		},
-		{
-			Name:        "Неизвестная ошибка",
-			RequestID:   1,
-			Expected:    0.0,
-			ExpectedErr: entity.PSQLWrap(fmt.Errorf("ошибка"), errors.New("ошибка при получении рейтинга контента")),
-			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
-				mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(args...).WillReturnError(fmt.Errorf("ошибка"))
-			},
-		},
-		{
-			Name:        "Контент никто не оценивал",
-			RequestID:   1,
-			Expected:    0.0,
-			ExpectedErr: nil,
-			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
-				mock.ExpectQuery(regexp.QuoteMeta(query)).
-					WithArgs(args...).
-					WillReturnError(sql.ErrNoRows)
-			},
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.Name, func(t *testing.T) {
-			t.Parallel()
-			db, mock, err := sqlmock.New()
-			require.NoError(t, err)
-			repo := &ReviewDB{
-				DB: db,
-			}
-			query, args, err := sq.Select("AVG(content_rating)").
-				From("review").
-				Where(sq.Eq{"content_id": tc.RequestID}).
-				PlaceholderFormat(sq.Dollar).
-				ToSql()
-			require.NoError(t, err)
-			driverValues := make([]driver.Value, len(args))
-			for i, v := range args {
-				driverValues[i] = v
-			}
-			tc.SetupMock(mock, query, driverValues)
-			output, err := repo.GetContentRating(tc.RequestID)
+			output, err := repo.IsVotedByUser(tc.Request.ReviewID, tc.Request.UserID)
 			require.Equal(t, tc.Expected, output)
 			require.Equal(t, tc.ExpectedErr, err)
 		})
