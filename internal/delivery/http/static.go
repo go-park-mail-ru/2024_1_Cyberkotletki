@@ -1,8 +1,8 @@
 package http
 
 import (
+	"errors"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http/utils"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -36,16 +36,14 @@ func (h *StaticEndpoints) Configure(e *echo.Group) {
 func (h *StaticEndpoints) GetStaticURL(ctx echo.Context) error {
 	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
-		return utils.NewError(ctx, http.StatusBadRequest, entity.NewClientError("невалидный id статики"))
+		return utils.NewError(ctx, http.StatusBadRequest, "Невалидный id статики", nil)
 	}
-	staticURL, err := h.staticUC.GetStaticURL(int(id))
-	if err != nil {
-		switch {
-		case entity.Contains(err, entity.ErrNotFound):
-			return utils.NewError(ctx, http.StatusNotFound, err)
-		default:
-			return utils.NewError(ctx, http.StatusInternalServerError, err)
-		}
+	staticURL, err := h.staticUC.GetStatic(int(id))
+	switch {
+	case errors.Is(err, usecase.ErrStaticNotFound):
+		return utils.NewError(ctx, http.StatusNotFound, "Статика не найдена", nil)
+	case err != nil:
+		return utils.NewError(ctx, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
 	}
 	return ctx.String(http.StatusOK, staticURL)
 }

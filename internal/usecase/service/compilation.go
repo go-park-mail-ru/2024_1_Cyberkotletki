@@ -22,7 +22,7 @@ func NewCompilationService(
 	compilationRepo repository.Compilation,
 	staticRepo repository.Static,
 	contentRepo repository.Content,
-) *CompilationService {
+) usecase.Compilation {
 	return &CompilationService{
 		compilationRepo: compilationRepo,
 		staticRepo:      staticRepo,
@@ -74,15 +74,14 @@ func (c *CompilationService) compilationEntitiesToDTO(compEntities []entity.Comp
 	return &dto.CompilationResponseList{Compilations: compDTOs}, nil
 }
 
-func (c *CompilationService) compilationTypeEntitiesToDTO(compTypeEntities []entity.CompilationType) (
-	*dto.CompilationTypeResponseList,
-	error,
-) {
+func (c *CompilationService) compilationTypeEntitiesToDTO(
+	compTypeEntities []entity.CompilationType,
+) *dto.CompilationTypeResponseList {
 	compTypeDTOs := make([]dto.CompilationType, 0, len(compTypeEntities))
 	for i, compTypeEntity := range compTypeEntities {
 		compTypeDTOs[i] = c.compilationTypeDTOToEntity(compTypeEntity)
 	}
-	return &dto.CompilationTypeResponseList{CompilationTypes: compTypeDTOs}, nil
+	return &dto.CompilationTypeResponseList{CompilationTypes: compTypeDTOs}
 }
 
 // GetCompilationTypes возвращает список типов подборок
@@ -91,7 +90,7 @@ func (c *CompilationService) GetCompilationTypes() (*dto.CompilationTypeResponse
 	if err != nil {
 		return nil, entity.UsecaseWrap(errors.New("ошибка при получении типов подборок"), err)
 	}
-	return c.compilationTypeEntitiesToDTO(compTypes)
+	return c.compilationTypeEntitiesToDTO(compTypes), nil
 }
 
 func (c *CompilationService) GetCompilationsByCompilationType(compTypeID int) (

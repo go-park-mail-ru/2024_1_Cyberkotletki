@@ -1,8 +1,8 @@
 package http
 
 import (
+	"errors"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http/utils"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -30,19 +30,12 @@ func (h *CompilationEndpoints) Configure(server *echo.Group) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} dto.CompilationTypeResponseList
-// @Failure 400 {object} echo.HTTPError
-// @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
 // @Router /compilation/types [get]
 func (h *CompilationEndpoints) GetCompilationTypes(ctx echo.Context) error {
 	compType, err := h.compilationUC.GetCompilationTypes()
 	if err != nil {
-		switch {
-		case entity.Contains(err, entity.ErrNotFound):
-			return utils.NewError(ctx, http.StatusNotFound, err)
-		default:
-			return utils.NewError(ctx, http.StatusInternalServerError, err)
-		}
+		return utils.NewError(ctx, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
 	}
 	return utils.WriteJSON(ctx, compType)
 }
@@ -56,22 +49,16 @@ func (h *CompilationEndpoints) GetCompilationTypes(ctx echo.Context) error {
 // @Param compilationType path string true "id типа подборки"
 // @Success 200 {object} dto.CompilationResponseList
 // @Failure 400 {object} echo.HTTPError
-// @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
 // @Router /compilation/type/{compilationType} [get]
 func (h *CompilationEndpoints) GetCompilationsByCompilationType(ctx echo.Context) error {
 	compilationType, err := strconv.ParseInt(ctx.Param("compilationType"), 10, 64)
 	if err != nil {
-		return utils.NewError(ctx, http.StatusBadRequest, entity.NewClientError("невалидный id типа подборки"))
+		return utils.NewError(ctx, http.StatusBadRequest, "Невалидный id типа подборки", nil)
 	}
 	compilations, err := h.compilationUC.GetCompilationsByCompilationType(int(compilationType))
 	if err != nil {
-		switch {
-		case entity.Contains(err, entity.ErrNotFound):
-			return utils.NewError(ctx, http.StatusNotFound, err)
-		default:
-			return utils.NewError(ctx, http.StatusInternalServerError, err)
-		}
+		return utils.NewError(ctx, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
 	}
 	return utils.WriteJSON(ctx, compilations)
 }
@@ -92,20 +79,18 @@ func (h *CompilationEndpoints) GetCompilationsByCompilationType(ctx echo.Context
 func (h *CompilationEndpoints) GetCompilationContent(ctx echo.Context) error {
 	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
-		return utils.NewError(ctx, http.StatusBadRequest, entity.NewClientError("невалидный id подборки"))
+		return utils.NewError(ctx, http.StatusBadRequest, "Невалидный id подборки", nil)
 	}
 	page, err := strconv.ParseInt(ctx.Param("page"), 10, 64)
 	if err != nil {
 		page = 1
 	}
-	compilation, err := h.compilationUC.GetCompilationContent(int(id), int(page), 10)
-	if err != nil {
-		switch {
-		case entity.Contains(err, entity.ErrNotFound):
-			return utils.NewError(ctx, http.StatusNotFound, err)
-		default:
-			return utils.NewError(ctx, http.StatusInternalServerError, err)
-		}
+	compilation, err := h.compilationUC.GetCompilationContent(int(id), int(page))
+	switch {
+	case errors.Is(err, usecase.ErrCompilationNotFound):
+		return utils.NewError(ctx, http.StatusNotFound, "Подборка не найдена", nil)
+	case err != nil:
+		return utils.NewError(ctx, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
 	}
 	return utils.WriteJSON(ctx, compilation)
 }

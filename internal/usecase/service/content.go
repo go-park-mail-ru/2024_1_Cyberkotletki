@@ -106,16 +106,16 @@ func (c *ContentService) GetContentByID(id int) (*dto.Content, error) {
 		return nil, entity.UsecaseWrap(errors.New("ошибка при получении фонового изображения"), err)
 	}
 	pictures := make([]string, len(contentEntity.PicturesStaticID))
-	for i, pictureID := range contentEntity.PicturesStaticID {
+	for index, pictureID := range contentEntity.PicturesStaticID {
 		pictureURL, err := c.staticRepo.GetStatic(pictureID)
 		switch {
 		case errors.Is(err, repository.ErrStaticNotFound):
 			// Если изображение не найдено, возвращаем пустую строку
-			pictures[i] = ""
+			pictures[index] = ""
 		case err != nil:
 			return nil, entity.UsecaseWrap(errors.New("ошибка при получении изображения"), err)
 		}
-		pictures[i] = pictureURL
+		pictures[index] = pictureURL
 	}
 	contentDTO := dto.Content{
 		ID:             contentEntity.ID,

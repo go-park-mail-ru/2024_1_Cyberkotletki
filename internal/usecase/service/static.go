@@ -34,14 +34,14 @@ func (s *StaticService) GetStatic(staticID int) (string, error) {
 
 func (s *StaticService) UploadAvatar(reader io.Reader) (int, error) {
 	data := make([]byte, s.staticRepo.GetMaxSize())
-	n, err := reader.Read(data)
+	bytesCount, err := reader.Read(data)
 	if err != nil {
 		return -1, errors.New("UploadAvatar: ошибка при чтении файла")
 	}
-	if n >= s.staticRepo.GetMaxSize() {
+	if bytesCount >= s.staticRepo.GetMaxSize() {
 		return -1, usecase.ErrStaticTooBigFile
 	}
-	data = data[:n]
+	data = data[:bytesCount]
 
 	// Определение типа файла
 	contentType := http.DetectContentType(data)

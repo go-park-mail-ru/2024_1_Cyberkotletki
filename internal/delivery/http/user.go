@@ -1,26 +1,29 @@
 package http
 
 import (
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/config"
+	"errors"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http/utils"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
 	"github.com/labstack/echo/v4"
-	"io"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 type UserEndpoints struct {
-	userUC   usecase.User
-	authUC   usecase.Auth
-	staticUC usecase.Static
+	userUC         usecase.User
+	authUC         usecase.Auth
+	staticUC       usecase.Static
+	sessionManager *utils.SessionManager
 }
 
-func NewUserEndpoints(userUC usecase.User, authUC usecase.Auth, staticUC usecase.Static) UserEndpoints {
-	return UserEndpoints{userUC: userUC, authUC: authUC, staticUC: staticUC}
+func NewUserEndpoints(
+	userUC usecase.User,
+	authUC usecase.Auth,
+	staticUC usecase.Static,
+	sessionManager *utils.SessionManager,
+) UserEndpoints {
+	return UserEndpoints{userUC: userUC, authUC: authUC, staticUC: staticUC, sessionManager: sessionManager}
 }
 
 func (h *UserEndpoints) Configure(server *echo.Group) {
@@ -48,20 +51,24 @@ func (h *UserEndpoints) Configure(server *echo.Group) {
 func (h *UserEndpoints) Register(ctx echo.Context) error {
 	registerData := new(dto.Register)
 	if err := ctx.Bind(registerData); err != nil {
-		return utils.NewError(ctx, http.StatusBadRequest, utils.ErrBadJSON)
+		return utils.NewError(ctx, http.StatusBadRequest, "Невалидный JSON", nil)
 	}
 	userID, err := h.userUC.Register(registerData)
-	if err != nil {
-		switch {
-		case entity.Contains(err, entity.ErrAlreadyExists):
-			return utils.NewError(ctx, http.StatusConflict, err)
-		case entity.Contains(err, entity.ErrBadRequest):
-			return utils.NewError(ctx, http.StatusBadRequest, err)
-		default:
-			return utils.NewError(ctx, http.StatusInternalServerError, err)
+	var errUserIncorrectData usecase.UserIncorrectDataError
+	switch {
+	case errors.Is(err, usecase.ErrUserAlreadyExists):
+		return utils.NewError(ctx, http.StatusConflict, "Пользователь с такой почтой уже существует", err)
+	case errors.As(err, &errUserIncorrectData):
+		return utils.NewError(ctx, http.StatusBadRequest, errUserIncorrectData.Err.Error(), err)
+	case err != nil:
+		return utils.NewError(ctx, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
+	default:
+		err = h.sessionManager.CreateSession(ctx, h.authUC, userID)
+		if err != nil {
+			return utils.NewError(ctx, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
 		}
+		return ctx.NoContent(http.StatusOK)
 	}
-	return utils.CreateSession(ctx, h.authUC, userID)
 }
 
 // Login
@@ -81,20 +88,23 @@ func (h *UserEndpoints) Register(ctx echo.Context) error {
 func (h *UserEndpoints) Login(ctx echo.Context) error {
 	loginData := new(dto.Login)
 	if err := ctx.Bind(loginData); err != nil {
-		return utils.NewError(ctx, http.StatusBadRequest, utils.ErrBadJSON)
+		return utils.NewError(ctx, http.StatusBadRequest, "Невалидный JSON", nil)
 	}
 	userID, err := h.userUC.Login(loginData)
-	if err != nil {
-		switch {
-		case entity.Contains(err, entity.ErrNotFound):
-			return utils.NewError(ctx, http.StatusNotFound, err)
-		case entity.Contains(err, entity.ErrForbidden):
-			return utils.NewError(ctx, http.StatusForbidden, err)
-		default:
-			return utils.NewError(ctx, http.StatusInternalServerError, err)
+	var errUserIncorrectData usecase.UserIncorrectDataError
+	switch {
+	case errors.Is(err, usecase.ErrUserNotFound):
+		return utils.NewError(ctx, http.StatusNotFound, "Пользователь не найден", err)
+	case errors.As(err, &errUserIncorrectData):
+		return utils.NewError(ctx, http.StatusForbidden, errUserIncorrectData.Err.Error(), err)
+	case err != nil:
+		return utils.NewError(ctx, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
+	default:
+		if err = h.sessionManager.CreateSession(ctx, h.authUC, userID); err != nil {
+			return utils.NewError(ctx, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
 		}
+		return ctx.NoContent(http.StatusOK)
 	}
-	return utils.CreateSession(ctx, h.authUC, userID)
 }
 
 // UpdatePassword
@@ -114,30 +124,26 @@ func (h *UserEndpoints) Login(ctx echo.Context) error {
 func (h *UserEndpoints) UpdatePassword(ctx echo.Context) error {
 	userID, err := utils.GetUserIDFromSession(ctx, h.authUC)
 	if err != nil {
-		return err
+		return utils.NewError(ctx, http.StatusUnauthorized, "Не авторизован", err)
 	}
 	updateData := new(dto.UpdatePassword)
 	if err = ctx.Bind(updateData); err != nil {
-		return utils.NewError(ctx, http.StatusBadRequest, utils.ErrBadJSON)
+		return utils.NewError(ctx, http.StatusBadRequest, "Невалидный JSON", nil)
 	}
-	if err = h.userUC.UpdatePassword(userID, updateData); err != nil {
-		switch {
-		case entity.Contains(err, entity.ErrBadRequest):
-			return utils.NewError(ctx, http.StatusBadRequest, err)
-		default:
-			return utils.NewError(ctx, http.StatusInternalServerError, err)
-		}
+	err = h.userUC.UpdatePassword(userID, updateData)
+	switch {
+	case errors.Is(err, usecase.ErrUserNotFound):
+		return utils.NewError(ctx, http.StatusNotFound, "Пользователь не найден", err)
+	case errors.As(err, &usecase.UserIncorrectDataError{}):
+		return utils.NewError(ctx, http.StatusBadRequest, err.Error(), err)
+	case err != nil:
+		return utils.NewError(ctx, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
 	}
-	session, err := h.authUC.CreateSession(userID)
+	_, err = h.authUC.CreateSession(userID)
 	if err != nil {
-		return utils.NewError(ctx, http.StatusInternalServerError, err)
+		return utils.NewError(ctx, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
 	}
-	utils.SessionSet(
-		ctx,
-		session,
-		time.Now().Add(time.Duration(ctx.Get("params").(config.Config).Auth.SessionAliveTime)*time.Second),
-	)
-	return nil
+	return ctx.NoContent(200)
 }
 
 // UploadAvatar
@@ -155,35 +161,29 @@ func (h *UserEndpoints) UpdatePassword(ctx echo.Context) error {
 func (h *UserEndpoints) UploadAvatar(ctx echo.Context) error {
 	userID, err := utils.GetUserIDFromSession(ctx, h.authUC)
 	if err != nil {
-		return err
+		return utils.NewError(ctx, http.StatusUnauthorized, "Не авторизован", err)
 	}
 	fileHeader, err := ctx.FormFile("avatar")
 	if err != nil {
-		return utils.NewError(ctx, http.StatusBadRequest, entity.NewClientError("файл не прикреплен"))
+		return utils.NewError(ctx, http.StatusBadRequest, "Файл не прикреплён", nil)
 	}
 	file, err := fileHeader.Open()
 	if err != nil {
-		return utils.NewError(ctx, http.StatusInternalServerError, err)
+		return utils.NewError(ctx, http.StatusBadRequest, "Невалидный файл", nil)
 	}
-	data, err := io.ReadAll(file)
-	if err != nil {
-		return utils.NewError(ctx, http.StatusInternalServerError, err)
+	err = h.userUC.UpdateAvatar(userID, file)
+	var errUserIncorrectData usecase.UserIncorrectDataError
+	switch {
+	case errors.Is(err, usecase.ErrUserNotFound):
+		return utils.NewError(ctx, http.StatusNotFound, "Пользователь не найден", err)
+	case errors.As(err, &errUserIncorrectData):
+		return utils.NewError(ctx, http.StatusBadRequest, errUserIncorrectData.Err.Error(), err)
+	case err != nil:
+		return utils.NewError(ctx, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
 	}
-	if err = file.Close(); err != nil {
-		return utils.NewError(ctx, http.StatusInternalServerError, err)
-	}
-	uploadID, err := h.staticUC.UploadAvatar(data)
-	if err != nil {
-		switch {
-		case entity.Contains(err, entity.ErrBadRequest):
-			return utils.NewError(ctx, http.StatusBadRequest, err)
-		default:
-			return utils.NewError(ctx, http.StatusInternalServerError, err)
-		}
-	}
-	if err = h.userUC.UpdateAvatar(userID, uploadID); err != nil {
-		return utils.NewError(ctx, http.StatusInternalServerError, err)
-	}
+	// ну не закрылся и не закрылся, чего бубнить-то
+	// no-lint
+	_ = file.Close()
 	return ctx.NoContent(200)
 }
 
@@ -202,21 +202,24 @@ func (h *UserEndpoints) UploadAvatar(ctx echo.Context) error {
 func (h *UserEndpoints) UpdateInfo(ctx echo.Context) error {
 	userID, err := utils.GetUserIDFromSession(ctx, h.authUC)
 	if err != nil {
-		return err
+		return utils.NewError(ctx, http.StatusUnauthorized, "Не авторизован", err)
 	}
 	updateData := new(dto.UserUpdate)
 	if err = ctx.Bind(updateData); err != nil {
-		return utils.NewError(ctx, http.StatusBadRequest, utils.ErrBadJSON)
+		return utils.NewError(ctx, http.StatusBadRequest, "Невалидный JSON", nil)
 	}
-	if err = h.userUC.UpdateInfo(userID, updateData); err != nil {
-		switch {
-		case entity.Contains(err, entity.ErrBadRequest):
-			return utils.NewError(ctx, http.StatusBadRequest, err)
-		default:
-			return utils.NewError(ctx, http.StatusInternalServerError, err)
-		}
+	err = h.userUC.UpdateInfo(userID, updateData)
+	var errUserIncorrectData usecase.UserIncorrectDataError
+	switch {
+	case errors.Is(err, usecase.ErrUserNotFound):
+		return utils.NewError(ctx, http.StatusNotFound, "Пользователь не найден", err)
+	case errors.As(err, &errUserIncorrectData):
+		return utils.NewError(ctx, http.StatusBadRequest, err.Error(), err)
+	case err != nil:
+		return utils.NewError(ctx, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
+	default:
+		return ctx.NoContent(200)
 	}
-	return nil
 }
 
 // GetProfile
@@ -233,18 +236,17 @@ func (h *UserEndpoints) UpdateInfo(ctx echo.Context) error {
 func (h *UserEndpoints) GetProfile(ctx echo.Context) error {
 	userID, err := strconv.ParseInt(ctx.QueryParam("id"), 10, 64)
 	if err != nil {
-		return utils.NewError(ctx, http.StatusBadRequest, entity.NewClientError("неверный id"))
+		return utils.NewError(ctx, http.StatusBadRequest, "Неверный id", nil)
 	}
 	user, err := h.userUC.GetUser(int(userID))
-	if err != nil {
-		switch {
-		case entity.Contains(err, entity.ErrNotFound):
-			return utils.NewError(ctx, http.StatusNotFound, err)
-		default:
-			return utils.NewError(ctx, http.StatusInternalServerError, err)
-		}
+	switch {
+	case errors.Is(err, usecase.ErrUserNotFound):
+		return utils.NewError(ctx, http.StatusNotFound, "Пользователь не найден", err)
+	case err != nil:
+		return utils.NewError(ctx, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
+	default:
+		return ctx.JSON(http.StatusOK, user)
 	}
-	return ctx.JSON(http.StatusOK, user)
 }
 
 // GetMyID
@@ -259,7 +261,7 @@ func (h *UserEndpoints) GetProfile(ctx echo.Context) error {
 func (h *UserEndpoints) GetMyID(ctx echo.Context) error {
 	userID, err := utils.GetUserIDFromSession(ctx, h.authUC)
 	if err != nil {
-		return err
+		return utils.NewError(ctx, http.StatusUnauthorized, "Не авторизован", err)
 	}
 	return ctx.JSON(http.StatusOK, map[string]int{"id": userID})
 }

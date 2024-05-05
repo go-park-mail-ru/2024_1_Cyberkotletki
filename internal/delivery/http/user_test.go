@@ -3,9 +3,11 @@ package http
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/config"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http/utils"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
 	mockusecase "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/mocks"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"
@@ -34,7 +36,7 @@ func TestUserEndpoints_Register(t *testing.T) {
 			Input: func() io.Reader {
 				return strings.NewReader("invalid")
 			},
-			ExpectedErr:            &echo.HTTPError{Code: 400, Message: "Bad Request"},
+			ExpectedErr:            &echo.HTTPError{Code: 400, Message: "Невалидный JSON"},
 			SetupUserUsecaseMock:   func(usecase *mockusecase.MockUser) {},
 			SetupAuthUsecaseMock:   func(usecase *mockusecase.MockAuth) {},
 			SetupStaticUsecaseMock: func(usecase *mockusecase.MockStatic) {},
@@ -58,7 +60,7 @@ func TestUserEndpoints_Register(t *testing.T) {
 			SetupStaticUsecaseMock: func(usecase *mockusecase.MockStatic) {},
 		},
 		{
-			Name: "Ошибка при регистрации",
+			Name: "Внутренняя ошибка сервера",
 			Input: func() io.Reader {
 				body, _ := json.Marshal(dto.Register{
 					Email:    "email",
@@ -66,9 +68,9 @@ func TestUserEndpoints_Register(t *testing.T) {
 				})
 				return strings.NewReader(string(body))
 			},
-			ExpectedErr: &echo.HTTPError{Code: 500, Message: "ошибка при регистрации"},
-			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {
-				usecase.EXPECT().Register(gomock.Any()).Return(0, entity.NewClientError("ошибка при регистрации", entity.ErrInternal))
+			ExpectedErr: &echo.HTTPError{Code: 500, Message: "Внутренняя ошибка сервера", Internal: errors.New("123")},
+			SetupUserUsecaseMock: func(uc *mockusecase.MockUser) {
+				uc.EXPECT().Register(gomock.Any()).Return(0, errors.New("123"))
 			},
 			SetupAuthUsecaseMock:   func(usecase *mockusecase.MockAuth) {},
 			SetupStaticUsecaseMock: func(usecase *mockusecase.MockStatic) {},
@@ -82,9 +84,9 @@ func TestUserEndpoints_Register(t *testing.T) {
 				})
 				return strings.NewReader(string(body))
 			},
-			ExpectedErr: &echo.HTTPError{Code: 409, Message: "пользователь с таким email уже существует"},
-			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {
-				usecase.EXPECT().Register(gomock.Any()).Return(0, entity.NewClientError("пользователь с таким email уже существует", entity.ErrAlreadyExists))
+			ExpectedErr: &echo.HTTPError{Code: 409, Message: "Пользователь с такой почтой уже существует"},
+			SetupUserUsecaseMock: func(uc *mockusecase.MockUser) {
+				uc.EXPECT().Register(gomock.Any()).Return(0, usecase.ErrUserAlreadyExists)
 			},
 			SetupAuthUsecaseMock:   func(usecase *mockusecase.MockAuth) {},
 			SetupStaticUsecaseMock: func(usecase *mockusecase.MockStatic) {},
@@ -98,9 +100,9 @@ func TestUserEndpoints_Register(t *testing.T) {
 				})
 				return strings.NewReader(string(body))
 			},
-			ExpectedErr: &echo.HTTPError{Code: 400, Message: "невалидные данные"},
-			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {
-				usecase.EXPECT().Register(gomock.Any()).Return(0, entity.NewClientError("невалидные данные", entity.ErrBadRequest))
+			ExpectedErr: &echo.HTTPError{Code: 400, Message: "123"},
+			SetupUserUsecaseMock: func(uc *mockusecase.MockUser) {
+				uc.EXPECT().Register(gomock.Any()).Return(0, usecase.UserIncorrectDataError{Err: errors.New("123")})
 			},
 			SetupAuthUsecaseMock:   func(usecase *mockusecase.MockAuth) {},
 			SetupStaticUsecaseMock: func(usecase *mockusecase.MockStatic) {},
@@ -114,12 +116,12 @@ func TestUserEndpoints_Register(t *testing.T) {
 				})
 				return strings.NewReader(string(body))
 			},
-			ExpectedErr: &echo.HTTPError{Code: 500, Message: "ошибка при создании сессии"},
+			ExpectedErr: &echo.HTTPError{Code: 500, Message: "Внутренняя ошибка сервера", Internal: errors.New("123")},
 			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {
 				usecase.EXPECT().Register(gomock.Any()).Return(1, nil)
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
-				usecase.EXPECT().CreateSession(1).Return("", entity.NewClientError("ошибка при создании сессии", entity.ErrInternal))
+				usecase.EXPECT().CreateSession(1).Return("", errors.New("123"))
 			},
 			SetupStaticUsecaseMock: func(usecase *mockusecase.MockStatic) {},
 		},
@@ -135,7 +137,8 @@ func TestUserEndpoints_Register(t *testing.T) {
 			mockUserUsecase := mockusecase.NewMockUser(ctrl)
 			mockAuthUsecase := mockusecase.NewMockAuth(ctrl)
 			mockStaticUseCase := mockusecase.NewMockStatic(ctrl)
-			userEndpoints := NewUserEndpoints(mockUserUsecase, mockAuthUsecase, mockStaticUseCase)
+			sessionManager := utils.NewSessionManager(mockAuthUsecase, 1, false)
+			userEndpoints := NewUserEndpoints(mockUserUsecase, mockAuthUsecase, mockStaticUseCase, sessionManager)
 			tc.SetupUserUsecaseMock(mockUserUsecase)
 			tc.SetupAuthUsecaseMock(mockAuthUsecase)
 			tc.SetupStaticUsecaseMock(mockStaticUseCase)
@@ -184,12 +187,12 @@ func TestUserEndpoints_Login(t *testing.T) {
 			Input: func() io.Reader {
 				return strings.NewReader("invalid")
 			},
-			ExpectedErr:          &echo.HTTPError{Code: 400, Message: "Bad Request"},
+			ExpectedErr:          &echo.HTTPError{Code: 400, Message: "Невалидный JSON"},
 			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {},
 		},
 		{
-			Name: "Ошибка при авторизации",
+			Name: "Внутренняя ошибка сервера",
 			Input: func() io.Reader {
 				body, _ := json.Marshal(dto.Login{
 					Login:    "email",
@@ -197,11 +200,28 @@ func TestUserEndpoints_Login(t *testing.T) {
 				})
 				return strings.NewReader(string(body))
 			},
-			ExpectedErr: &echo.HTTPError{Code: 500, Message: "ошибка при авторизации"},
+			ExpectedErr: &echo.HTTPError{Code: 500, Message: "Внутренняя ошибка сервера", Internal: errors.New("123")},
 			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {
-				usecase.EXPECT().Login(gomock.Any()).Return(0, entity.NewClientError("ошибка при авторизации", entity.ErrInternal))
+				usecase.EXPECT().Login(gomock.Any()).Return(0, errors.New("123"))
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {},
+		},
+		{
+			Name: "Внутренняя ошибка сервера при создании сессии",
+			Input: func() io.Reader {
+				body, _ := json.Marshal(dto.Login{
+					Login:    "email",
+					Password: "AmaziNgPassw0rd!",
+				})
+				return strings.NewReader(string(body))
+			},
+			ExpectedErr: &echo.HTTPError{Code: 500, Message: "Внутренняя ошибка сервера", Internal: errors.New("123")},
+			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {
+				usecase.EXPECT().Login(gomock.Any()).Return(0, nil)
+			},
+			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
+				usecase.EXPECT().CreateSession(0).Return("", errors.New("123"))
+			},
 		},
 		{
 			Name: "Пользователь не найден",
@@ -212,9 +232,9 @@ func TestUserEndpoints_Login(t *testing.T) {
 				})
 				return strings.NewReader(string(body))
 			},
-			ExpectedErr: &echo.HTTPError{Code: 404, Message: "пользователь не найден"},
-			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {
-				usecase.EXPECT().Login(gomock.Any()).Return(0, entity.NewClientError("пользователь не найден", entity.ErrNotFound))
+			ExpectedErr: &echo.HTTPError{Code: 404, Message: "Пользователь не найден"},
+			SetupUserUsecaseMock: func(uc *mockusecase.MockUser) {
+				uc.EXPECT().Login(gomock.Any()).Return(0, usecase.ErrUserNotFound)
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {},
 		},
@@ -227,9 +247,9 @@ func TestUserEndpoints_Login(t *testing.T) {
 				})
 				return strings.NewReader(string(body))
 			},
-			ExpectedErr: &echo.HTTPError{Code: 403, Message: "неверный пароль"},
-			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {
-				usecase.EXPECT().Login(gomock.Any()).Return(0, entity.NewClientError("неверный пароль", entity.ErrForbidden))
+			ExpectedErr: &echo.HTTPError{Code: 403, Message: "123"},
+			SetupUserUsecaseMock: func(uc *mockusecase.MockUser) {
+				uc.EXPECT().Login(gomock.Any()).Return(0, usecase.UserIncorrectDataError{Err: errors.New("123")})
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {},
 		},
@@ -245,7 +265,8 @@ func TestUserEndpoints_Login(t *testing.T) {
 			mockAuthUsecase := mockusecase.NewMockAuth(ctrl)
 			mockUserUsecase := mockusecase.NewMockUser(ctrl)
 			mockStaticUseCase := mockusecase.NewMockStatic(ctrl)
-			userEndpoints := NewUserEndpoints(mockUserUsecase, mockAuthUsecase, mockStaticUseCase)
+			sessionManager := utils.NewSessionManager(mockAuthUsecase, 1, false)
+			userEndpoints := NewUserEndpoints(mockUserUsecase, mockAuthUsecase, mockStaticUseCase, sessionManager)
 			tc.SetupUserUsecaseMock(mockUserUsecase)
 			tc.SetupAuthUsecaseMock(mockAuthUsecase)
 			req := httptest.NewRequest(http.MethodPost, "/user/login", tc.Input())
@@ -296,7 +317,7 @@ func TestUserEndpoints_UpdatePassword(t *testing.T) {
 			Input: func() io.Reader {
 				return strings.NewReader("invalid")
 			},
-			ExpectedErr:          &echo.HTTPError{Code: 400, Message: "Bad Request"},
+			ExpectedErr:          &echo.HTTPError{Code: 400, Message: "Невалидный JSON"},
 			Cookies:              &http.Cookie{Name: "session", Value: "session"},
 			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
@@ -304,7 +325,7 @@ func TestUserEndpoints_UpdatePassword(t *testing.T) {
 			},
 		},
 		{
-			Name: "Ошибка при обновлении пароля",
+			Name: "Внутренняя ошибка сервера",
 			Input: func() io.Reader {
 				body, _ := json.Marshal(dto.UpdatePassword{
 					OldPassword: "AmaziNgPassw0rd!",
@@ -312,10 +333,10 @@ func TestUserEndpoints_UpdatePassword(t *testing.T) {
 				})
 				return strings.NewReader(string(body))
 			},
-			ExpectedErr: &echo.HTTPError{Code: 500, Message: "ошибка при обновлении пароля"},
+			ExpectedErr: &echo.HTTPError{Code: 500, Message: "Внутренняя ошибка сервера", Internal: errors.New("123")},
 			Cookies:     &http.Cookie{Name: "session", Value: "session"},
 			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {
-				usecase.EXPECT().UpdatePassword(1, gomock.Any()).Return(entity.NewClientError("ошибка при обновлении пароля", entity.ErrInternal))
+				usecase.EXPECT().UpdatePassword(1, gomock.Any()).Return(errors.New("123"))
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
 				usecase.EXPECT().GetUserIDBySession("session").Return(1, nil)
@@ -330,10 +351,10 @@ func TestUserEndpoints_UpdatePassword(t *testing.T) {
 				})
 				return strings.NewReader(string(body))
 			},
-			ExpectedErr: &echo.HTTPError{Code: 400, Message: "неверный пароль"},
+			ExpectedErr: &echo.HTTPError{Code: 400, Message: "123"},
 			Cookies:     &http.Cookie{Name: "session", Value: "session"},
-			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {
-				usecase.EXPECT().UpdatePassword(1, gomock.Any()).Return(entity.NewClientError("неверный пароль", entity.ErrBadRequest))
+			SetupUserUsecaseMock: func(uc *mockusecase.MockUser) {
+				uc.EXPECT().UpdatePassword(1, gomock.Any()).Return(usecase.UserIncorrectDataError{Err: errors.New("123")})
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
 				usecase.EXPECT().GetUserIDBySession("session").Return(1, nil)
@@ -348,7 +369,7 @@ func TestUserEndpoints_UpdatePassword(t *testing.T) {
 				})
 				return strings.NewReader(string(body))
 			},
-			ExpectedErr:          &echo.HTTPError{Code: 401, Message: "отсутствует cookies с сессией"},
+			ExpectedErr:          &echo.HTTPError{Code: 401, Message: "Не авторизован"},
 			Cookies:              nil,
 			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {},
@@ -362,14 +383,32 @@ func TestUserEndpoints_UpdatePassword(t *testing.T) {
 				})
 				return strings.NewReader(string(body))
 			},
-			ExpectedErr: &echo.HTTPError{Code: 500, Message: "ошибка при создании сессии"},
+			ExpectedErr: &echo.HTTPError{Code: 500, Message: "Внутренняя ошибка сервера", Internal: errors.New("123")},
 			Cookies:     &http.Cookie{Name: "session", Value: "session"},
 			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {
 				usecase.EXPECT().UpdatePassword(1, gomock.Any()).Return(nil)
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
 				usecase.EXPECT().GetUserIDBySession("session").Return(1, nil)
-				usecase.EXPECT().CreateSession(1).Return("", entity.NewClientError("ошибка при создании сессии", entity.ErrInternal))
+				usecase.EXPECT().CreateSession(1).Return("", errors.New("123"))
+			},
+		},
+		{
+			Name: "Пользователь не найден",
+			Input: func() io.Reader {
+				body, _ := json.Marshal(dto.UpdatePassword{
+					OldPassword: "AmaziNgPassw0rd!",
+					NewPassword: "AmaziNgPassw0rd!",
+				})
+				return strings.NewReader(string(body))
+			},
+			ExpectedErr: &echo.HTTPError{Code: 404, Message: "Пользователь не найден"},
+			Cookies:     &http.Cookie{Name: "session", Value: "session"},
+			SetupUserUsecaseMock: func(uc *mockusecase.MockUser) {
+				uc.EXPECT().UpdatePassword(1, gomock.Any()).Return(usecase.ErrUserNotFound)
+			},
+			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
+				usecase.EXPECT().GetUserIDBySession("session").Return(1, nil)
 			},
 		},
 	}
@@ -384,7 +423,8 @@ func TestUserEndpoints_UpdatePassword(t *testing.T) {
 			mockUserUsecase := mockusecase.NewMockUser(ctrl)
 			mockAuthUsecase := mockusecase.NewMockAuth(ctrl)
 			mockStaticUseCase := mockusecase.NewMockStatic(ctrl)
-			userEndpoints := NewUserEndpoints(mockUserUsecase, mockAuthUsecase, mockStaticUseCase)
+			sessionManager := utils.NewSessionManager(mockAuthUsecase, 1, false)
+			userEndpoints := NewUserEndpoints(mockUserUsecase, mockAuthUsecase, mockStaticUseCase, sessionManager)
 			tc.SetupUserUsecaseMock(mockUserUsecase)
 			tc.SetupAuthUsecaseMock(mockAuthUsecase)
 			req := httptest.NewRequest(http.MethodPut, "/user/password", tc.Input())
@@ -434,9 +474,7 @@ func TestUserEndpoints_UploadAvatar(t *testing.T) {
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
 				usecase.EXPECT().GetUserIDBySession("session").Return(1, nil)
 			},
-			SetupStaticUsecaseMock: func(usecase *mockusecase.MockStatic) {
-				usecase.EXPECT().UploadAvatar(gomock.Any()).Return(1, nil)
-			},
+			SetupStaticUsecaseMock: func(usecase *mockusecase.MockStatic) {},
 		},
 		{
 			Name: "Файл не прикреплён",
@@ -446,7 +484,7 @@ func TestUserEndpoints_UploadAvatar(t *testing.T) {
 				writer.Close()
 				return &buffer, writer.FormDataContentType()
 			},
-			ExpectedErr:          &echo.HTTPError{Code: 400, Message: "файл не прикреплен"},
+			ExpectedErr:          &echo.HTTPError{Code: 400, Message: "Файл не прикреплён"},
 			Cookies:              &http.Cookie{Name: "session", Value: "session"},
 			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
@@ -464,15 +502,15 @@ func TestUserEndpoints_UploadAvatar(t *testing.T) {
 				writer.Close()
 				return &buffer, writer.FormDataContentType()
 			},
-			ExpectedErr:          &echo.HTTPError{Code: 400, Message: "невалидное изображение"},
-			Cookies:              &http.Cookie{Name: "session", Value: "session"},
-			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {},
+			ExpectedErr: &echo.HTTPError{Code: 400, Message: "123"},
+			Cookies:     &http.Cookie{Name: "session", Value: "session"},
+			SetupUserUsecaseMock: func(uc *mockusecase.MockUser) {
+				uc.EXPECT().UpdateAvatar(1, gomock.Any()).Return(usecase.UserIncorrectDataError{Err: errors.New("123")})
+			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
 				usecase.EXPECT().GetUserIDBySession("session").Return(1, nil)
 			},
-			SetupStaticUsecaseMock: func(usecase *mockusecase.MockStatic) {
-				usecase.EXPECT().UploadAvatar(gomock.Any()).Return(0, entity.NewClientError("невалидное изображение", entity.ErrBadRequest))
-			},
+			SetupStaticUsecaseMock: func(usecase *mockusecase.MockStatic) {},
 		},
 		{
 			Name: "Пользователь не авторизован",
@@ -484,14 +522,14 @@ func TestUserEndpoints_UploadAvatar(t *testing.T) {
 				writer.Close()
 				return &buffer, writer.FormDataContentType()
 			},
-			ExpectedErr:            &echo.HTTPError{Code: 401, Message: "отсутствует cookies с сессией"},
+			ExpectedErr:            &echo.HTTPError{Code: 401, Message: "Не авторизован"},
 			Cookies:                nil,
 			SetupUserUsecaseMock:   func(usecase *mockusecase.MockUser) {},
 			SetupAuthUsecaseMock:   func(usecase *mockusecase.MockAuth) {},
 			SetupStaticUsecaseMock: func(usecase *mockusecase.MockStatic) {},
 		},
 		{
-			Name: "Не удалось загрузить аватар",
+			Name: "Внутренняя ошибка сервера",
 			Input: func() (io.Reader, string) {
 				var buffer bytes.Buffer
 				writer := multipart.NewWriter(&buffer)
@@ -500,40 +538,18 @@ func TestUserEndpoints_UploadAvatar(t *testing.T) {
 				writer.Close()
 				return &buffer, writer.FormDataContentType()
 			},
-			ExpectedErr:          &echo.HTTPError{Code: 500, Message: "ошибка при загрузке аватара"},
-			Cookies:              &http.Cookie{Name: "session", Value: "session"},
-			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {},
-			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
-				usecase.EXPECT().GetUserIDBySession("session").Return(1, nil)
-			},
-			SetupStaticUsecaseMock: func(usecase *mockusecase.MockStatic) {
-				usecase.EXPECT().UploadAvatar(gomock.Any()).Return(0, entity.NewClientError("ошибка при загрузке аватара", entity.ErrInternal))
-			},
-		},
-		{
-			Name: "Ошибка при обновлении аватара",
-			Input: func() (io.Reader, string) {
-				var buffer bytes.Buffer
-				writer := multipart.NewWriter(&buffer)
-				part, _ := writer.CreateFormFile("avatar", "test.jpg")
-				part.Write([]byte("test image data")) // здесь можно использовать реальные данные изображения
-				writer.Close()
-				return &buffer, writer.FormDataContentType()
-			},
-			ExpectedErr: &echo.HTTPError{Code: 500, Message: "ошибка при обновлении аватара"},
+			ExpectedErr: &echo.HTTPError{Code: 500, Message: "Внутренняя ошибка сервера", Internal: errors.New("123")},
 			Cookies:     &http.Cookie{Name: "session", Value: "session"},
 			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {
-				usecase.EXPECT().UpdateAvatar(1, 1).Return(entity.NewClientError("ошибка при обновлении аватара", entity.ErrInternal))
+				usecase.EXPECT().UpdateAvatar(1, gomock.Any()).Return(errors.New("123"))
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
 				usecase.EXPECT().GetUserIDBySession("session").Return(1, nil)
 			},
-			SetupStaticUsecaseMock: func(usecase *mockusecase.MockStatic) {
-				usecase.EXPECT().UploadAvatar(gomock.Any()).Return(1, nil)
-			},
+			SetupStaticUsecaseMock: func(usecase *mockusecase.MockStatic) {},
 		},
 		{
-			Name: "Ошибка при получении ID пользователя",
+			Name: "Пользователь не найден",
 			Input: func() (io.Reader, string) {
 				var buffer bytes.Buffer
 				writer := multipart.NewWriter(&buffer)
@@ -542,11 +558,33 @@ func TestUserEndpoints_UploadAvatar(t *testing.T) {
 				writer.Close()
 				return &buffer, writer.FormDataContentType()
 			},
-			ExpectedErr:          &echo.HTTPError{Code: 401, Message: "необходима авторизация"},
-			Cookies:              &http.Cookie{Name: "session", Value: "session"},
-			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {},
+			ExpectedErr: &echo.HTTPError{Code: 404, Message: "Пользователь не найден"},
+			Cookies:     &http.Cookie{Name: "session", Value: "session"},
+			SetupUserUsecaseMock: func(uc *mockusecase.MockUser) {
+				uc.EXPECT().UpdateAvatar(1, gomock.Any()).Return(usecase.ErrUserNotFound)
+			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
-				usecase.EXPECT().GetUserIDBySession("session").Return(0, entity.NewClientError("ошибка при получении ID пользователя", entity.ErrInternal))
+				usecase.EXPECT().GetUserIDBySession("session").Return(1, nil)
+			},
+			SetupStaticUsecaseMock: func(usecase *mockusecase.MockStatic) {},
+		},
+		{
+			Name: "Невалидный файл",
+			Input: func() (io.Reader, string) {
+				var buffer bytes.Buffer
+				writer := multipart.NewWriter(&buffer)
+				part, _ := writer.CreateFormFile("avatar", "test.jpg")
+				part.Write([]byte("test image data")) // здесь можно использовать реальные данные изображения
+				writer.Close()
+				return &buffer, writer.FormDataContentType()
+			},
+			ExpectedErr: &echo.HTTPError{Code: 400, Message: "123"},
+			Cookies:     &http.Cookie{Name: "session", Value: "session"},
+			SetupUserUsecaseMock: func(uc *mockusecase.MockUser) {
+				uc.EXPECT().UpdateAvatar(1, gomock.Any()).Return(usecase.UserIncorrectDataError{Err: errors.New("123")})
+			},
+			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
+				usecase.EXPECT().GetUserIDBySession("session").Return(1, nil)
 			},
 			SetupStaticUsecaseMock: func(usecase *mockusecase.MockStatic) {},
 		},
@@ -562,7 +600,8 @@ func TestUserEndpoints_UploadAvatar(t *testing.T) {
 			mockUserUsecase := mockusecase.NewMockUser(ctrl)
 			mockAuthUsecase := mockusecase.NewMockAuth(ctrl)
 			mockStaticUseCase := mockusecase.NewMockStatic(ctrl)
-			userEndpoints := NewUserEndpoints(mockUserUsecase, mockAuthUsecase, mockStaticUseCase)
+			sessionManager := utils.NewSessionManager(mockAuthUsecase, 1, false)
+			userEndpoints := NewUserEndpoints(mockUserUsecase, mockAuthUsecase, mockStaticUseCase, sessionManager)
 			tc.SetupUserUsecaseMock(mockUserUsecase)
 			tc.SetupAuthUsecaseMock(mockAuthUsecase)
 			tc.SetupStaticUsecaseMock(mockStaticUseCase)
@@ -617,7 +656,7 @@ func TestUserEndpoints_UpdateInfo(t *testing.T) {
 			Input: func() io.Reader {
 				return strings.NewReader("invalid")
 			},
-			ExpectedErr:          &echo.HTTPError{Code: 400, Message: "Bad Request"},
+			ExpectedErr:          &echo.HTTPError{Code: 400, Message: "Невалидный JSON"},
 			Cookies:              &http.Cookie{Name: "session", Value: "session"},
 			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
@@ -633,17 +672,17 @@ func TestUserEndpoints_UpdateInfo(t *testing.T) {
 				})
 				return strings.NewReader(string(body))
 			},
-			ExpectedErr: &echo.HTTPError{Code: 400, Message: "невалидные данные"},
+			ExpectedErr: &echo.HTTPError{Code: 400, Message: "123"},
 			Cookies:     &http.Cookie{Name: "session", Value: "session"},
-			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {
-				usecase.EXPECT().UpdateInfo(1, gomock.Any()).Return(entity.NewClientError("невалидные данные", entity.ErrBadRequest))
+			SetupUserUsecaseMock: func(uc *mockusecase.MockUser) {
+				uc.EXPECT().UpdateInfo(1, gomock.Any()).Return(usecase.UserIncorrectDataError{Err: errors.New("123")})
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
 				usecase.EXPECT().GetUserIDBySession("session").Return(1, nil)
 			},
 		},
 		{
-			Name: "Ошибка при обновлении информации",
+			Name: "Внутренняя ошибка сервера",
 			Input: func() io.Reader {
 				body, _ := json.Marshal(dto.UserUpdate{
 					Name:  "name",
@@ -651,10 +690,10 @@ func TestUserEndpoints_UpdateInfo(t *testing.T) {
 				})
 				return strings.NewReader(string(body))
 			},
-			ExpectedErr: &echo.HTTPError{Code: 500, Message: "ошибка при обновлении информации"},
+			ExpectedErr: &echo.HTTPError{Code: 500, Message: "Внутренняя ошибка сервера", Internal: errors.New("123")},
 			Cookies:     &http.Cookie{Name: "session", Value: "session"},
 			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {
-				usecase.EXPECT().UpdateInfo(1, gomock.Any()).Return(entity.NewClientError("ошибка при обновлении информации", entity.ErrInternal))
+				usecase.EXPECT().UpdateInfo(1, gomock.Any()).Return(errors.New("123"))
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
 				usecase.EXPECT().GetUserIDBySession("session").Return(1, nil)
@@ -669,10 +708,36 @@ func TestUserEndpoints_UpdateInfo(t *testing.T) {
 				})
 				return strings.NewReader(string(body))
 			},
-			ExpectedErr:          &echo.HTTPError{Code: 401, Message: "отсутствует cookies с сессией"},
-			Cookies:              nil,
+			ExpectedErr: &echo.HTTPError{Code: 401, Message: "Не авторизован"},
+			Cookies: &http.Cookie{
+				Name:  "session",
+				Value: "session",
+			},
 			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {},
-			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {},
+			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
+				usecase.EXPECT().GetUserIDBySession("session").Return(0, utils.ErrUnauthorized)
+			},
+		},
+		{
+			Name: "Пользователь не найден",
+			Input: func() io.Reader {
+				body, _ := json.Marshal(dto.UserUpdate{
+					Name:  "name",
+					Email: "email",
+				})
+				return strings.NewReader(string(body))
+			},
+			ExpectedErr: &echo.HTTPError{Code: 404, Message: "Пользователь не найден"},
+			Cookies: &http.Cookie{
+				Name:  "session",
+				Value: "session",
+			},
+			SetupUserUsecaseMock: func(uc *mockusecase.MockUser) {
+				uc.EXPECT().UpdateInfo(1, gomock.Any()).Return(usecase.ErrUserNotFound)
+			},
+			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
+				usecase.EXPECT().GetUserIDBySession("session").Return(1, nil)
+			},
 		},
 	}
 
@@ -686,7 +751,8 @@ func TestUserEndpoints_UpdateInfo(t *testing.T) {
 			mockUserUsecase := mockusecase.NewMockUser(ctrl)
 			mockAuthUsecase := mockusecase.NewMockAuth(ctrl)
 			mockStaticUseCase := mockusecase.NewMockStatic(ctrl)
-			userEndpoints := NewUserEndpoints(mockUserUsecase, mockAuthUsecase, mockStaticUseCase)
+			sessionManager := utils.NewSessionManager(mockAuthUsecase, 1, false)
+			userEndpoints := NewUserEndpoints(mockUserUsecase, mockAuthUsecase, mockStaticUseCase, sessionManager)
 			tc.SetupUserUsecaseMock(mockUserUsecase)
 			tc.SetupAuthUsecaseMock(mockAuthUsecase)
 			req := httptest.NewRequest(http.MethodPut, "/user/info", tc.Input())
@@ -731,25 +797,25 @@ func TestUserEndpoints_GetProfile(t *testing.T) {
 			},
 		},
 		{
-			Name:        "Ошибка при получении профиля",
+			Name:        "Внутренняя ошибка сервера",
 			RequestID:   "1",
-			ExpectedErr: &echo.HTTPError{Code: 500, Message: "ошибка при получении профиля"},
-			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {
-				usecase.EXPECT().GetUser(1).Return(nil, entity.NewClientError("ошибка при получении профиля", entity.ErrInternal))
+			ExpectedErr: &echo.HTTPError{Code: 500, Message: "Внутренняя ошибка сервера", Internal: errors.New("123")},
+			SetupUserUsecaseMock: func(uc *mockusecase.MockUser) {
+				uc.EXPECT().GetUser(1).Return(nil, errors.New("123"))
 			},
 		},
 		{
 			Name:        "Пользователь не найден",
 			RequestID:   "1",
-			ExpectedErr: &echo.HTTPError{Code: 404, Message: "пользователь не найден"},
-			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {
-				usecase.EXPECT().GetUser(1).Return(nil, entity.NewClientError("пользователь не найден", entity.ErrNotFound))
+			ExpectedErr: &echo.HTTPError{Code: 404, Message: "Пользователь не найден"},
+			SetupUserUsecaseMock: func(uc *mockusecase.MockUser) {
+				uc.EXPECT().GetUser(1).Return(nil, usecase.ErrUserNotFound)
 			},
 		},
 		{
 			Name:                 "Неверный ID",
 			RequestID:            "invalid",
-			ExpectedErr:          &echo.HTTPError{Code: 400, Message: "неверный id"},
+			ExpectedErr:          &echo.HTTPError{Code: 400, Message: "Неверный id"},
 			SetupUserUsecaseMock: func(usecase *mockusecase.MockUser) {},
 		},
 	}
@@ -764,7 +830,8 @@ func TestUserEndpoints_GetProfile(t *testing.T) {
 			mockUserUsecase := mockusecase.NewMockUser(ctrl)
 			mockAuthUsecase := mockusecase.NewMockAuth(ctrl)
 			mockStaticUseCase := mockusecase.NewMockStatic(ctrl)
-			userEndpoints := NewUserEndpoints(mockUserUsecase, mockAuthUsecase, mockStaticUseCase)
+			sessionManager := utils.NewSessionManager(mockAuthUsecase, 1, false)
+			userEndpoints := NewUserEndpoints(mockUserUsecase, mockAuthUsecase, mockStaticUseCase, sessionManager)
 			tc.SetupUserUsecaseMock(mockUserUsecase)
 			req := httptest.NewRequest(http.MethodGet, "/user/profile", nil)
 			req.AddCookie(&http.Cookie{Name: "session", Value: "session"})
@@ -800,10 +867,10 @@ func TestUserEndpoints_GetMyID(t *testing.T) {
 			},
 		},
 		{
-			Name:        "Нет cookies",
-			ExpectedErr: &echo.HTTPError{Code: 401, Message: "необходима авторизация"},
+			Name:        "Не авторизован",
+			ExpectedErr: &echo.HTTPError{Code: 401, Message: "Не авторизован"},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
-				usecase.EXPECT().GetUserIDBySession("session").Return(0, entity.NewClientError("ошибка при получении ID", entity.ErrInternal))
+				usecase.EXPECT().GetUserIDBySession("session").Return(0, utils.ErrUnauthorized)
 			},
 		},
 	}
@@ -818,7 +885,8 @@ func TestUserEndpoints_GetMyID(t *testing.T) {
 			mockUserUsecase := mockusecase.NewMockUser(ctrl)
 			mockAuthUsecase := mockusecase.NewMockAuth(ctrl)
 			mockStaticUseCase := mockusecase.NewMockStatic(ctrl)
-			userEndpoints := NewUserEndpoints(mockUserUsecase, mockAuthUsecase, mockStaticUseCase)
+			sessionManager := utils.NewSessionManager(mockAuthUsecase, 1, false)
+			userEndpoints := NewUserEndpoints(mockUserUsecase, mockAuthUsecase, mockStaticUseCase, sessionManager)
 			req := httptest.NewRequest(http.MethodGet, "/user/id", nil)
 			req.AddCookie(&http.Cookie{Name: "session", Value: "session"})
 			rec := httptest.NewRecorder()

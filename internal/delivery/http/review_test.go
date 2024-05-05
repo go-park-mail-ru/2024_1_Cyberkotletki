@@ -2,8 +2,11 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
+	"errors"
+	"fmt"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http/utils"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
 	mockusecase "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/mocks"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"
@@ -33,8 +36,8 @@ func TestReviewHandler_GetReview(t *testing.T) {
 				Name:  "session",
 				Value: "xxx",
 			},
-			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().GetReview(1).Return(nil, nil)
+			SetupReviewUsecaseMock: func(uc *mockusecase.MockReview) {
+				uc.EXPECT().GetReview(1).Return(nil, nil)
 			},
 		},
 		{
@@ -42,32 +45,32 @@ func TestReviewHandler_GetReview(t *testing.T) {
 			ReviewID: "1",
 			ExpectedErr: &echo.HTTPError{
 				Code:    404,
-				Message: "отзыв не найден",
+				Message: "Рецензия не найдена",
 			},
 			Cookies: &http.Cookie{
 				Name:  "session",
 				Value: "xxx",
 			},
-			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().GetReview(1).Return(nil, entity.NewClientError("отзыв не найден", entity.ErrNotFound))
+			SetupReviewUsecaseMock: func(uc *mockusecase.MockReview) {
+				uc.EXPECT().GetReview(1).Return(nil, usecase.ErrReviewNotFound)
 			},
 		},
 		{
 			Name:        "Неожиданная ошибка",
 			ReviewID:    "1",
-			ExpectedErr: &echo.HTTPError{Code: 500, Message: "internal"},
+			ExpectedErr: &echo.HTTPError{Code: 500, Message: "Внутренняя ошибка сервера", Internal: errors.New("123")},
 			Cookies: &http.Cookie{
 				Name:  "session",
 				Value: "xxx",
 			},
-			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().GetReview(1).Return(nil, entity.NewClientError("internal", entity.ErrInternal))
+			SetupReviewUsecaseMock: func(uc *mockusecase.MockReview) {
+				uc.EXPECT().GetReview(1).Return(nil, errors.New("123"))
 			},
 		},
 		{
 			Name:                   "Невалидный айди",
 			ReviewID:               "ogo!",
-			ExpectedErr:            &echo.HTTPError{Code: 400, Message: "невалидный id рецензии"},
+			ExpectedErr:            &echo.HTTPError{Code: 400, Message: "Невалидный id рецензии"},
 			Cookies:                nil,
 			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {},
 		},
@@ -162,7 +165,7 @@ func TestReviewEndpoints_GetMyContentReview(t *testing.T) {
 			ContentID: "ogo!",
 			ExpectedErr: &echo.HTTPError{
 				Code:    400,
-				Message: "невалидный id контента",
+				Message: "Невалидный id контента",
 			},
 			Cookies: &http.Cookie{
 				Name:  "session",
@@ -176,14 +179,14 @@ func TestReviewEndpoints_GetMyContentReview(t *testing.T) {
 			ContentID: "1",
 			ExpectedErr: &echo.HTTPError{
 				Code:    404,
-				Message: "отзыв не найден",
+				Message: "Рецензия не найдена",
 			},
 			Cookies: &http.Cookie{
 				Name:  "session",
 				Value: "xxx",
 			},
-			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().GetContentReviewByAuthor(1, 1).Return(nil, entity.NewClientError("отзыв не найден", entity.ErrNotFound))
+			SetupReviewUsecaseMock: func(uc *mockusecase.MockReview) {
+				uc.EXPECT().GetContentReviewByAuthor(1, 1).Return(nil, usecase.ErrReviewNotFound)
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
 				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
@@ -192,23 +195,23 @@ func TestReviewEndpoints_GetMyContentReview(t *testing.T) {
 		{
 			Name:                   "Пользователь не авторизован",
 			ContentID:              "1",
-			ExpectedErr:            &echo.HTTPError{Code: 401, Message: "необходима авторизация"},
+			ExpectedErr:            &echo.HTTPError{Code: 401, Message: "Для этой операции нужно авторизоваться"},
 			Cookies:                &http.Cookie{Name: "session", Value: "xxx"},
 			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
-				usecase.EXPECT().GetUserIDBySession(gomock.Any()).Return(-1, entity.NewClientError("необходима авторизация", entity.ErrUnauthorized))
+				usecase.EXPECT().GetUserIDBySession(gomock.Any()).Return(-1, utils.ErrUnauthorized)
 			},
 		},
 		{
-			Name:        "Неожиданная ошибка",
+			Name:        "Внутренняя ошибка сервера",
 			ContentID:   "1",
-			ExpectedErr: &echo.HTTPError{Code: 500, Message: "internal"},
+			ExpectedErr: &echo.HTTPError{Code: 500, Message: "Внутренняя ошибка сервера", Internal: errors.New("123")},
 			Cookies: &http.Cookie{
 				Name:  "session",
 				Value: "xxx",
 			},
 			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().GetContentReviewByAuthor(1, 1).Return(nil, entity.NewClientError("internal", entity.ErrInternal))
+				usecase.EXPECT().GetContentReviewByAuthor(1, 1).Return(nil, errors.New("123"))
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
 				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
@@ -316,7 +319,7 @@ func TestReviewEndpoints_CreateReview(t *testing.T) {
 			},
 			ExpectedErr: &echo.HTTPError{
 				Code:    400,
-				Message: "невалидный запрос",
+				Message: "Невалидный запрос",
 			},
 			Cookies: &http.Cookie{
 				Name:  "session",
@@ -326,51 +329,23 @@ func TestReviewEndpoints_CreateReview(t *testing.T) {
 			SetupAuthUsecaseMock:   func(usecase *mockusecase.MockAuth) {},
 		},
 		{
-			Name: "Невалидный айди",
-			Body: func() io.Reader {
-				return strings.NewReader(`{"contentID":-100,"rating":5,"title":"Title","text":"i like it"}`)
-			},
-			ExpectedErr: &echo.HTTPError{
-				Code:    400,
-				Message: "невалидный id контента",
-			},
-			Cookies: &http.Cookie{
-				Name:  "session",
-				Value: "xxx",
-			},
-			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().CreateReview(dto.ReviewCreate{
-					ReviewCreateRequest: dto.ReviewCreateRequest{
-						ContentID: -100,
-						Rating:    5,
-						Title:     "Title",
-						Text:      "i like it",
-					},
-					UserID: 1,
-				}).Return(nil, entity.NewClientError("невалидный id контента", entity.ErrBadRequest))
-			},
-			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
-				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
-			},
-		},
-		{
 			Name: "Пользователь не авторизован",
 			Body: func() io.Reader {
 				return strings.NewReader(`{"contentID":1,"rating":5,"title":"Title","text":"i like it"}`)
 			},
-			ExpectedErr:            &echo.HTTPError{Code: 401, Message: "необходима авторизация"},
+			ExpectedErr:            &echo.HTTPError{Code: 401, Message: "Для этой операции нужно авторизоваться"},
 			Cookies:                &http.Cookie{Name: "session", Value: "xxx"},
 			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {},
-			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
-				usecase.EXPECT().GetUserIDBySession(gomock.Any()).Return(-1, entity.NewClientError("необходима авторизация", entity.ErrUnauthorized))
+			SetupAuthUsecaseMock: func(uc *mockusecase.MockAuth) {
+				uc.EXPECT().GetUserIDBySession(gomock.Any()).Return(-1, utils.ErrUnauthorized)
 			},
 		},
 		{
-			Name: "Неожиданная ошибка",
+			Name: "Внутренняя ошибка сервера",
 			Body: func() io.Reader {
 				return strings.NewReader(`{"contentID":1,"rating":5,"title":"Title","text":"i like it"}`)
 			},
-			ExpectedErr: &echo.HTTPError{Code: 500, Message: "internal"},
+			ExpectedErr: &echo.HTTPError{Code: 500, Message: "Внутренняя ошибка сервера", Internal: errors.New("123")},
 			Cookies: &http.Cookie{
 				Name:  "session",
 				Value: "xxx",
@@ -384,10 +359,94 @@ func TestReviewEndpoints_CreateReview(t *testing.T) {
 						Text:      "i like it",
 					},
 					UserID: 1,
-				}).Return(nil, entity.NewClientError("internal", entity.ErrInternal))
+				}).Return(nil, errors.New("123"))
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
 				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
+			},
+		},
+		{
+			Name: "Контент не найден",
+			Body: func() io.Reader {
+				return strings.NewReader(`{"contentID":1,"rating":5,"title":"Title","text":"i like it"}`)
+			},
+			ExpectedErr: &echo.HTTPError{
+				Code:    404,
+				Message: "Контент не найден",
+			},
+			Cookies: &http.Cookie{
+				Name:  "session",
+				Value: "xxx",
+			},
+			SetupReviewUsecaseMock: func(uc *mockusecase.MockReview) {
+				uc.EXPECT().CreateReview(dto.ReviewCreate{
+					ReviewCreateRequest: dto.ReviewCreateRequest{
+						ContentID: 1,
+						Rating:    5,
+						Title:     "Title",
+						Text:      "i like it",
+					},
+					UserID: 1,
+				}).Return(nil, usecase.ErrReviewContentNotFound)
+			},
+			SetupAuthUsecaseMock: func(uc *mockusecase.MockAuth) {
+				uc.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
+			},
+		},
+		{
+			Name: "Рецензия уже существует",
+			Body: func() io.Reader {
+				return strings.NewReader(`{"contentID":1,"rating":5,"title":"Title","text":"i like it"}`)
+			},
+			ExpectedErr: &echo.HTTPError{
+				Code:    409,
+				Message: "Рецензия уже существует",
+			},
+			Cookies: &http.Cookie{
+				Name:  "session",
+				Value: "xxx",
+			},
+			SetupReviewUsecaseMock: func(uc *mockusecase.MockReview) {
+				uc.EXPECT().CreateReview(dto.ReviewCreate{
+					ReviewCreateRequest: dto.ReviewCreateRequest{
+						ContentID: 1,
+						Rating:    5,
+						Title:     "Title",
+						Text:      "i like it",
+					},
+					UserID: 1,
+				}).Return(nil, usecase.ErrReviewAlreadyExists)
+			},
+			SetupAuthUsecaseMock: func(uc *mockusecase.MockAuth) {
+				uc.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
+			},
+		},
+		{
+			Name: "Невалидный айди контента",
+			Body: func() io.Reader {
+				return strings.NewReader(`{"contentID":-100,"rating":5,"title":"Title","text":"i like it"}`)
+			},
+			ExpectedErr: &echo.HTTPError{
+				Code:    400,
+				Message: "content_id",
+			},
+			Cookies: &http.Cookie{
+				Name:  "session",
+				Value: "xxx",
+			},
+			SetupReviewUsecaseMock: func(uc *mockusecase.MockReview) {
+				uc.EXPECT().CreateReview(dto.ReviewCreate{
+					ReviewCreateRequest: dto.ReviewCreateRequest{
+						ContentID: -100,
+						Rating:    5,
+						Title:     "Title",
+						Text:      "i like it",
+					},
+					UserID: 1,
+				}).Return(nil, usecase.ReviewErrorIncorrectData{Err: errors.New("content_id")})
+			},
+			SetupAuthUsecaseMock: func(uc *mockusecase.MockAuth) {
+				uc.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
 			},
 		},
 	}
@@ -492,7 +551,7 @@ func TestReviewEndpoints_UpdateReview(t *testing.T) {
 			},
 			ExpectedErr: &echo.HTTPError{
 				Code:    400,
-				Message: "невалидный запрос",
+				Message: "Невалидный запрос",
 			},
 			Cookies: &http.Cookie{
 				Name:  "session",
@@ -502,20 +561,20 @@ func TestReviewEndpoints_UpdateReview(t *testing.T) {
 			SetupAuthUsecaseMock:   func(usecase *mockusecase.MockAuth) {},
 		},
 		{
-			Name: "Отзыв не найден",
+			Name: "Что-то невалидное",
 			Body: func() io.Reader {
 				return strings.NewReader(`{"reviewID":1,"rating":5,"title":"Title","text":"i like it"}`)
 			},
 			ExpectedErr: &echo.HTTPError{
-				Code:    404,
-				Message: "отзыв не найден",
+				Code:    400,
+				Message: "review_id",
 			},
 			Cookies: &http.Cookie{
 				Name:  "session",
 				Value: "xxx",
 			},
-			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().EditReview(dto.ReviewUpdate{
+			SetupReviewUsecaseMock: func(uc *mockusecase.MockReview) {
+				uc.EXPECT().EditReview(dto.ReviewUpdate{
 					ReviewUpdateRequest: dto.ReviewUpdateRequest{
 						ReviewID: 1,
 						Rating:   5,
@@ -523,7 +582,35 @@ func TestReviewEndpoints_UpdateReview(t *testing.T) {
 						Text:     "i like it",
 					},
 					UserID: 1,
-				}).Return(nil, entity.NewClientError("отзыв не найден", entity.ErrNotFound))
+				}).Return(nil, usecase.ReviewErrorIncorrectData{Err: errors.New("review_id")})
+			},
+			SetupAuthUsecaseMock: func(uc *mockusecase.MockAuth) {
+				uc.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
+			},
+		},
+		{
+			Name: "Рецензия не найдена",
+			Body: func() io.Reader {
+				return strings.NewReader(`{"reviewID":1,"rating":5,"title":"Title","text":"i like it"}`)
+			},
+			ExpectedErr: &echo.HTTPError{
+				Code:    404,
+				Message: "Рецензия не найдена",
+			},
+			Cookies: &http.Cookie{
+				Name:  "session",
+				Value: "xxx",
+			},
+			SetupReviewUsecaseMock: func(uc *mockusecase.MockReview) {
+				uc.EXPECT().EditReview(dto.ReviewUpdate{
+					ReviewUpdateRequest: dto.ReviewUpdateRequest{
+						ReviewID: 1,
+						Rating:   5,
+						Title:    "Title",
+						Text:     "i like it",
+					},
+					UserID: 1,
+				}).Return(nil, usecase.ErrReviewNotFound)
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
 				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
@@ -536,14 +623,14 @@ func TestReviewEndpoints_UpdateReview(t *testing.T) {
 			},
 			ExpectedErr: &echo.HTTPError{
 				Code:    403,
-				Message: "нет доступа к чужой рецензии",
+				Message: "Недостаточно прав для выполнения операции",
 			},
 			Cookies: &http.Cookie{
 				Name:  "session",
 				Value: "xxx",
 			},
-			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().EditReview(dto.ReviewUpdate{
+			SetupReviewUsecaseMock: func(uc *mockusecase.MockReview) {
+				uc.EXPECT().EditReview(dto.ReviewUpdate{
 					ReviewUpdateRequest: dto.ReviewUpdateRequest{
 						ReviewID: 1,
 						Rating:   5,
@@ -551,35 +638,7 @@ func TestReviewEndpoints_UpdateReview(t *testing.T) {
 						Text:     "i like it",
 					},
 					UserID: 1,
-				}).Return(nil, entity.NewClientError("нет доступа к чужой рецензии", entity.ErrForbidden))
-			},
-			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
-				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
-			},
-		},
-		{
-			Name: "Невалидный айди",
-			Body: func() io.Reader {
-				return strings.NewReader(`{"reviewID":-100,"rating":5,"title":"Title","text":"i like it"}`)
-			},
-			ExpectedErr: &echo.HTTPError{
-				Code:    400,
-				Message: "невалидный id рецензии",
-			},
-			Cookies: &http.Cookie{
-				Name:  "session",
-				Value: "xxx",
-			},
-			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().EditReview(dto.ReviewUpdate{
-					ReviewUpdateRequest: dto.ReviewUpdateRequest{
-						ReviewID: -100,
-						Rating:   5,
-						Title:    "Title",
-						Text:     "i like it",
-					},
-					UserID: 1,
-				}).Return(nil, entity.NewClientError("невалидный id рецензии", entity.ErrBadRequest))
+				}).Return(nil, usecase.ErrReviewForbidden)
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
 				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
@@ -590,11 +649,11 @@ func TestReviewEndpoints_UpdateReview(t *testing.T) {
 			Body: func() io.Reader {
 				return strings.NewReader(`{"reviewID":1,"rating":5,"title":"Title","text":"i like it"}`)
 			},
-			ExpectedErr:            &echo.HTTPError{Code: 401, Message: "необходима авторизация"},
+			ExpectedErr:            &echo.HTTPError{Code: 401, Message: "Для этой операции нужно авторизоваться"},
 			Cookies:                &http.Cookie{Name: "session", Value: "xxx"},
 			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
-				usecase.EXPECT().GetUserIDBySession(gomock.Any()).Return(-1, entity.NewClientError("необходима авторизация", entity.ErrUnauthorized))
+				usecase.EXPECT().GetUserIDBySession(gomock.Any()).Return(-1, utils.ErrUnauthorized)
 			},
 		},
 		{
@@ -602,7 +661,7 @@ func TestReviewEndpoints_UpdateReview(t *testing.T) {
 			Body: func() io.Reader {
 				return strings.NewReader(`{"reviewID":1,"rating":5,"title":"Title","text":"i like it"}`)
 			},
-			ExpectedErr: &echo.HTTPError{Code: 500, Message: "internal"},
+			ExpectedErr: &echo.HTTPError{Code: 500, Message: "Внутренняя ошибка сервера", Internal: errors.New("123")},
 			Cookies: &http.Cookie{
 				Name:  "session",
 				Value: "xxx",
@@ -616,7 +675,7 @@ func TestReviewEndpoints_UpdateReview(t *testing.T) {
 						Text:     "i like it",
 					},
 					UserID: 1,
-				}).Return(nil, entity.NewClientError("internal", entity.ErrInternal))
+				}).Return(nil, errors.New("123"))
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
 				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
@@ -677,18 +736,18 @@ func TestReviewEndpoints_DeleteReview(t *testing.T) {
 			},
 		},
 		{
-			Name:     "Отзыв не найден",
+			Name:     "Рецензия не найдена",
 			ReviewID: "1",
 			ExpectedErr: &echo.HTTPError{
 				Code:    404,
-				Message: "отзыв не найден",
+				Message: "Рецензия не найдена",
 			},
 			Cookies: &http.Cookie{
 				Name:  "session",
 				Value: "xxx",
 			},
-			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().DeleteReview(1, 1).Return(entity.NewClientError("отзыв не найден", entity.ErrNotFound))
+			SetupReviewUsecaseMock: func(uc *mockusecase.MockReview) {
+				uc.EXPECT().DeleteReview(1, 1).Return(usecase.ErrReviewNotFound)
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
 				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
@@ -699,14 +758,14 @@ func TestReviewEndpoints_DeleteReview(t *testing.T) {
 			ReviewID: "1",
 			ExpectedErr: &echo.HTTPError{
 				Code:    403,
-				Message: "нет доступа к чужому отзыву",
+				Message: "Недостаточно прав для выполнения операции",
 			},
 			Cookies: &http.Cookie{
 				Name:  "session",
 				Value: "xxx",
 			},
-			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().DeleteReview(1, 1).Return(entity.NewClientError("нет доступа к чужому отзыву", entity.ErrForbidden))
+			SetupReviewUsecaseMock: func(uc *mockusecase.MockReview) {
+				uc.EXPECT().DeleteReview(1, 1).Return(usecase.ErrReviewForbidden)
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
 				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
@@ -717,7 +776,7 @@ func TestReviewEndpoints_DeleteReview(t *testing.T) {
 			ReviewID: "ogo!",
 			ExpectedErr: &echo.HTTPError{
 				Code:    400,
-				Message: "невалидный id рецензии",
+				Message: "Невалидный id рецензии",
 			},
 			Cookies: &http.Cookie{
 				Name:  "session",
@@ -731,7 +790,7 @@ func TestReviewEndpoints_DeleteReview(t *testing.T) {
 			ReviewID: "1",
 			ExpectedErr: &echo.HTTPError{
 				Code:    401,
-				Message: "необходима авторизация",
+				Message: "Для этой операции нужно авторизоваться",
 			},
 			Cookies: &http.Cookie{
 				Name:  "session",
@@ -739,22 +798,23 @@ func TestReviewEndpoints_DeleteReview(t *testing.T) {
 			},
 			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
-				usecase.EXPECT().GetUserIDBySession(gomock.Any()).Return(-1, entity.NewClientError("необходима авторизация", entity.ErrUnauthorized))
+				usecase.EXPECT().GetUserIDBySession(gomock.Any()).Return(-1, utils.ErrUnauthorized)
 			},
 		},
 		{
 			Name:     "Неожиданная ошибка",
 			ReviewID: "1",
 			ExpectedErr: &echo.HTTPError{
-				Code:    500,
-				Message: "internal",
+				Code:     500,
+				Message:  "Внутренняя ошибка сервера",
+				Internal: errors.New("123"),
 			},
 			Cookies: &http.Cookie{
 				Name:  "session",
 				Value: "xxx",
 			},
 			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().DeleteReview(1, 1).Return(entity.NewClientError("internal", entity.ErrInternal))
+				usecase.EXPECT().DeleteReview(1, 1).Return(errors.New("123"))
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
 				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
@@ -846,10 +906,10 @@ func TestReviewEndpoints_GetRecentReviews(t *testing.T) {
 		},
 		{
 			Name:           "Неожиданная ошибка",
-			ExpectedErr:    &echo.HTTPError{Code: 500, Message: "internal"},
+			ExpectedErr:    &echo.HTTPError{Code: 500, Message: "Внутренняя ошибка сервера", Internal: errors.New("123")},
 			ExpectedOutput: nil,
 			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().GetLatestReviews(3).Return(nil, entity.NewClientError("internal", entity.ErrInternal))
+				usecase.EXPECT().GetLatestReviews(3).Return(nil, errors.New("123"))
 			},
 		},
 	}
@@ -940,12 +1000,13 @@ func TestReviewEndpoints_GetUserLatestReviews(t *testing.T) {
 			Name:   "Неожиданная ошибка",
 			UserID: "1",
 			ExpectedErr: &echo.HTTPError{
-				Code:    500,
-				Message: "internal",
+				Code:     500,
+				Message:  "Внутренняя ошибка сервера",
+				Internal: errors.New("123"),
 			},
 			ExpectedOutput: nil,
 			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().GetUserReviews(1, 3, 1).Return(nil, entity.NewClientError("internal", entity.ErrInternal))
+				usecase.EXPECT().GetUserReviews(1, 3, 1).Return(nil, errors.New("123"))
 			},
 		},
 		{
@@ -953,22 +1014,10 @@ func TestReviewEndpoints_GetUserLatestReviews(t *testing.T) {
 			UserID: "ogo!",
 			ExpectedErr: &echo.HTTPError{
 				Code:    400,
-				Message: "невалидный id пользователя",
+				Message: "Невалидный id пользователя",
 			},
 			ExpectedOutput:         nil,
 			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {},
-		},
-		{
-			Name:   "Пользователь не найден",
-			UserID: "1",
-			ExpectedErr: &echo.HTTPError{
-				Code:    404,
-				Message: "пользователь не найден",
-			},
-			ExpectedOutput: nil,
-			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().GetUserReviews(1, 3, 1).Return(nil, entity.NewClientError("пользователь не найден", entity.ErrNotFound))
-			},
 		},
 	}
 
@@ -1064,12 +1113,13 @@ func TestReviewEndpoints_GetUserReviews(t *testing.T) {
 			UserID: "1",
 			Page:   "1",
 			ExpectedErr: &echo.HTTPError{
-				Code:    500,
-				Message: "internal",
+				Code:     500,
+				Message:  "Внутренняя ошибка сервера",
+				Internal: errors.New("123"),
 			},
 			ExpectedOutput: nil,
 			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().GetUserReviews(1, 10, 1).Return(nil, entity.NewClientError("internal", entity.ErrInternal))
+				usecase.EXPECT().GetUserReviews(1, 10, 1).Return(nil, errors.New("123"))
 			},
 		},
 		{
@@ -1078,7 +1128,7 @@ func TestReviewEndpoints_GetUserReviews(t *testing.T) {
 			Page:   "1",
 			ExpectedErr: &echo.HTTPError{
 				Code:    400,
-				Message: "невалидный id пользователя",
+				Message: "Невалидный id пользователя",
 			},
 			ExpectedOutput:         nil,
 			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {},
@@ -1089,22 +1139,23 @@ func TestReviewEndpoints_GetUserReviews(t *testing.T) {
 			Page:   "ogo!",
 			ExpectedErr: &echo.HTTPError{
 				Code:    400,
-				Message: "невалидный номер страницы",
+				Message: "Невалидный номер страницы",
 			},
 			ExpectedOutput:         nil,
 			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {},
 		},
 		{
-			Name:   "Пользователь не найден",
+			Name:   "Внутренняя ошибка сервера",
 			UserID: "1",
 			Page:   "1",
 			ExpectedErr: &echo.HTTPError{
-				Code:    404,
-				Message: "пользователь не найден",
+				Code:     500,
+				Message:  "Внутренняя ошибка сервера",
+				Internal: errors.New("123"),
 			},
 			ExpectedOutput: nil,
 			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().GetUserReviews(1, 10, 1).Return(nil, entity.NewClientError("пользователь не найден", entity.ErrNotFound))
+				usecase.EXPECT().GetUserReviews(1, 10, 1).Return(nil, errors.New("123"))
 			},
 		},
 	}
@@ -1201,12 +1252,13 @@ func TestReviewEndpoints_GetContentReviews(t *testing.T) {
 			ContentID: "1",
 			Page:      "1",
 			ExpectedErr: &echo.HTTPError{
-				Code:    500,
-				Message: "internal",
+				Code:     500,
+				Message:  "Внутренняя ошибка сервера",
+				Internal: errors.New("123"),
 			},
 			ExpectedOutput: nil,
 			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().GetContentReviews(1, 10, 1).Return(nil, entity.NewClientError("internal", entity.ErrInternal))
+				usecase.EXPECT().GetContentReviews(1, 10, 1).Return(nil, errors.New("123"))
 			},
 		},
 		{
@@ -1215,7 +1267,7 @@ func TestReviewEndpoints_GetContentReviews(t *testing.T) {
 			Page:      "1",
 			ExpectedErr: &echo.HTTPError{
 				Code:    400,
-				Message: "невалидный id контента",
+				Message: "Невалидный id контента",
 			},
 			ExpectedOutput:         nil,
 			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {},
@@ -1226,23 +1278,10 @@ func TestReviewEndpoints_GetContentReviews(t *testing.T) {
 			Page:      "ogo!",
 			ExpectedErr: &echo.HTTPError{
 				Code:    400,
-				Message: "невалидный номер страницы",
+				Message: "Невалидный номер страницы",
 			},
 			ExpectedOutput:         nil,
 			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {},
-		},
-		{
-			Name:      "Контент не найден",
-			ContentID: "1",
-			Page:      "1",
-			ExpectedErr: &echo.HTTPError{
-				Code:    404,
-				Message: "контент не найден",
-			},
-			ExpectedOutput: nil,
-			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().GetContentReviews(1, 10, 1).Return(nil, entity.NewClientError("контент не найден", entity.ErrNotFound))
-			},
 		},
 	}
 
@@ -1274,12 +1313,13 @@ func TestReviewEndpoints_GetContentReviews(t *testing.T) {
 	}
 }
 
-func TestReviewEndpoints_LikeReview(t *testing.T) {
+func TestReviewEndpoints_VoteReview(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
 		Name                   string
 		ReviewID               string
+		Vote                   string
 		ExpectedErr            error
 		Cookies                *http.Cookie
 		SetupReviewUsecaseMock func(usecase *mockusecase.MockReview)
@@ -1288,13 +1328,14 @@ func TestReviewEndpoints_LikeReview(t *testing.T) {
 		{
 			Name:        "Успешный лайк на отзыв",
 			ReviewID:    "1",
+			Vote:        "true",
 			ExpectedErr: nil,
 			Cookies: &http.Cookie{
 				Name:  "session",
 				Value: "xxx",
 			},
 			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().LikeReview(1, 1).Return(nil)
+				usecase.EXPECT().VoteReview(1, 1, true).Return(nil)
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
 				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
@@ -1303,16 +1344,18 @@ func TestReviewEndpoints_LikeReview(t *testing.T) {
 		{
 			Name:     "Неожиданная ошибка",
 			ReviewID: "1",
+			Vote:     "true",
 			ExpectedErr: &echo.HTTPError{
-				Code:    500,
-				Message: "internal",
+				Code:     500,
+				Message:  "Внутренняя ошибка сервера",
+				Internal: errors.New("123"),
 			},
 			Cookies: &http.Cookie{
 				Name:  "session",
 				Value: "xxx",
 			},
 			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().LikeReview(1, 1).Return(entity.NewClientError("internal", entity.ErrInternal))
+				usecase.EXPECT().VoteReview(1, 1, true).Return(errors.New("123"))
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
 				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
@@ -1321,9 +1364,10 @@ func TestReviewEndpoints_LikeReview(t *testing.T) {
 		{
 			Name:     "Невалидный айди",
 			ReviewID: "ogo!",
+			Vote:     "false",
 			ExpectedErr: &echo.HTTPError{
 				Code:    400,
-				Message: "невалидный id рецензии",
+				Message: "Невалидный id рецензии",
 			},
 			Cookies: &http.Cookie{
 				Name:  "session",
@@ -1333,18 +1377,34 @@ func TestReviewEndpoints_LikeReview(t *testing.T) {
 			SetupAuthUsecaseMock:   func(usecase *mockusecase.MockAuth) {},
 		},
 		{
-			Name:     "Отзыв не найден",
+			Name:     "Невалидный голос",
 			ReviewID: "1",
+			Vote:     "ogo!",
 			ExpectedErr: &echo.HTTPError{
-				Code:    404,
-				Message: "отзыв не найден",
+				Code:    400,
+				Message: "Невалидный параметр vote",
 			},
 			Cookies: &http.Cookie{
 				Name:  "session",
 				Value: "xxx",
 			},
-			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().LikeReview(1, 1).Return(entity.NewClientError("отзыв не найден", entity.ErrNotFound))
+			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {},
+			SetupAuthUsecaseMock:   func(usecase *mockusecase.MockAuth) {},
+		},
+		{
+			Name:     "Рецензия не найдена",
+			ReviewID: "1",
+			Vote:     "true",
+			ExpectedErr: &echo.HTTPError{
+				Code:    404,
+				Message: "Рецензия не найдена",
+			},
+			Cookies: &http.Cookie{
+				Name:  "session",
+				Value: "xxx",
+			},
+			SetupReviewUsecaseMock: func(uc *mockusecase.MockReview) {
+				uc.EXPECT().VoteReview(1, 1, true).Return(usecase.ErrReviewNotFound)
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
 				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
@@ -1353,9 +1413,10 @@ func TestReviewEndpoints_LikeReview(t *testing.T) {
 		{
 			Name:     "Пользователь не авторизован",
 			ReviewID: "1",
+			Vote:     "true",
 			ExpectedErr: &echo.HTTPError{
 				Code:    401,
-				Message: "необходима авторизация",
+				Message: "Для этой операции нужно авторизоваться",
 			},
 			Cookies: &http.Cookie{
 				Name:  "session",
@@ -1363,7 +1424,26 @@ func TestReviewEndpoints_LikeReview(t *testing.T) {
 			},
 			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
-				usecase.EXPECT().GetUserIDBySession(gomock.Any()).Return(-1, entity.NewClientError("необходима авторизация", entity.ErrUnauthorized))
+				usecase.EXPECT().GetUserIDBySession(gomock.Any()).Return(-1, utils.ErrUnauthorized)
+			},
+		},
+		{
+			Name:     "Голос уже учтен",
+			ReviewID: "1",
+			Vote:     "true",
+			ExpectedErr: &echo.HTTPError{
+				Code:    409,
+				Message: "Голос уже учтен",
+			},
+			Cookies: &http.Cookie{
+				Name:  "session",
+				Value: "xxx",
+			},
+			SetupReviewUsecaseMock: func(uc *mockusecase.MockReview) {
+				uc.EXPECT().VoteReview(1, 1, true).Return(usecase.ErrReviewVoteAlreadyExists)
+			},
+			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
+				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
 			},
 		},
 	}
@@ -1380,7 +1460,7 @@ func TestReviewEndpoints_LikeReview(t *testing.T) {
 			tc.SetupReviewUsecaseMock(mockReviewUsecase)
 			tc.SetupAuthUsecaseMock(mockAuthUsecase)
 			reviewHandler := NewReviewEndpoints(mockReviewUsecase, mockAuthUsecase)
-			req := httptest.NewRequest(http.MethodPost, "/review/like", nil)
+			req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/review/like?vote=%s", tc.Vote), nil)
 			if tc.Cookies != nil {
 				req.AddCookie(tc.Cookies)
 			}
@@ -1389,134 +1469,13 @@ func TestReviewEndpoints_LikeReview(t *testing.T) {
 			c.SetPath("/review/like/:id")
 			c.SetParamNames("id")
 			c.SetParamValues(tc.ReviewID)
-			err := reviewHandler.LikeReview(c)
+			err := reviewHandler.VoteReview(c)
 			require.Equal(t, tc.ExpectedErr, err)
 		})
 	}
 }
 
-func TestReviewEndpoints_DislikeReview(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		Name                   string
-		ReviewID               string
-		ExpectedErr            error
-		Cookies                *http.Cookie
-		SetupReviewUsecaseMock func(usecase *mockusecase.MockReview)
-		SetupAuthUsecaseMock   func(usecase *mockusecase.MockAuth)
-	}{
-		{
-			Name:        "Успешный дизлайк на отзыв",
-			ReviewID:    "1",
-			ExpectedErr: nil,
-			Cookies: &http.Cookie{
-				Name:  "session",
-				Value: "xxx",
-			},
-			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().DislikeReview(1, 1).Return(nil)
-			},
-			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
-				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
-			},
-		},
-		{
-			Name:     "Неожиданная ошибка",
-			ReviewID: "1",
-			ExpectedErr: &echo.HTTPError{
-				Code:    500,
-				Message: "internal",
-			},
-			Cookies: &http.Cookie{
-				Name:  "session",
-				Value: "xxx",
-			},
-			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().DislikeReview(1, 1).Return(entity.NewClientError("internal", entity.ErrInternal))
-			},
-			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
-				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
-			},
-		},
-		{
-			Name:     "Невалидный айди",
-			ReviewID: "ogo!",
-			ExpectedErr: &echo.HTTPError{
-				Code:    400,
-				Message: "невалидный id рецензии",
-			},
-			Cookies: &http.Cookie{
-				Name:  "session",
-				Value: "xxx",
-			},
-			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {},
-			SetupAuthUsecaseMock:   func(usecase *mockusecase.MockAuth) {},
-		},
-		{
-			Name:     "Отзыв не найден",
-			ReviewID: "1",
-			ExpectedErr: &echo.HTTPError{
-				Code:    404,
-				Message: "отзыв не найден",
-			},
-			Cookies: &http.Cookie{
-				Name:  "session",
-				Value: "xxx",
-			},
-			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().DislikeReview(1, 1).Return(entity.NewClientError("отзыв не найден", entity.ErrNotFound))
-			},
-			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
-				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
-			},
-		},
-		{
-			Name:     "Пользователь не авторизован",
-			ReviewID: "1",
-			ExpectedErr: &echo.HTTPError{
-				Code:    401,
-				Message: "необходима авторизация",
-			},
-			Cookies: &http.Cookie{
-				Name:  "session",
-				Value: "xxx",
-			},
-			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {},
-			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
-				usecase.EXPECT().GetUserIDBySession(gomock.Any()).Return(-1, entity.NewClientError("необходима авторизация", entity.ErrUnauthorized))
-			},
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.Name, func(t *testing.T) {
-			t.Parallel()
-			e := echo.New()
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-			mockReviewUsecase := mockusecase.NewMockReview(ctrl)
-			mockAuthUsecase := mockusecase.NewMockAuth(ctrl)
-			tc.SetupReviewUsecaseMock(mockReviewUsecase)
-			tc.SetupAuthUsecaseMock(mockAuthUsecase)
-			reviewHandler := NewReviewEndpoints(mockReviewUsecase, mockAuthUsecase)
-			req := httptest.NewRequest(http.MethodPost, "/review/dislike", nil)
-			if tc.Cookies != nil {
-				req.AddCookie(tc.Cookies)
-			}
-			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
-			c.SetPath("/review/dislike/:id")
-			c.SetParamNames("id")
-			c.SetParamValues(tc.ReviewID)
-			err := reviewHandler.DislikeReview(c)
-			require.Equal(t, tc.ExpectedErr, err)
-		})
-	}
-}
-
-func TestReviewEndpoints_UnlikeReview(t *testing.T) {
+func TestReviewEndpoints_UnVoteReview(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -1536,7 +1495,7 @@ func TestReviewEndpoints_UnlikeReview(t *testing.T) {
 				Value: "xxx",
 			},
 			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().UnlikeReview(1, 1).Return(nil)
+				usecase.EXPECT().UnVoteReview(1, 1).Return(nil)
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
 				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
@@ -1546,15 +1505,16 @@ func TestReviewEndpoints_UnlikeReview(t *testing.T) {
 			Name:     "Неожиданная ошибка",
 			ReviewID: "1",
 			ExpectedErr: &echo.HTTPError{
-				Code:    500,
-				Message: "internal",
+				Code:     500,
+				Message:  "Внутренняя ошибка сервера",
+				Internal: errors.New("123"),
 			},
 			Cookies: &http.Cookie{
 				Name:  "session",
 				Value: "xxx",
 			},
 			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().UnlikeReview(1, 1).Return(entity.NewClientError("internal", entity.ErrInternal))
+				usecase.EXPECT().UnVoteReview(1, 1).Return(errors.New("123"))
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
 				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
@@ -1565,7 +1525,7 @@ func TestReviewEndpoints_UnlikeReview(t *testing.T) {
 			ReviewID: "ogo!",
 			ExpectedErr: &echo.HTTPError{
 				Code:    400,
-				Message: "невалидный id рецензии",
+				Message: "Невалидный id рецензии",
 			},
 			Cookies: &http.Cookie{
 				Name:  "session",
@@ -1575,18 +1535,18 @@ func TestReviewEndpoints_UnlikeReview(t *testing.T) {
 			SetupAuthUsecaseMock:   func(usecase *mockusecase.MockAuth) {},
 		},
 		{
-			Name:     "Отзыв не найден",
+			Name:     "Голос не найден",
 			ReviewID: "1",
 			ExpectedErr: &echo.HTTPError{
 				Code:    404,
-				Message: "отзыв не найден",
+				Message: "Голос не найден",
 			},
 			Cookies: &http.Cookie{
 				Name:  "session",
 				Value: "xxx",
 			},
-			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {
-				usecase.EXPECT().UnlikeReview(1, 1).Return(entity.NewClientError("отзыв не найден", entity.ErrNotFound))
+			SetupReviewUsecaseMock: func(uc *mockusecase.MockReview) {
+				uc.EXPECT().UnVoteReview(1, 1).Return(usecase.ErrReviewVoteNotFound)
 			},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
 				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
@@ -1597,7 +1557,7 @@ func TestReviewEndpoints_UnlikeReview(t *testing.T) {
 			ReviewID: "1",
 			ExpectedErr: &echo.HTTPError{
 				Code:    401,
-				Message: "необходима авторизация",
+				Message: "Для этой операции нужно авторизоваться",
 			},
 			Cookies: &http.Cookie{
 				Name:  "session",
@@ -1605,7 +1565,7 @@ func TestReviewEndpoints_UnlikeReview(t *testing.T) {
 			},
 			SetupReviewUsecaseMock: func(usecase *mockusecase.MockReview) {},
 			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
-				usecase.EXPECT().GetUserIDBySession(gomock.Any()).Return(-1, entity.NewClientError("необходима авторизация", entity.ErrUnauthorized))
+				usecase.EXPECT().GetUserIDBySession(gomock.Any()).Return(-1, utils.ErrUnauthorized)
 			},
 		},
 	}
@@ -1631,7 +1591,7 @@ func TestReviewEndpoints_UnlikeReview(t *testing.T) {
 			c.SetPath("/review/unlike/:id")
 			c.SetParamNames("id")
 			c.SetParamValues(tc.ReviewID)
-			err := reviewHandler.UnlikeReview(c)
+			err := reviewHandler.UnVoteReview(c)
 			require.Equal(t, tc.ExpectedErr, err)
 		})
 	}

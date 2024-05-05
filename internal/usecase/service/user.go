@@ -66,19 +66,17 @@ func (u *UserService) UpdateAvatar(userID int, reader io.Reader) error {
 	case err != nil:
 		return entity.UsecaseWrap(errors.New("ошибка при поиске пользователя"), err)
 	}
-
 	uploadID, err := u.staticUC.UploadAvatar(reader)
 	switch {
 	case errors.Is(err, usecase.ErrStaticTooBigFile):
 		return usecase.UserIncorrectDataError{Err: err}
 	case errors.Is(err, usecase.ErrStaticNotImage):
 		return usecase.UserIncorrectDataError{Err: err}
-	case errors.Is(err, usecase.ErrStaticTooBigFile):
+	case errors.Is(err, usecase.ErrStaticImageDimensions):
 		return usecase.UserIncorrectDataError{Err: err}
 	case err != nil:
 		return entity.UsecaseWrap(errors.New("ошибка при загрузке аватара"), err)
 	}
-
 	user.AvatarUploadID = uploadID
 	err = u.userRepo.UpdateUser(user)
 	if err != nil {

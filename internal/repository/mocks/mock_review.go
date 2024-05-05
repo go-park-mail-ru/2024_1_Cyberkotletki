@@ -143,6 +143,21 @@ func (mr *MockReviewMockRecorder) GetReviewsByContentID(contentID, page, limit a
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReviewsByContentID", reflect.TypeOf((*MockReview)(nil).GetReviewsByContentID), contentID, page, limit)
 }
 
+// GetReviewsCountByAuthorID mocks base method.
+func (m *MockReview) GetReviewsCountByAuthorID(authorID int) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetReviewsCountByAuthorID", authorID)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetReviewsCountByAuthorID indicates an expected call of GetReviewsCountByAuthorID.
+func (mr *MockReviewMockRecorder) GetReviewsCountByAuthorID(authorID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReviewsCountByAuthorID", reflect.TypeOf((*MockReview)(nil).GetReviewsCountByAuthorID), authorID)
+}
+
 // GetReviewsCountByContentID mocks base method.
 func (m *MockReview) GetReviewsCountByContentID(contentID int) (int, error) {
 	m.ctrl.T.Helper()

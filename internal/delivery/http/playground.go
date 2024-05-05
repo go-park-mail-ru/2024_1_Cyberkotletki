@@ -20,7 +20,7 @@ func NewPlaygroundEndpoints() PlaygroundEndpoints {
 // @Router /playground/ping [get]
 func (h *PlaygroundEndpoints) Ping(c echo.Context) error {
 	if err := c.String(http.StatusOK, "pong"); err != nil {
-		return utils.NewError(c, http.StatusInternalServerError, err)
+		return utils.NewError(c, http.StatusInternalServerError, "Произошла внутренняя ошибка", err)
 	}
 	return nil
 }

@@ -7,12 +7,15 @@ import (
 
 //go:generate mockgen -source=$GOFILE -destination=mocks/mock_compilation.go
 type Compilation interface {
+	// GetCompilationTypes возвращает список типов подборок
 	GetCompilationTypes() (*dto.CompilationTypeResponseList, error)
+	// GetCompilationsByCompilationType возвращает список подборок по типу подборок
 	GetCompilationsByCompilationType(compTypeID int) (*dto.CompilationResponseList, error)
-	GetCompilationContent(compID, page, limit int) ([]*dto.PreviewContentCard, error)
+	// GetCompilationContent возвращает контент подборки по ее ID
+	// Если подборка не найдена, возвращает ErrCompilationNotFound
+	GetCompilationContent(compID, page int) (*dto.CompilationResponse, error)
 }
 
 var (
-	ErrCompilationTypeNotFound = errors.New("тип подборки не найден")
-	ErrCompilationNotFound     = errors.New("подборка не найдена")
+	ErrCompilationNotFound = errors.New("подборка не найдена")
 )

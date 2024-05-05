@@ -9,7 +9,7 @@ import (
 // response в json
 func WriteJSON(c echo.Context, response any) error {
 	if err := c.JSON(http.StatusOK, response); err != nil {
-		return NewError(c, http.StatusInternalServerError, err)
+		return NewError(c, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
 	}
 	return nil
 }

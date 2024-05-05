@@ -1,6 +1,7 @@
 package http
 
 import (
+	"errors"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http/utils"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
 	"github.com/labstack/echo/v4"
@@ -9,11 +10,12 @@ import (
 )
 
 type AuthEndpoints struct {
-	authUC usecase.Auth
+	authUC         usecase.Auth
+	sessionManager *utils.SessionManager
 }
 
-func NewAuthEndpoints(authUC usecase.Auth) AuthEndpoints {
-	return AuthEndpoints{authUC: authUC}
+func NewAuthEndpoints(authUC usecase.Auth, sessionManager *utils.SessionManager) AuthEndpoints {
+	return AuthEndpoints{authUC: authUC, sessionManager: sessionManager}
 }
 
 func (h *AuthEndpoints) Configure(e *echo.Group) {
@@ -31,8 +33,9 @@ func (h *AuthEndpoints) Configure(e *echo.Group) {
 // @Failure		500	{object}	echo.HTTPError	"Внутренняя ошибка сервера"
 // @Router /auth/isAuth [get]
 func (h *AuthEndpoints) IsAuth(ctx echo.Context) error {
-	if _, err := utils.GetUserIDFromSession(ctx, h.authUC); err != nil {
-		return err
+	_, err := utils.GetUserIDFromSession(ctx, h.authUC)
+	if errors.Is(err, utils.ErrUnauthorized) {
+		return utils.NewError(ctx, http.StatusUnauthorized, "Не авторизован", nil)
 	}
 	ctx.Response().WriteHeader(http.StatusOK)
 	return nil
@@ -56,7 +59,7 @@ func (h *AuthEndpoints) Logout(ctx echo.Context) error {
 	// ошибку игнорируем
 	// no-lint
 	_ = h.authUC.Logout(cookie.Value)
-	utils.SessionSet(ctx, "", time.Unix(0, 0))
+	h.sessionManager.SessionSet(ctx, "session", time.Unix(0, 0))
 	return nil
 }
 
@@ -76,12 +79,17 @@ func (h *AuthEndpoints) LogoutAll(ctx echo.Context) error {
 		return nil
 	}
 	userID, err := h.authUC.GetUserIDBySession(cookie.Value)
+	if errors.Is(err, usecase.ErrSessionNotFound) {
+		// сессия в базе не найдена, значит пользователь уже вышел
+		ctx.Response().WriteHeader(http.StatusOK)
+		return nil
+	}
 	if err != nil {
-		return utils.NewError(ctx, http.StatusInternalServerError, err)
+		return utils.NewError(ctx, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
 	}
-	if err := h.authUC.LogoutAll(userID); err != nil {
-		return utils.NewError(ctx, http.StatusInternalServerError, err)
+	if err = h.authUC.LogoutAll(userID); err != nil {
+		return utils.NewError(ctx, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
 	}
-	utils.SessionSet(ctx, "", time.Unix(0, 0))
+	h.sessionManager.SessionSet(ctx, "session", time.Unix(0, 0))
 	return nil
 }
