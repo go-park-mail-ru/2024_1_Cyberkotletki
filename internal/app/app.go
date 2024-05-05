@@ -68,7 +68,7 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	echoServer.Server.WriteTimeout = time.Duration(params.HTTP.Server.WriteTimeout) * time.Second
 	echoServer.Server.IdleTimeout = time.Duration(params.HTTP.Server.ReadTimeout) * time.Second
 	// статика
-	echoServer.Static("/static/", params.HTTP.StaticFolder)
+	echoServer.Static("/static/", params.Static.Path)
 	// middleware
 	// config
 	echoServer.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -143,7 +143,7 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	// docs
 	api.GET("/docs*", echoSwagger.WrapHandler)
 	// static
-	staticAPI := api.Group("/static")
+	staticAPI := api.Group(params.Static.Path)
 	staticDelivery.Configure(staticAPI)
 	// playground
 	playgroundAPI := api.Group("/playground")

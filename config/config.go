@@ -27,14 +27,13 @@ type PostgresDatabase struct {
 
 type Config struct {
 	HTTP struct {
-		StaticFolder       string `yaml:"static_folder"        default:"assets/examples/static"`
 		CORSAllowedOrigins string `yaml:"cors_allowed_origins" default:"http://localhost:8000"`
 		SecureCookies      bool   `yaml:"secure_cookies"       default:"false"`
 		Server             Server `yaml:"server"`
 	} `yaml:"http"`
 	Static struct {
 		MaxFileSize int    `yaml:"max_file_size" default:"10485760"`
-		Path        string `yaml:"path"          default:"assets/examples/static"`
+		Path        string `yaml:"path"          default:"assets/static"`
 	} `yaml:"static_service"`
 	Auth struct {
 		SessionAliveTime int `yaml:"session_alive_time" default:"86400"`

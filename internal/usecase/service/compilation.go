@@ -63,7 +63,7 @@ func (c *CompilationService) compilationEntitiesToDTO(compEntities []entity.Comp
 	*dto.CompilationResponseList,
 	error,
 ) {
-	compDTOs := make([]dto.Compilation, 0, len(compEntities))
+	compDTOs := make([]dto.Compilation, len(compEntities))
 	for i, compEntity := range compEntities {
 		compDTO, err := c.compilationEntityToDTO(compEntity)
 		if err != nil {
@@ -77,7 +77,7 @@ func (c *CompilationService) compilationEntitiesToDTO(compEntities []entity.Comp
 func (c *CompilationService) compilationTypeEntitiesToDTO(
 	compTypeEntities []entity.CompilationType,
 ) *dto.CompilationTypeResponseList {
-	compTypeDTOs := make([]dto.CompilationType, 0, len(compTypeEntities))
+	compTypeDTOs := make([]dto.CompilationType, len(compTypeEntities))
 	for i, compTypeEntity := range compTypeEntities {
 		compTypeDTOs[i] = c.compilationTypeDTOToEntity(compTypeEntity)
 	}
@@ -119,6 +119,10 @@ func (c *CompilationService) GetCompilationContent(compID, page int) (*dto.Compi
 	case err != nil:
 		return nil, entity.UsecaseWrap(errors.New("ошибка при получении контента подборки"), err)
 	}
+	contentTotal, err := c.compilationRepo.GetCompilationContentLength(compID)
+	if err != nil {
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении количества контента подборки"), err)
+	}
 	compilationDTO, err := c.compilationEntityToDTO(compilation)
 	if err != nil {
 		return nil, err
@@ -126,9 +130,9 @@ func (c *CompilationService) GetCompilationContent(compID, page int) (*dto.Compi
 	return &dto.CompilationResponse{
 		Compilation:   *compilationDTO,
 		ContentIDs:    contentIDs,
-		ContentLength: len(contentIDs),
+		ContentLength: contentTotal,
 		Page:          page,
 		PerPage:       compilationContentLimit,
-		TotalPages:    (len(contentIDs) + compilationContentLimit - 1) / compilationContentLimit,
+		TotalPages:    (contentTotal + compilationContentLimit - 1) / compilationContentLimit,
 	}, nil
 }

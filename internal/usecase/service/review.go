@@ -103,9 +103,9 @@ func (r *ReviewService) GetLatestReviews(count int) (*dto.ReviewResponseList, er
 		return nil, err
 	}
 	reviewDTOs.Page = 1
-	reviewDTOs.Count = count
+	reviewDTOs.Count = len(reviewEntities)
 	reviewDTOs.Pages = 1
-	reviewDTOs.Total = count
+	reviewDTOs.Total = len(reviewEntities)
 	return reviewDTOs, nil
 }
 
@@ -140,10 +140,10 @@ func (r *ReviewService) GetContentReviews(contentID, count, page int) (*dto.Revi
 	}
 	reviewDTOs.Total, err = r.reviewRepo.GetReviewsCountByContentID(contentID)
 	if err != nil {
-		return nil, entity.UsecaseWrap(errors.New("ошибка при получении количества отзывов пользователя"), err)
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении количества отзывов"), err)
 	}
 	reviewDTOs.Page = page
-	reviewDTOs.Count = count
+	reviewDTOs.Count = len(reviewEntities)
 	reviewDTOs.Pages = (reviewDTOs.Total + count - 1) / count
 	return reviewDTOs, nil
 }
