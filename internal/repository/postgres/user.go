@@ -43,15 +43,17 @@ func NewUserRepository(db *sql.DB) repository.User {
 // AddUser добавляет пользователя в базу данных.
 // Если операция происходит успешно, то в переданный по указателю user будет записан id нового пользователя.
 func (u *UsersDB) AddUser(email string, passwordHash, passwordSalt []byte) (*entity.User, error) {
-	query, args, err := sq.Insert("users").
+	query, args, err := sq.Insert("\"user\"").
 		Columns("email", "password_hashed", "salt_password").
 		Values(email, passwordHash, passwordSalt).
 		PlaceholderFormat(sq.Dollar).
+		Suffix("RETURNING id").
 		ToSql()
 	if err != nil {
 		return nil, entity.PSQLWrap(errors.New("ошибка при составлении запроса AddUser"), err)
 	}
-	result, err := u.DB.Exec(query, args...)
+	var lastID int
+	err = u.DB.QueryRow(query, args...).Scan(&lastID)
 	var pqErr *pq.Error
 	if errors.As(err, &pqErr) {
 		switch pqErr.Code {
@@ -65,12 +67,8 @@ func (u *UsersDB) AddUser(email string, passwordHash, passwordSalt []byte) (*ent
 		// неизвестная ошибка
 		return nil, entity.PSQLQueryErr("AddUser", err)
 	}
-	lastID, err := result.LastInsertId()
-	if err != nil {
-		return nil, entity.PSQLQueryErr("AddUser", err)
-	}
 	user := new(entity.User)
-	user.ID = int(lastID)
+	user.ID = lastID
 	user.Email = email
 	user.PasswordHash = passwordHash
 	user.PasswordSalt = passwordSalt
@@ -79,8 +77,8 @@ func (u *UsersDB) AddUser(email string, passwordHash, passwordSalt []byte) (*ent
 
 func (u *UsersDB) getUser(where map[string]any) (*entity.User, error) {
 	query, args, err := sq.
-		Select("id", "email", "name", "password_hashed", "salt_password", "avatar_upload_id", "rating").
-		From("users").
+		Select("\"id\"", "email", "name", "password_hashed", "salt_password", "avatar_upload_id", "rating").
+		From("\"user\"").
 		Where(where).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
@@ -136,7 +134,7 @@ func (u *UsersDB) UpdateUser(user *entity.User) error {
 	if user.AvatarUploadID != 0 {
 		setMap["avatar_upload_id"] = user.AvatarUploadID
 	}
-	query, args, err := sq.Update("users").
+	query, args, err := sq.Update("\"user\"").
 		Where(map[string]any{"id": user.ID}).
 		SetMap(setMap).
 		PlaceholderFormat(sq.Dollar).

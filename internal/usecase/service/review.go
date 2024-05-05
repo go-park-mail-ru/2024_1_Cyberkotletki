@@ -103,9 +103,9 @@ func (r *ReviewService) GetLatestReviews(count int) (*dto.ReviewResponseList, er
 		return nil, err
 	}
 	reviewDTOs.Page = 1
-	reviewDTOs.Count = count
+	reviewDTOs.Count = len(reviewEntities)
 	reviewDTOs.Pages = 1
-	reviewDTOs.Total = count
+	reviewDTOs.Total = len(reviewEntities)
 	return reviewDTOs, nil
 }
 
@@ -140,10 +140,10 @@ func (r *ReviewService) GetContentReviews(contentID, count, page int) (*dto.Revi
 	}
 	reviewDTOs.Total, err = r.reviewRepo.GetReviewsCountByContentID(contentID)
 	if err != nil {
-		return nil, entity.UsecaseWrap(errors.New("ошибка при получении количества отзывов пользователя"), err)
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении количества отзывов"), err)
 	}
 	reviewDTOs.Page = page
-	reviewDTOs.Count = count
+	reviewDTOs.Count = len(reviewEntities)
 	reviewDTOs.Pages = (reviewDTOs.Total + count - 1) / count
 	return reviewDTOs, nil
 }
@@ -183,7 +183,7 @@ func (r *ReviewService) CreateReview(review dto.ReviewCreate) (*dto.ReviewRespon
 	})
 	switch {
 	case errors.Is(err, repository.ErrReviewViolation):
-		return nil, usecase.ErrReviewNotFound
+		return nil, usecase.ErrReviewContentNotFound
 	case errors.Is(err, repository.ErrReviewBadRequest):
 		return nil, usecase.ReviewErrorIncorrectData{Err: err}
 	case errors.Is(err, repository.ErrReviewAlreadyExists):
@@ -224,6 +224,12 @@ func (r *ReviewService) EditReview(review dto.ReviewUpdate) (*dto.ReviewResponse
 		return nil, entity.UsecaseWrap(errors.New("ошибка при обновлении отзыва"), err)
 	}
 	reviewEntity, err := r.reviewRepo.GetReviewByID(review.ReviewID)
+	switch {
+	case errors.Is(err, repository.ErrReviewNotFound):
+		return nil, usecase.ErrReviewNotFound
+	case err != nil:
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении отзыва"), err)
+	}
 	return r.reviewEntityToDTO(reviewEntity)
 }
 
@@ -279,7 +285,7 @@ func (r *ReviewService) VoteReview(reviewID, userID int, vote bool) error {
 	case errors.Is(err, repository.ErrReviewNotFound):
 		return usecase.ErrReviewNotFound
 	case errors.Is(err, repository.ErrReviewVoteAlreadyExists):
-		return usecase.ErrReviewAlreadyExists
+		return usecase.ErrReviewVoteAlreadyExists
 	case err != nil:
 		return entity.UsecaseWrap(errors.New("ошибка при оценке отзыва"), err)
 	}
@@ -298,7 +304,7 @@ func (r *ReviewService) UnVoteReview(userID, reviewID int) error {
 	err := r.reviewRepo.UnVoteReview(reviewID, userID)
 	switch {
 	case errors.Is(err, repository.ErrReviewVoteNotFound):
-		return usecase.ErrReviewNotFound
+		return usecase.ErrReviewVoteNotFound
 	case err != nil:
 		return entity.UsecaseWrap(errors.New("ошибка при удалении оценки"), err)
 	}

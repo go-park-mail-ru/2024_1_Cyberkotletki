@@ -3,7 +3,6 @@ package redis
 import (
 	"context"
 	"errors"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/config"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
 	"github.com/google/uuid"
@@ -20,20 +19,13 @@ type sessionsDB struct {
 	ctx              context.Context
 }
 
-func NewSessionRepository(config config.Config) (repository.Session, error) {
+func NewSessionRepository(rdb *redis.Client, sessionAliveTime int) repository.Session {
 	db := &sessionsDB{
-		rdb: redis.NewClient(&redis.Options{
-			Addr:     config.Auth.Redis.Addr,
-			Password: config.Auth.Redis.Password,
-			DB:       config.Auth.Redis.DB,
-		}),
-		sessionAliveTime: config.Auth.SessionAliveTime,
+		rdb:              rdb,
+		sessionAliveTime: sessionAliveTime,
 		ctx:              context.Background(),
 	}
-	if err := db.rdb.Ping(db.ctx).Err(); err != nil {
-		return nil, err
-	}
-	return db, nil
+	return db
 }
 
 func (SDB *sessionsDB) NewSession(id int) (string, error) {

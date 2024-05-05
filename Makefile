@@ -89,9 +89,9 @@ run-migrations:
 .PHONY: gen-migration
 gen-migration:
 	# Пример использования: make gen-migration name=create_users_table
-	@if [ -z "$(name)" ]; then
-		echo "Нужно указать название миграции параметром 'name'";
-		exit 1;
+	@if [ -z $(name) ]; then \
+		echo "Нужно указать название миграции параметром 'name'"; \
+		exit 1; \
 	fi
 	goose -dir=db/migrations create $(name) sql
 

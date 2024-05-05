@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/config"
 	delivery "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http/utils"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/postgres"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/redis"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/service"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/connector"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -21,45 +23,39 @@ import (
 )
 
 func Init(logger echo.Logger, params config.Config) *echo.Echo {
-	// Repositories
-	userRepo, err := postgres.NewUserRepository(params.User.Postgres)
+	// DBConn
+	psqlConn, err := connector.GetPostgresConnector(params.Postgres.ConnectURL)
 	if err != nil {
-		logger.Fatalf("Ошибка при создании репозитория пользователей: %v", err)
+		logger.Fatalf("Ошибка при подключении к базе данных: %v", err)
 	}
-	contentRepo, err := postgres.NewContentRepository(params.Content.Postgres)
+	// RedisConn
+	redisConn, err := connector.GetRedisConnector(params.Redis.Addr, params.Redis.Password, params.Redis.DB)
 	if err != nil {
-		logger.Fatalf("Ошибка при создании репозитория контента: %v", err)
+		logger.Fatalf("Ошибка при подключении к Redis: %v", err)
 	}
-	sessionRepo, err := redis.NewSessionRepository(params)
-	if err != nil {
-		logger.Fatalf("Ошибка при создании репозитория сессий: %v", err)
-	}
-	staticRepo, err := postgres.NewStaticRepository(params.Static.Postgres, params.Static.Path, params.Static.MaxFileSize)
-	if err != nil {
-		logger.Fatalf("Ошибка при создании репозитория статики: %v", err)
-	}
-	reviewRepo, err := postgres.NewReviewRepository(params.Review.Postgres)
-	if err != nil {
-		logger.Fatalf("Ошибка при создании репозитория рецензий: %v", err)
-	}
-	compilationRepo, err := postgres.NewCompilationRepository(params.Compilation.Postgres)
-	if err != nil {
-		logger.Fatalf("Ошибка при создании репозитория подборок: %v", err)
 
-	}
+	// Repositories
+	userRepo := postgres.NewUserRepository(psqlConn)
+	contentRepo := postgres.NewContentRepository(psqlConn)
+	sessionRepo := redis.NewSessionRepository(redisConn, params.Auth.SessionAliveTime)
+	staticRepo := postgres.NewStaticRepository(psqlConn, params.Static.Path, params.Static.MaxFileSize)
+	reviewRepo := postgres.NewReviewRepository(psqlConn)
+	compilationRepo := postgres.NewCompilationRepository(psqlConn)
 
 	// Use Cases
 	staticUseCase := service.NewStaticService(staticRepo)
 	authUseCase := service.NewAuthService(sessionRepo)
-	userUseCase := service.NewUserService(userRepo, reviewRepo, staticRepo)
-	contentUseCase := service.NewContentService(contentRepo, reviewRepo, staticRepo)
+	userUseCase := service.NewUserService(userRepo, staticUseCase)
+	contentUseCase := service.NewContentService(contentRepo, staticRepo)
 	reviewUseCase := service.NewReviewService(reviewRepo, userRepo, contentRepo, staticRepo)
-	compilationUseCase := service.NewCompilationService(compilationRepo, staticRepo, contentRepo, reviewRepo)
+	compilationUseCase := service.NewCompilationService(compilationRepo, staticRepo, contentRepo)
+
+	sessionManager := utils.NewSessionManager(authUseCase, params.Auth.SessionAliveTime, params.HTTP.SecureCookies)
 
 	// Delivery
 	staticDelivery := delivery.NewStaticEndpoints(staticUseCase)
-	authDelivery := delivery.NewAuthEndpoints(authUseCase)
-	userDelivery := delivery.NewUserEndpoints(userUseCase, authUseCase, staticUseCase)
+	authDelivery := delivery.NewAuthEndpoints(authUseCase, sessionManager)
+	userDelivery := delivery.NewUserEndpoints(userUseCase, authUseCase, staticUseCase, sessionManager)
 	contentDelivery := delivery.NewContentEndpoints(contentUseCase)
 	playgroundDelivery := delivery.NewPlaygroundEndpoints()
 	reviewDelivery := delivery.NewReviewEndpoints(reviewUseCase, authUseCase)
@@ -72,7 +68,7 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	echoServer.Server.WriteTimeout = time.Duration(params.HTTP.Server.WriteTimeout) * time.Second
 	echoServer.Server.IdleTimeout = time.Duration(params.HTTP.Server.ReadTimeout) * time.Second
 	// статика
-	echoServer.Static("/static/", params.HTTP.StaticFolder)
+	echoServer.Static("/static/", params.Static.Path)
 	// middleware
 	// config
 	echoServer.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -117,43 +113,6 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 		}
 	})
 	// СSRF
-	/*
-		echoServer.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-			return func(ctx echo.Context) error {
-				// Сетим новый токен
-				token, err := random.Bytes(32)
-				cookie := http.Cookie{
-					Name:     "session",
-					MaxAge:   86400,
-					HttpOnly: true,
-					Secure:   params.HTTP.SecureCookies,
-					Path:     "/",
-				}
-				if err != nil {
-					// в качестве исключительного случая будем сетить csrf константным значением
-					ctx.Response().Header().Set("X-Csrf-Token", "error")
-					cookie.Value = "error"
-					ctx.SetCookie(&cookie)
-				}
-				ctx.Response().Header().Set("X-Csrf-Token", string(token))
-				cookie.Value = string(token)
-				// новый токен устанавливаем только после остальных операций
-				defer ctx.SetCookie(&cookie)
-
-				// Обрабатываем токен, если необходимо
-				if ctx.Request().Method == http.MethodPost ||
-					ctx.Request().Method == http.MethodPut ||
-					ctx.Request().Method == http.MethodDelete {
-					token, err := ctx.Cookie("X-Csrf-Token")
-					if err != nil || token.Value != ctx.Request().Header.Get("X-Csrf-Token") {
-						return ctx.JSON(http.StatusForbidden, struct{ message string }{message: "Невалидный csrf токен"})
-					}
-				}
-
-				return next(ctx)
-			}
-		})
-	*/
 	echoServer.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
 		CookieHTTPOnly: false,
 		CookiePath:     "/",
@@ -184,7 +143,7 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	// docs
 	api.GET("/docs*", echoSwagger.WrapHandler)
 	// static
-	staticAPI := api.Group("/static")
+	staticAPI := api.Group(params.Static.Path)
 	staticDelivery.Configure(staticAPI)
 	// playground
 	playgroundAPI := api.Group("/playground")

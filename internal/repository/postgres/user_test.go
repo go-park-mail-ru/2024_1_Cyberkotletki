@@ -33,9 +33,9 @@ func TestUsersDB_AddUser(t *testing.T) {
 			},
 			expectedErr: nil,
 			setupMock: func(mock sqlmock.Sqlmock, query string) {
-				mock.ExpectExec(regexp.QuoteMeta(query)).
+				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs("email@mail.ru", []byte("hashed"), []byte("salt")).
-					WillReturnResult(sqlmock.NewResult(1, 1))
+					WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
 			},
 			expectedOut: &entity.User{
 				ID:             1,
@@ -55,7 +55,7 @@ func TestUsersDB_AddUser(t *testing.T) {
 			},
 			expectedErr: repository.ErrUserAlreadyExists,
 			setupMock: func(mock sqlmock.Sqlmock, query string) {
-				mock.ExpectExec(regexp.QuoteMeta(query)).
+				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs("email@mail.ru", []byte("hashed"), []byte("salt")).
 					WillReturnError(&pq.Error{Code: entity.PSQLUniqueViolation})
 			},
@@ -69,7 +69,7 @@ func TestUsersDB_AddUser(t *testing.T) {
 			},
 			expectedErr: repository.ErrUserIncorrectData,
 			setupMock: func(mock sqlmock.Sqlmock, query string) {
-				mock.ExpectExec(regexp.QuoteMeta(query)).
+				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(
 						"тут мог бы быть длинный емейл длинной больше 255 символов, но его нет",
 						[]byte("в этом хэше слишком много байт, из-за чего нарушается ограничение CHECK"),
@@ -87,7 +87,7 @@ func TestUsersDB_AddUser(t *testing.T) {
 			},
 			expectedErr: entity.PSQLQueryErr("AddUser", &pq.Error{Code: "123"}),
 			setupMock: func(mock sqlmock.Sqlmock, query string) {
-				mock.ExpectExec(regexp.QuoteMeta(query)).
+				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(
 						"тут мог бы быть длинный емейл длинной больше 255 символов, но его нет",
 						[]byte("в этом хэше слишком много байт, из-за чего нарушается ограничение CHECK"),
@@ -105,7 +105,7 @@ func TestUsersDB_AddUser(t *testing.T) {
 			},
 			expectedErr: entity.PSQLQueryErr("AddUser", sql.ErrConnDone),
 			setupMock: func(mock sqlmock.Sqlmock, query string) {
-				mock.ExpectExec(regexp.QuoteMeta(query)).
+				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(
 						"тут мог бы быть длинный емейл длинной больше 255 символов, но его нет",
 						[]byte("в этом хэше слишком много байт, из-за чего нарушается ограничение CHECK"),
@@ -128,10 +128,11 @@ func TestUsersDB_AddUser(t *testing.T) {
 			// Создаем репозиторий с моком вместо реального подключения
 			repo := NewUserRepository(db)
 			// Ожидаемый запрос
-			query, _, err := sq.Insert("users").
+			query, _, err := sq.Insert("\"user\"").
 				Columns("email", "password_hashed", "salt_password").
 				Values(tc.user.Email, tc.user.PasswordHash, tc.user.PasswordSalt).
 				PlaceholderFormat(sq.Dollar).
+				Suffix("RETURNING id").
 				ToSql()
 			tc.setupMock(mock, query)
 			user, err := repo.AddUser(tc.user.Email, tc.user.PasswordHash, tc.user.PasswordSalt)
@@ -209,8 +210,8 @@ func TestUsersDB_GetUserByID(t *testing.T) {
 			}
 			// Ожидаемый запрос
 			query, args, err := sq.
-				Select("id", "email", "name", "password_hashed", "salt_password", "avatar_upload_id", "rating").
-				From("users").
+				Select("\"id\"", "email", "name", "password_hashed", "salt_password", "avatar_upload_id", "rating").
+				From("\"user\"").
 				Where(map[string]any{"id": tc.Request}).
 				PlaceholderFormat(sq.Dollar).
 				ToSql()
@@ -297,8 +298,8 @@ func TestUsersDB_GetUserByEmail(t *testing.T) {
 			}
 			// Ожидаемый запрос
 			query, args, err := sq.
-				Select("id", "email", "name", "password_hashed", "salt_password", "avatar_upload_id", "rating").
-				From("users").
+				Select("\"id\"", "email", "name", "password_hashed", "salt_password", "avatar_upload_id", "rating").
+				From("\"user\"").
 				Where(map[string]any{"email": tc.Request}).
 				PlaceholderFormat(sq.Dollar).
 				ToSql()
@@ -376,7 +377,7 @@ func TestUsersDB_UpdateUser(t *testing.T) {
 				DB: db,
 			}
 			// Ожидаемый запрос
-			query, args, err := sq.Update("users").
+			query, args, err := sq.Update("\"user\"").
 				Where(map[string]interface{}{"id": 1}).
 				SetMap(map[string]interface{}{
 					"email":            tc.User.Email,

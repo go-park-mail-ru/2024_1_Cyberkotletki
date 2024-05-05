@@ -20,38 +20,26 @@ type RedisDatabase struct {
 }
 
 type PostgresDatabase struct {
+	// default исключительно для примера
 	// nolint
 	ConnectURL string `yaml:"connect_url" default:"postgres://kinoskop_admin:admin_secret_password@localhost:5432/kinoskop?sslmode=disable"`
 }
 
 type Config struct {
 	HTTP struct {
-		StaticFolder       string `yaml:"static_folder"        default:"assets/examples/static"`
 		CORSAllowedOrigins string `yaml:"cors_allowed_origins" default:"http://localhost:8000"`
 		SecureCookies      bool   `yaml:"secure_cookies"       default:"false"`
 		Server             Server `yaml:"server"`
 	} `yaml:"http"`
 	Static struct {
-		MaxFileSize int              `yaml:"max_file_size" default:"10485760"`
-		Path        string           `yaml:"path"          default:"assets/examples/static"`
-		Postgres    PostgresDatabase `yaml:"postgres"`
+		MaxFileSize int    `yaml:"max_file_size" default:"10485760"`
+		Path        string `yaml:"path"          default:"assets/static"`
 	} `yaml:"static_service"`
 	Auth struct {
-		SessionAliveTime int           `yaml:"session_alive_time" default:"86400"`
-		Redis            RedisDatabase `yaml:"redis"`
+		SessionAliveTime int `yaml:"session_alive_time" default:"86400"`
 	} `yaml:"auth_service"`
-	User struct {
-		Postgres PostgresDatabase `yaml:"postgres"`
-	} `yaml:"user_service"`
-	Review struct {
-		Postgres PostgresDatabase `yaml:"postgres"`
-	} `yaml:"review_service"`
-	Content struct {
-		Postgres PostgresDatabase `yaml:"postgres"`
-	} `yaml:"content_service"`
-	Compilation struct {
-		Postgres PostgresDatabase `yaml:"postgres"`
-	} `yaml:"compilation_service"`
+	Postgres PostgresDatabase `yaml:"postgres"`
+	Redis    RedisDatabase    `yaml:"redis"`
 }
 
 func (cfg *Config) GetServerAddr() string {
