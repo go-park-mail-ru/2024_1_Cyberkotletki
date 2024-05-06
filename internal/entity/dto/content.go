@@ -83,7 +83,7 @@ type Person struct {
 	PhotoURL  string    `json:"photoURL,omitempty"  example:"/static/photo.jpg"`
 	Height    int       `json:"height,omitempty"    example:"185"`
 
-	Roles map[string]PreviewContentCardVertical `json:"roles"`
+	Roles map[string][]PreviewContentCardVertical `json:"roles"`
 }
 
 type Content struct {

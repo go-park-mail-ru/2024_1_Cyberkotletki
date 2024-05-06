@@ -175,7 +175,7 @@ func (c *ContentService) GetPersonByID(id int) (*dto.Person, error) {
 	if err != nil {
 		return nil, entity.UsecaseWrap(errors.New("ошибка при получении ролей персоны"), err)
 	}
-	personDTO.Roles = make(map[string]dto.PreviewContentCardVertical, len(contentRoles))
+	personDTO.Roles = make(map[string][]dto.PreviewContentCardVertical, len(contentRoles))
 	for _, role := range contentRoles {
 		content, err := c.contentRepo.GetPreviewContent(role.ContentID)
 		switch {
@@ -207,7 +207,10 @@ func (c *ContentService) GetPersonByID(id int) (*dto.Person, error) {
 			roleContent.YearStart = content.Series.YearStart
 			roleContent.YearEnd = content.Series.YearEnd
 		}
-		personDTO.Roles[role.Role.Name] = roleContent
+		if _, ok := personDTO.Roles[role.Role.Name]; !ok {
+			personDTO.Roles[role.Role.Name] = make([]dto.PreviewContentCardVertical, 0)
+		}
+		personDTO.Roles[role.Role.Name] = append(personDTO.Roles[role.Role.Name], roleContent)
 	}
 	return &personDTO, nil
 }

@@ -814,8 +814,8 @@ func (c *ContentDB) GetPersonRoles(personID int) ([]entity.PersonRole, error) {
 	rows.Close()
 
 	// получаем роли персоны
-	personRoles := make([]entity.PersonRole, len(roles))
-	for index, role := range roles {
+	personRoles := make([]entity.PersonRole, 0)
+	for _, role := range roles {
 		query, args, err := sq.Select("content_id").
 			From("person_role").
 			Where(sq.Eq{"person_id": personID, "role_id": role.ID}).
@@ -834,11 +834,11 @@ func (c *ContentDB) GetPersonRoles(personID int) ([]entity.PersonRole, error) {
 			if err != nil {
 				return nil, entity.PSQLQueryErr("GetPersonRoles при сканировании ролей персоны", err)
 			}
-			personRoles[index] = entity.PersonRole{
+			personRoles = append(personRoles, entity.PersonRole{
 				PersonID:  personID,
 				Role:      role,
 				ContentID: contentID,
-			}
+			})
 		}
 		rows.Close()
 	}
