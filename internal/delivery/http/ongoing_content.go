@@ -124,9 +124,9 @@ func (h *OngoingContentEndpoints) GetAllReleaseYears(ctx echo.Context) error {
 	years, err := h.usecase.GetAllReleaseYears()
 	switch {
 	case errors.Is(err, usecase.ErrOngoingContentYearsNotFound):
-		return utils.NewError(ctx, http.StatusNotFound, "года релизов не найдены")
+		return utils.NewError(ctx, http.StatusNotFound, "года релизов не найдены", err)
 	case err != nil:
-		return utils.NewError(ctx, http.StatusInternalServerError, "ошибка при получении годов релизов")
+		return utils.NewError(ctx, http.StatusInternalServerError, "ошибка при получении годов релизов", err)
 	default:
 		return utils.WriteJSON(ctx, years)
 	}

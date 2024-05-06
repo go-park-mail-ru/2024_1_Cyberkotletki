@@ -31,6 +31,7 @@ func scanAllFieldsOnoingContent(row sq.RowScanner) (*entity.OngoingContent, erro
 		&ongoingContent.Type,
 		&ongoingContent.Title,
 		&ongoingContent.ReleaseDate,
+		&ongoingContent.PosterStaticID,
 	)
 	return ongoingContent, err
 }
@@ -39,50 +40,6 @@ func NewOngoingContentRepository(db *sql.DB) repository.OngoingContent {
 	return &OngoingContentDB{
 		DB: db,
 	}
-}
-
-func (oc *OngoingContentDB) getOngoingMovieData(id int) (*entity.OngoingMovie, error) {
-	query, args, err := sq.Select("premiere, duration").
-		From("ongoing_movie").
-		Where(sq.Eq{"ongoing_content_id": id}).
-		PlaceholderFormat(sq.Dollar).
-		ToSql()
-
-	if err != nil {
-		return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при формировании запроса getOngoingMovieData"))
-	}
-	var movie entity.OngoingMovie
-	var premiere sql.NullTime
-	var duration sql.NullInt64
-	err = oc.DB.QueryRow(query, args...).Scan(&premiere, &duration)
-	if err != nil {
-		return nil, entity.PSQLQueryErr("getOngoingMovieData", err)
-	}
-	movie.Premiere = premiere.Time
-	movie.Duration = int(duration.Int64)
-	return &movie, nil
-}
-
-func (oc *OngoingContentDB) getOngoingSeriesData(id int) (*entity.OngoingSeries, error) {
-	query, args, err := sq.Select("year_start, year_end").
-		From("ongoing_series").
-		Where(sq.Eq{"ongoing_content_id": id}).
-		PlaceholderFormat(sq.Dollar).
-		ToSql()
-
-	if err != nil {
-		return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при формировании запроса getOngoingSeriesData"))
-	}
-	var series entity.OngoingSeries
-	var yearStart sql.NullInt64
-	var yearEnd sql.NullInt64
-	err = oc.DB.QueryRow(query, args...).Scan(&yearStart, &yearEnd)
-	if err != nil {
-		return nil, entity.PSQLQueryErr("getOngoingSeriesData", err)
-	}
-	series.YearStart = int(yearStart.Int64)
-	series.YearEnd = int(yearEnd.Int64)
-	return &series, nil
 }
 
 func (oc *OngoingContentDB) getGenreByID(genreID int) (*entity.Genre, error) {
@@ -169,7 +126,7 @@ func (oc *OngoingContentDB) GetOngoingContentByID(id int) (*entity.OngoingConten
 		return nil, err
 	}
 	var wg sync.WaitGroup
-	var occurredErrorsChan = make(chan error, 2)
+	var occurredErrorsChan = make(chan error, 1)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -179,26 +136,6 @@ func (oc *OngoingContentDB) GetOngoingContentByID(id int) (*entity.OngoingConten
 			return
 		}
 		ongoingContent.Genres = genres
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		switch ongoingContent.Type {
-		case entity.OngoingContentTypeMovie:
-			movie, err := oc.getOngoingMovieData(id)
-			if err != nil {
-				occurredErrorsChan <- err
-				return
-			}
-			ongoingContent.Movie = movie
-		case entity.OngoingContentTypeSeries:
-			series, err := oc.getOngoingSeriesData(id)
-			if err != nil {
-				occurredErrorsChan <- err
-				return
-			}
-			ongoingContent.Series = series
-		}
 	}()
 	wg.Wait()
 	if len(occurredErrorsChan) > 0 {
@@ -221,9 +158,6 @@ func (oc *OngoingContentDB) GetNearestOngoings(limit int) ([]*entity.OngoingCont
 	}
 	rows, err := oc.DB.Query(query, args...)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, repository.ErrOngoingContentNotFound
-		}
 		return nil, entity.PSQLQueryErr("GetNearestOngoings", err)
 	}
 	defer rows.Close()
@@ -231,15 +165,9 @@ func (oc *OngoingContentDB) GetNearestOngoings(limit int) ([]*entity.OngoingCont
 	for rows.Next() {
 		ongoingContent, err := scanAllFieldsOnoingContent(rows)
 		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				return nil, repository.ErrOngoingContentNotFound
-			}
-			return nil, entity.PSQLQueryErr("GetNearestOngoings при сканировании клендаря релизов", err)
+			return nil, entity.PSQLQueryErr("GetNearestOngoings", err)
 		}
 		ongoingContents = append(ongoingContents, ongoingContent)
-	}
-	if err = rows.Err(); err != nil {
-		return nil, entity.PSQLQueryErr("GetNearestOngoings при получении результатов", err)
 	}
 	return ongoingContents, nil
 }
@@ -270,7 +198,7 @@ func (oc *OngoingContentDB) GetOngoingContentByMonthAndYear(month, year int) ([]
 		}
 		ongoingContents = append(ongoingContents, ongoingContent)
 	}
-	return ongoingContents, err
+	return ongoingContents, nil
 }
 
 // GetAllReleaseYears возвращает все года релизов
