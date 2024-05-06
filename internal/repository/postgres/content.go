@@ -814,51 +814,33 @@ func (c *ContentDB) GetPersonRoles(personID int) ([]entity.PersonRole, error) {
 	rows.Close()
 
 	// получаем роли персоны
-	personRoles := make([]entity.PersonRole, 0)
-	personRolesChan := make(chan entity.PersonRole, len(roles))
-	var wgRolePersons sync.WaitGroup
-	occurredErrorsChan := make(chan error, len(roles))
-	for _, role := range roles {
-		wgRolePersons.Add(1)
-		go func(role entity.Role) {
-			defer wgRolePersons.Done()
-			query, args, err := sq.Select("content_id").
-				From("person_role").
-				Where(sq.Eq{"person_id": personID, "role_id": role.ID}).
-				PlaceholderFormat(sq.Dollar).
-				ToSql()
+	personRoles := make([]entity.PersonRole, len(roles))
+	for index, role := range roles {
+		query, args, err := sq.Select("content_id").
+			From("person_role").
+			Where(sq.Eq{"person_id": personID, "role_id": role.ID}).
+			PlaceholderFormat(sq.Dollar).
+			ToSql()
+		if err != nil {
+			return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при формировании запроса GetPersonRoles"))
+		}
+		rows, err := c.DB.Query(query, args...)
+		if err != nil {
+			return nil, entity.PSQLQueryErr("GetPersonRoles при получении ролей персоны", err)
+		}
+		for rows.Next() {
+			var contentID int
+			err := rows.Scan(&contentID)
 			if err != nil {
-				occurredErrorsChan <- entity.PSQLWrap(err, fmt.Errorf("ошибка при формировании запроса GetPersonRoles"))
-				return
+				return nil, entity.PSQLQueryErr("GetPersonRoles при сканировании ролей персоны", err)
 			}
-			rows, err := c.DB.Query(query, args...)
-			if err != nil {
-				occurredErrorsChan <- entity.PSQLQueryErr("GetPersonRoles при получении ролей персоны", err)
-				return
+			personRoles[index] = entity.PersonRole{
+				PersonID:  personID,
+				Role:      role,
+				ContentID: contentID,
 			}
-			for rows.Next() {
-				var contentID int
-				err := rows.Scan(&contentID)
-				if err != nil {
-					occurredErrorsChan <- entity.PSQLQueryErr("GetPersonRoles при сканировании ролей персоны", err)
-					return
-				}
-				personRolesChan <- entity.PersonRole{
-					PersonID:  personID,
-					Role:      role,
-					ContentID: contentID,
-				}
-			}
-			rows.Close()
-		}(role)
-	}
-	wgRolePersons.Wait()
-	if len(occurredErrorsChan) > 0 {
-		return nil, <-occurredErrorsChan
-	}
-	close(personRolesChan)
-	for personRole := range personRolesChan {
-		personRoles = append(personRoles, personRole)
+		}
+		rows.Close()
 	}
 	return personRoles, nil
 }
