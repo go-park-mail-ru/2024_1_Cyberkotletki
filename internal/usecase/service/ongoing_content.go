@@ -14,12 +14,24 @@ type OngoingContentService struct {
 	staticRepo         repository.Static
 }
 
+func NewOngoingContentService(
+	ongoingContentRepo repository.OngoingContent,
+	staticRepo repository.Static,
+) usecase.OngoingContent {
+	return &OngoingContentService{
+		ongoingContentRepo: ongoingContentRepo,
+		staticRepo:         staticRepo,
+	}
+}
+
 // GetAllReleaseYears implements usecase.OngoingContent.
 func (o *OngoingContentService) GetAllReleaseYears() ([]int, error) {
 	return o.ongoingContentRepo.GetAllReleaseYears()
 }
 
-func (o *OngoingContentService) ongoindContentEntityToDTO(ongoingContentEntity *entity.OngoingContent) (*dto.PreviewOngoingContentCardVertical, error) {
+func (o *OngoingContentService) ongoingContentEntityToDTO(
+	ongoingContentEntity *entity.OngoingContent,
+) (*dto.PreviewOngoingContentCardVertical, error) {
 	ongoingContent, err := o.ongoingContentRepo.GetOngoingContentByID(ongoingContentEntity.ID)
 	switch {
 	case errors.Is(err, repository.ErrOngoingContentNotFound):
@@ -54,7 +66,7 @@ func (o *OngoingContentService) GetNearestOngoings(limit int) ([]*dto.PreviewOng
 	}
 	ongoingContentDTOs := make([]*dto.PreviewOngoingContentCardVertical, 0, len(ongoingContentEntities))
 	for _, ongoingContentEntity := range ongoingContentEntities {
-		ongoingContentDTO, err := o.ongoindContentEntityToDTO(ongoingContentEntity)
+		ongoingContentDTO, err := o.ongoingContentEntityToDTO(ongoingContentEntity)
 		if err != nil {
 			return nil, err
 		}
@@ -64,7 +76,9 @@ func (o *OngoingContentService) GetNearestOngoings(limit int) ([]*dto.PreviewOng
 }
 
 // GetOngoingContentByContentID implements usecase.OngoingContent.
-func (o *OngoingContentService) GetOngoingContentByContentID(contentID int) (*dto.PreviewOngoingContentCardVertical, error) {
+func (o *OngoingContentService) GetOngoingContentByContentID(
+	contentID int,
+) (*dto.PreviewOngoingContentCardVertical, error) {
 	ongoingContent, err := o.ongoingContentRepo.GetOngoingContentByID(contentID)
 	switch {
 	case errors.Is(err, repository.ErrOngoingContentNotFound):
@@ -92,14 +106,17 @@ func (o *OngoingContentService) GetOngoingContentByContentID(contentID int) (*dt
 }
 
 // GetOngoingContentByMonthAndYear implements usecase.OngoingContent.
-func (o *OngoingContentService) GetOngoingContentByMonthAndYear(month int, year int) ([]*dto.PreviewOngoingContentCardVertical, error) {
+func (o *OngoingContentService) GetOngoingContentByMonthAndYear(
+	month int,
+	year int,
+) ([]*dto.PreviewOngoingContentCardVertical, error) {
 	ongoingContentEntities, err := o.ongoingContentRepo.GetOngoingContentByMonthAndYear(month, year)
 	if err != nil {
 		return nil, entity.UsecaseWrap(errors.New("ошибка при получении релизов по месяцу и году"), err)
 	}
 	ongoingContentDTOs := make([]*dto.PreviewOngoingContentCardVertical, 0, len(ongoingContentEntities))
 	for _, ongoingContentEntity := range ongoingContentEntities {
-		ongoingContentDTO, err := o.ongoindContentEntityToDTO(ongoingContentEntity)
+		ongoingContentDTO, err := o.ongoingContentEntityToDTO(ongoingContentEntity)
 		if err != nil {
 			return nil, err
 		}
@@ -111,11 +128,4 @@ func (o *OngoingContentService) GetOngoingContentByMonthAndYear(month int, year 
 // IsOngoingContentFinished implements usecase.OngoingContent.
 func (o *OngoingContentService) IsOngoingContentFinished(contentID int) (bool, error) {
 	return o.ongoingContentRepo.IsOngoingContentFinished(contentID)
-}
-
-func NewOngoingContentService(ongoingContentRepo repository.OngoingContent, staticRepo repository.Static) usecase.OngoingContent {
-	return &OngoingContentService{
-		ongoingContentRepo: ongoingContentRepo,
-		staticRepo:         staticRepo,
-	}
 }

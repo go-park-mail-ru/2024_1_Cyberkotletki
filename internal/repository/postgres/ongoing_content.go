@@ -48,6 +48,9 @@ func (oc *OngoingContentDB) getGenreByID(genreID int) (*entity.Genre, error) {
 		Where(sq.Eq{"id": genreID}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
+	if err != nil {
+		return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при формировании запроса getGenreByID"))
+	}
 	var genre entity.Genre
 	err = oc.DB.QueryRow(query, args...).Scan(&genre.Name)
 	genre.ID = genreID

@@ -19,23 +19,6 @@ definitions:
         format: string
         type: string
     type: object
-  dto.CompilationResponse:
-    properties:
-      compilation:
-        $ref: '#/definitions/dto.Compilation'
-      content_ids:
-        items:
-          type: integer
-        type: array
-      content_length:
-        type: integer
-      page:
-        type: integer
-      per_page:
-        type: integer
-      total_pages:
-        type: integer
-    type: object
   dto.CompilationResponseList:
     properties:
       compilations:
@@ -380,6 +363,30 @@ definitions:
         example: 2020
         type: integer
     type: object
+  dto.PreviewOngoingContentCardVertical:
+    properties:
+      genre:
+        example:
+        - Боевик
+        items:
+          type: string
+        type: array
+      id:
+        example: 1
+        type: integer
+      poster:
+        example: /static/poster.jpg
+        type: string
+      releaseDate:
+        example: "2022-01-02T15:04:05Z"
+        type: string
+      title:
+        example: Бэтмен
+        type: string
+      type:
+        example: movie
+        type: string
+    type: object
   dto.Register:
     properties:
       email:
@@ -688,7 +695,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.CompilationResponse'
+            $ref: '#/definitions/dto.Compilation'
         "400":
           description: Bad Request
           schema:
@@ -959,6 +966,122 @@ paths:
             $ref: '#/definitions/echo.HTTPError'
       tags:
       - Favourite
+  /ongoing/{id}:
+    get:
+      parameters:
+      - description: ID контента календаря релизов
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PreviewOngoingContentCardVertical'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Получить контент календаря релизов по id контента
+      tags:
+      - ongoing_content
+  /ongoing/{year}/{month}:
+    get:
+      parameters:
+      - description: Месяц
+        in: path
+        name: month
+        required: true
+        type: integer
+      - description: Год
+        in: path
+        name: year
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PreviewOngoingContentCardVertical'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Получить релизы по месяцу и году
+      tags:
+      - ongoing_content
+  /ongoing/nearest:
+    get:
+      parameters:
+      - description: Количество релизов
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PreviewOngoingContentCardVertical'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Получить ближайшие релизы
+      tags:
+      - ongoing_content
+  /ongoing/years:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: integer
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Получить все года релизов
+      tags:
+      - ongoing_content
   /playground/ping:
     get:
       description: Проверка соединения через классический ping pong

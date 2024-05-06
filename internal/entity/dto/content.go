@@ -3,15 +3,15 @@ package dto
 import "time"
 
 type PreviewContentCard struct {
-	ID            int      `json:"id"            example:"1"`
-	Title         string   `json:"title"         example:"Бэтмен"`
-	OriginalTitle string   `json:"originalTitle" example:"Batman"`
-	Country       string   `json:"country"       example:"Россия"`
-	Genre         string   `json:"genre"         example:"Боевик"`
-	Director      string   `json:"director"      example:"Тарантино"`
-	Actors        []string `json:"actors"        example:"Том Хэнкс,Сергей Бодров"`
-	Poster        string   `json:"poster"        example:"/static/poster.jpg"`
-	Rating        float64  `json:"rating"        example:"9.1"`
+	ID            int      `json:"id"                      example:"1"`
+	Title         string   `json:"title"                   example:"Бэтмен"`
+	OriginalTitle string   `json:"originalTitle,omitempty" example:"Batman"`
+	Country       string   `json:"country"                 example:"Россия"`
+	Genre         string   `json:"genre"                   example:"Боевик"`
+	Director      string   `json:"director"                example:"Тарантино"`
+	Actors        []string `json:"actors"                  example:"Том Хэнкс,Сергей Бодров"`
+	Poster        string   `json:"poster"                  example:"/static/poster.jpg"`
+	Rating        float64  `json:"rating"                  example:"9.1"`
 
 	Type string `json:"type" example:"movie"`
 	// Поля, которые есть только у фильмов
@@ -31,7 +31,7 @@ type PreviewContentCardVertical struct {
 
 	Type string `json:"type" example:"movie"`
 	// Поля, которые есть только у фильмов
-	ReleaseYear int `json:"releaseYear" example:"2020"`
+	ReleaseYear int `json:"releaseYear,omitempty" example:"2020"`
 	// Поля, которые есть только у сериалов
 	YearStart int `json:"yearStart,omitempty" example:"2020"`
 	YearEnd   int `json:"yearEnd,omitempty"   example:"2021"`
@@ -96,7 +96,7 @@ type Content struct {
 	Rating         float64         `json:"rating"           example:"9.1"`
 	IMDBRating     float64         `json:"imdbRating"       example:"9.1"`
 	Description    string          `json:"description"      example:"Описание фильма или сериала"`
-	Facts          []string        `json:"facts,omitempty"  example:"Факты о фильме или сериале"`
+	Facts          []string        `json:"facts"            example:"Факты о фильме или сериале"`
 	TrailerLink    string          `json:"trailerLink"      example:"https://www.youtube.com/watch?v=123456"`
 	BackdropURL    string          `json:"backdropURL"      example:"/static/backdrop.jpg"`
 	PicturesURL    []string        `json:"picturesURL"      example:"/static/picture1.jpg,/static/picture2.jpg"`

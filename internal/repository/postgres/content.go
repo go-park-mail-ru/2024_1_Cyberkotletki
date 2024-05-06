@@ -822,7 +822,7 @@ func (c *ContentDB) GetPersonRoles(personID int) ([]entity.PersonRole, error) {
 		wgRolePersons.Add(1)
 		go func(role entity.Role) {
 			defer wgRolePersons.Done()
-			query, args, err = sq.Select("content_id").
+			query, args, err := sq.Select("content_id").
 				From("person_role").
 				Where(sq.Eq{"person_id": personID, "role_id": role.ID}).
 				PlaceholderFormat(sq.Dollar).
@@ -831,14 +831,14 @@ func (c *ContentDB) GetPersonRoles(personID int) ([]entity.PersonRole, error) {
 				occurredErrorsChan <- entity.PSQLWrap(err, fmt.Errorf("ошибка при формировании запроса GetPersonRoles"))
 				return
 			}
-			rows, err = c.DB.Query(query, args...)
+			rows, err := c.DB.Query(query, args...)
 			if err != nil {
 				occurredErrorsChan <- entity.PSQLQueryErr("GetPersonRoles при получении ролей персоны", err)
 				return
 			}
 			for rows.Next() {
 				var contentID int
-				err = rows.Scan(&contentID)
+				err := rows.Scan(&contentID)
 				if err != nil {
 					occurredErrorsChan <- entity.PSQLQueryErr("GetPersonRoles при сканировании ролей персоны", err)
 					return
