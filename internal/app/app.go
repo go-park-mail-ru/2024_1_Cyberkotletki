@@ -42,6 +42,7 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	reviewRepo := postgres.NewReviewRepository(psqlConn)
 	compilationRepo := postgres.NewCompilationRepository(psqlConn)
 	searchRepo := postgres.NewSearchRepository(psqlConn, contentRepo)
+	favouriteRepo := postgres.NewFavouriteRepository(psqlConn)
 
 	// Use Cases
 	staticUseCase := service.NewStaticService(staticRepo)
@@ -51,6 +52,7 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	reviewUseCase := service.NewReviewService(reviewRepo, userRepo, contentRepo, staticRepo)
 	compilationUseCase := service.NewCompilationService(compilationRepo, staticRepo, contentRepo)
 	searchUseCase := service.NewSearchService(searchRepo, staticUseCase)
+	favouriteUseCase := service.NewFavouriteService(favouriteRepo)
 
 	sessionManager := utils.NewSessionManager(authUseCase, params.Auth.SessionAliveTime, params.HTTP.SecureCookies)
 
@@ -63,6 +65,7 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	reviewDelivery := delivery.NewReviewEndpoints(reviewUseCase, authUseCase)
 	compilationDelivery := delivery.NewCompilationEndpoints(compilationUseCase)
 	searchDelivery := delivery.NewSearchEndpoints(searchUseCase)
+	favouriteDelivery := delivery.NewFavouriteEndpoints(favouriteUseCase, authUseCase)
 
 	// REST API
 	echoServer := echo.New()
@@ -169,6 +172,9 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	// search
 	searchAPI := api.Group("/search")
 	searchDelivery.Configure(searchAPI)
+	// favourite
+	favouriteAPI := api.Group("/favourite")
+	favouriteDelivery.Configure(favouriteAPI)
 	return echoServer
 }
 

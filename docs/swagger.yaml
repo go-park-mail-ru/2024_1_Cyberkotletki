@@ -162,6 +162,18 @@ definitions:
           $ref: '#/definitions/dto.PersonPreview'
         type: array
     type: object
+  dto.CreateFavouriteRequest:
+    properties:
+      category:
+        description: nolint:lll
+        example: favourite
+        format: string
+        type: string
+      contentID:
+        example: 1
+        format: int
+        type: integer
+    type: object
   dto.Episode:
     properties:
       duration:
@@ -176,6 +188,33 @@ definitions:
       title:
         example: Название серии
         type: string
+    type: object
+  dto.Favourite:
+    properties:
+      category:
+        description: nolint:lll
+        example: favourite
+        format: string
+        type: string
+      contentID:
+        example: 1
+        format: int
+        type: integer
+    type: object
+  dto.FavouriteStatusResponse:
+    properties:
+      status:
+        description: nolint:lll
+        example: favourite
+        format: string
+        type: string
+    type: object
+  dto.FavouritesResponse:
+    properties:
+      favourites:
+        items:
+          $ref: '#/definitions/dto.Favourite'
+        type: array
     type: object
   dto.Login:
     properties:
@@ -775,6 +814,151 @@ paths:
       summary: Получение персоны по id
       tags:
       - content
+  /favourite:
+    put:
+      consumes:
+      - application/json
+      description: Добавление в избранное. Если уже в избранном, то ошибка не возвращается
+        (идемпотентный метод).
+      parameters:
+      - description: Данные для добавления в избранное
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateFavouriteRequest'
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      security:
+      - _csrf: []
+      tags:
+      - Favourite
+  /favourite/{id}:
+    delete:
+      description: Удаление из избранного.
+      parameters:
+      - description: Идентификатор контента
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      security:
+      - _csrf: []
+      tags:
+      - Favourite
+    get:
+      description: Получение избранного пользователя
+      parameters:
+      - description: Идентификатор пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.FavouritesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      tags:
+      - Favourite
+  /favourite/my:
+    get:
+      description: Получение избранного пользователя
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.FavouritesResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      tags:
+      - Favourite
+  /favourite/status/{id}:
+    get:
+      description: Получение статуса контента в избранном
+      parameters:
+      - description: Идентификатор контента
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.FavouriteStatusResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      tags:
+      - Favourite
   /playground/ping:
     get:
       description: Проверка соединения через классический ping pong

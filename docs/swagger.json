@@ -329,6 +329,231 @@
                 }
             }
         },
+        "/favourite": {
+            "put": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
+                "description": "Добавление в избранное. Если уже в избранном, то ошибка не возвращается (идемпотентный метод).",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Favourite"
+                ],
+                "parameters": [
+                    {
+                        "description": "Данные для добавления в избранное",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateFavouriteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/favourite/my": {
+            "get": {
+                "description": "Получение избранного пользователя",
+                "tags": [
+                    "Favourite"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.FavouritesResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/favourite/status/{id}": {
+            "get": {
+                "description": "Получение статуса контента в избранном",
+                "tags": [
+                    "Favourite"
+                ],
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Идентификатор контента",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.FavouriteStatusResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/favourite/{id}": {
+            "get": {
+                "description": "Получение избранного пользователя",
+                "tags": [
+                    "Favourite"
+                ],
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Идентификатор пользователя",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.FavouritesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
+                "description": "Удаление из избранного.",
+                "tags": [
+                    "Favourite"
+                ],
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Идентификатор контента",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/playground/ping": {
             "get": {
                 "description": "Проверка соединения через классический ping pong",
@@ -1601,6 +1826,22 @@
                 }
             }
         },
+        "dto.CreateFavouriteRequest": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "description": "nolint:lll",
+                    "type": "string",
+                    "format": "string",
+                    "example": "favourite"
+                },
+                "contentID": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
+                }
+            }
+        },
         "dto.Episode": {
             "type": "object",
             "properties": {
@@ -1619,6 +1860,44 @@
                 "title": {
                     "type": "string",
                     "example": "Название серии"
+                }
+            }
+        },
+        "dto.Favourite": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "description": "nolint:lll",
+                    "type": "string",
+                    "format": "string",
+                    "example": "favourite"
+                },
+                "contentID": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
+                }
+            }
+        },
+        "dto.FavouriteStatusResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "description": "nolint:lll",
+                    "type": "string",
+                    "format": "string",
+                    "example": "favourite"
+                }
+            }
+        },
+        "dto.FavouritesResponse": {
+            "type": "object",
+            "properties": {
+                "favourites": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.Favourite"
+                    }
                 }
             }
         },
