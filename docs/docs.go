@@ -948,7 +948,10 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SearchResult"
+                        }
                     },
                     "400": {
                         "description": "Bad Request",
@@ -1714,6 +1717,96 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.PersonPreviewWithPhoto": {
+            "type": "object",
+            "properties": {
+                "enName": {
+                    "type": "string",
+                    "example": "Keanu Reeves"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Киану Ривз"
+                },
+                "photoURL": {
+                    "type": "string",
+                    "example": "/static/photo.jpg"
+                }
+            }
+        },
+        "dto.PreviewContentCard": {
+            "type": "object",
+            "properties": {
+                "actors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "Том Хэнкс",
+                        "Сергей Бодров"
+                    ]
+                },
+                "country": {
+                    "type": "string",
+                    "example": "Россия"
+                },
+                "director": {
+                    "type": "string",
+                    "example": "Тарантино"
+                },
+                "duration": {
+                    "description": "Поля, которые есть только у фильмов",
+                    "type": "integer",
+                    "example": 134
+                },
+                "genre": {
+                    "type": "string",
+                    "example": "Боевик"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "originalTitle": {
+                    "type": "string",
+                    "example": "Batman"
+                },
+                "poster": {
+                    "type": "string",
+                    "example": "/static/poster.jpg"
+                },
+                "rating": {
+                    "type": "number",
+                    "example": 9.1
+                },
+                "seasonsNumber": {
+                    "description": "Поля, которые есть только у сериалов",
+                    "type": "integer",
+                    "example": 1
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Бэтмен"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "movie"
+                },
+                "yearEnd": {
+                    "type": "integer",
+                    "example": 2021
+                },
+                "yearStart": {
+                    "type": "integer",
+                    "example": 2020
+                }
+            }
+        },
         "dto.PreviewContentCardVertical": {
             "type": "object",
             "properties": {
@@ -1920,6 +2013,23 @@ const docTemplate = `{
                     "type": "string",
                     "format": "string",
                     "example": "Title"
+                }
+            }
+        },
+        "dto.SearchResult": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PreviewContentCard"
+                    }
+                },
+                "persons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PersonPreviewWithPhoto"
+                    }
                 }
             }
         },

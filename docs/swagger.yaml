@@ -240,6 +240,72 @@ definitions:
         example: Киану Ривз
         type: string
     type: object
+  dto.PersonPreviewWithPhoto:
+    properties:
+      enName:
+        example: Keanu Reeves
+        type: string
+      id:
+        example: 1
+        type: integer
+      name:
+        example: Киану Ривз
+        type: string
+      photoURL:
+        example: /static/photo.jpg
+        type: string
+    type: object
+  dto.PreviewContentCard:
+    properties:
+      actors:
+        example:
+        - Том Хэнкс
+        - Сергей Бодров
+        items:
+          type: string
+        type: array
+      country:
+        example: Россия
+        type: string
+      director:
+        example: Тарантино
+        type: string
+      duration:
+        description: Поля, которые есть только у фильмов
+        example: 134
+        type: integer
+      genre:
+        example: Боевик
+        type: string
+      id:
+        example: 1
+        type: integer
+      originalTitle:
+        example: Batman
+        type: string
+      poster:
+        example: /static/poster.jpg
+        type: string
+      rating:
+        example: 9.1
+        type: number
+      seasonsNumber:
+        description: Поля, которые есть только у сериалов
+        example: 1
+        type: integer
+      title:
+        example: Бэтмен
+        type: string
+      type:
+        example: movie
+        type: string
+      yearEnd:
+        example: 2021
+        type: integer
+      yearStart:
+        example: 2020
+        type: integer
+    type: object
   dto.PreviewContentCardVertical:
     properties:
       genre:
@@ -397,6 +463,17 @@ definitions:
         example: Title
         format: string
         type: string
+    type: object
+  dto.SearchResult:
+    properties:
+      content:
+        items:
+          $ref: '#/definitions/dto.PreviewContentCard'
+        type: array
+      persons:
+        items:
+          $ref: '#/definitions/dto.PersonPreviewWithPhoto'
+        type: array
     type: object
   dto.Season:
     properties:
@@ -1097,6 +1174,8 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/dto.SearchResult'
         "400":
           description: Bad Request
           schema:

@@ -24,7 +24,7 @@ func (h *SearchEndpoints) Configure(server *echo.Group) {
 // @Description Поиск фильмов, сериалов и персон
 // @Accept json
 // @Param	query	query	string	true	"Поисковый запрос"
-// @Success     200
+// @Success     200 {object}    dto.SearchResult
 // @Failure		400	{object}	echo.HTTPError
 // @Failure		500	{object}	echo.HTTPError
 // @Router /search [get]
