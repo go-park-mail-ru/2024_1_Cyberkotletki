@@ -218,7 +218,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.Compilation"
+                            "$ref": "#/definitions/dto.CompilationResponse"
                         }
                     },
                     "400": {
@@ -336,65 +336,39 @@ const docTemplate = `{
                 }
             }
         },
-        "/ongoing/nearest": {
-            "get": {
-                "produces": [
+        "/favourite": {
+            "put": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
+                "description": "Добавление в избранное. Если уже в избранном, то ошибка не возвращается (идемпотентный метод).",
+                "consumes": [
                     "application/json"
                 ],
                 "tags": [
-                    "ongoing_content"
+                    "Favourite"
                 ],
-                "summary": "Получить ближайшие релизы",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Количество релизов",
-                        "name": "limit",
-                        "in": "query"
+                        "description": "Данные для добавления в избранное",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateFavouriteRequest"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.PreviewOngoingContentCardVertical"
-                            }
-                        }
+                        "description": "OK"
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/echo.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/echo.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/ongoing/years": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ongoing_content"
-                ],
-                "summary": "Получить все года релизов",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "integer"
-                            }
                         }
                     },
                     "404": {
@@ -412,19 +386,50 @@ const docTemplate = `{
                 }
             }
         },
-        "/ongoing/{id}": {
+        "/favourite/my": {
             "get": {
-                "produces": [
-                    "application/json"
-                ],
+                "description": "Получение избранного пользователя",
                 "tags": [
-                    "ongoing_content"
+                    "Favourite"
                 ],
-                "summary": "Получить контент календаря релизов по id контента",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.FavouritesResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/favourite/status/{id}": {
+            "get": {
+                "description": "Получение статуса контента в избранном",
+                "tags": [
+                    "Favourite"
+                ],
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID контента календаря релизов",
+                        "description": "Идентификатор контента",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -434,7 +439,56 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PreviewOngoingContentCardVertical"
+                            "$ref": "#/definitions/dto.FavouriteStatusResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/favourite/{id}": {
+            "get": {
+                "description": "Получение избранного пользователя",
+                "tags": [
+                    "Favourite"
+                ],
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Идентификатор пользователя",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.FavouritesResponse"
                         }
                     },
                     "400": {
@@ -456,45 +510,38 @@ const docTemplate = `{
                         }
                     }
                 }
-            }
-        },
-        "/ongoing/{year}/{month}": {
-            "get": {
-                "produces": [
-                    "application/json"
+            },
+            "delete": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
                 ],
+                "description": "Удаление из избранного.",
                 "tags": [
-                    "ongoing_content"
+                    "Favourite"
                 ],
-                "summary": "Получить релизы по месяцу и году",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Месяц",
-                        "name": "month",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Год",
-                        "name": "year",
+                        "description": "Идентификатор контента",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.PreviewOngoingContentCardVertical"
-                            }
-                        }
+                        "description": "OK"
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/echo.HTTPError"
                         }
@@ -1106,6 +1153,46 @@ const docTemplate = `{
                 }
             }
         },
+        "/search": {
+            "get": {
+                "description": "Поиск фильмов, сериалов и персон",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Search"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Поисковый запрос",
+                        "name": "query",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SearchResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/static/{id}": {
             "get": {
                 "description": "Получение ссылки на статический файл по id. Возвращает ссылку подобного вида:",
@@ -1539,6 +1626,32 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CompilationResponse": {
+            "type": "object",
+            "properties": {
+                "compilation": {
+                    "$ref": "#/definitions/dto.Compilation"
+                },
+                "content_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "content_length": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "per_page": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.CompilationResponseList": {
             "type": "object",
             "properties": {
@@ -1720,6 +1833,22 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CreateFavouriteRequest": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "description": "nolint:lll",
+                    "type": "string",
+                    "format": "string",
+                    "example": "favourite"
+                },
+                "contentID": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
+                }
+            }
+        },
         "dto.Episode": {
             "type": "object",
             "properties": {
@@ -1738,6 +1867,44 @@ const docTemplate = `{
                 "title": {
                     "type": "string",
                     "example": "Название серии"
+                }
+            }
+        },
+        "dto.Favourite": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "description": "nolint:lll",
+                    "type": "string",
+                    "format": "string",
+                    "example": "favourite"
+                },
+                "contentID": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
+                }
+            }
+        },
+        "dto.FavouriteStatusResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "description": "nolint:lll",
+                    "type": "string",
+                    "format": "string",
+                    "example": "favourite"
+                }
+            }
+        },
+        "dto.FavouritesResponse": {
+            "type": "object",
+            "properties": {
+                "favourites": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.Favourite"
+                    }
                 }
             }
         },
@@ -1829,6 +1996,96 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.PersonPreviewWithPhoto": {
+            "type": "object",
+            "properties": {
+                "enName": {
+                    "type": "string",
+                    "example": "Keanu Reeves"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Киану Ривз"
+                },
+                "photoURL": {
+                    "type": "string",
+                    "example": "/static/photo.jpg"
+                }
+            }
+        },
+        "dto.PreviewContentCard": {
+            "type": "object",
+            "properties": {
+                "actors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "Том Хэнкс",
+                        "Сергей Бодров"
+                    ]
+                },
+                "country": {
+                    "type": "string",
+                    "example": "Россия"
+                },
+                "director": {
+                    "type": "string",
+                    "example": "Тарантино"
+                },
+                "duration": {
+                    "description": "Поля, которые есть только у фильмов",
+                    "type": "integer",
+                    "example": 134
+                },
+                "genre": {
+                    "type": "string",
+                    "example": "Боевик"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "originalTitle": {
+                    "type": "string",
+                    "example": "Batman"
+                },
+                "poster": {
+                    "type": "string",
+                    "example": "/static/poster.jpg"
+                },
+                "rating": {
+                    "type": "number",
+                    "example": 9.1
+                },
+                "seasonsNumber": {
+                    "description": "Поля, которые есть только у сериалов",
+                    "type": "integer",
+                    "example": 1
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Бэтмен"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "movie"
+                },
+                "yearEnd": {
+                    "type": "integer",
+                    "example": 2021
+                },
+                "yearStart": {
+                    "type": "integer",
+                    "example": 2020
+                }
+            }
+        },
         "dto.PreviewContentCardVertical": {
             "type": "object",
             "properties": {
@@ -1874,40 +2131,6 @@ const docTemplate = `{
                     "description": "Поля, которые есть только у сериалов",
                     "type": "integer",
                     "example": 2020
-                }
-            }
-        },
-        "dto.PreviewOngoingContentCardVertical": {
-            "type": "object",
-            "properties": {
-                "genre": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "Боевик"
-                    ]
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "poster": {
-                    "type": "string",
-                    "example": "/static/poster.jpg"
-                },
-                "releaseDate": {
-                    "type": "string",
-                    "example": "2022-01-02T15:04:05Z"
-                },
-                "title": {
-                    "type": "string",
-                    "example": "Бэтмен"
-                },
-                "type": {
-                    "type": "string",
-                    "example": "movie"
                 }
             }
         },
@@ -2069,6 +2292,23 @@ const docTemplate = `{
                     "type": "string",
                     "format": "string",
                     "example": "Title"
+                }
+            }
+        },
+        "dto.SearchResult": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PreviewContentCard"
+                    }
+                },
+                "persons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PersonPreviewWithPhoto"
+                    }
                 }
             }
         },

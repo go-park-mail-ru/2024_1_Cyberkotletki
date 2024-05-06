@@ -41,7 +41,7 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	staticRepo := postgres.NewStaticRepository(psqlConn, params.Static.Path, params.Static.MaxFileSize)
 	reviewRepo := postgres.NewReviewRepository(psqlConn)
 	compilationRepo := postgres.NewCompilationRepository(psqlConn)
-	ongoingRepo := postgres.NewOngoingContentRepository(psqlConn)
+	searchRepo := postgres.NewSearchRepository(psqlConn, contentRepo)
 
 	// Use Cases
 	staticUseCase := service.NewStaticService(staticRepo)
@@ -50,7 +50,7 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	contentUseCase := service.NewContentService(contentRepo, staticRepo)
 	reviewUseCase := service.NewReviewService(reviewRepo, userRepo, contentRepo, staticRepo)
 	compilationUseCase := service.NewCompilationService(compilationRepo, staticRepo, contentRepo)
-	ongoingUseCase := service.NewOngoingContentService(ongoingRepo, staticRepo)
+	searchUseCase := service.NewSearchService(searchRepo, staticUseCase)
 
 	sessionManager := utils.NewSessionManager(authUseCase, params.Auth.SessionAliveTime, params.HTTP.SecureCookies)
 
@@ -62,7 +62,7 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	playgroundDelivery := delivery.NewPlaygroundEndpoints()
 	reviewDelivery := delivery.NewReviewEndpoints(reviewUseCase, authUseCase)
 	compilationDelivery := delivery.NewCompilationEndpoints(compilationUseCase)
-	ongoingDelivery := delivery.NewOngoingContentEndpoints(ongoingUseCase)
+	searchDelivery := delivery.NewSearchEndpoints(searchUseCase)
 
 	// REST API
 	echoServer := echo.New()
@@ -166,9 +166,9 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	// compilations
 	compilationAPI := api.Group("/compilation")
 	compilationDelivery.Configure(compilationAPI)
-	// ongoing
-	ongoingAPI := api.Group("/ongoing")
-	ongoingDelivery.Configure(ongoingAPI)
+	// search
+	searchAPI := api.Group("/search")
+	searchDelivery.Configure(searchAPI)
 	return echoServer
 }
 
