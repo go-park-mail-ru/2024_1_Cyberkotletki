@@ -159,7 +159,7 @@ func TestUsersDB_GetUserByID(t *testing.T) {
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
-					WillReturnRows(sqlmock.NewRows([]string{"id", "email", "name", "password_hashed", "salt_password", "avatar_upload_id", "rating"}).
+					WillReturnRows(sqlmock.NewRows([]string{"id", "email", "Name", "password_hashed", "salt_password", "avatar_upload_id", "rating"}).
 						AddRow(1, "email@email.com", "", []byte("hashed"), []byte("salt"), 0, 0))
 			},
 			ExpectedOut: &entity.User{
@@ -210,7 +210,7 @@ func TestUsersDB_GetUserByID(t *testing.T) {
 			}
 			// Ожидаемый запрос
 			query, args, err := sq.
-				Select("\"id\"", "email", "name", "password_hashed", "salt_password", "avatar_upload_id", "rating").
+				Select("\"id\"", "email", "Name", "password_hashed", "salt_password", "avatar_upload_id", "rating").
 				From("\"user\"").
 				Where(map[string]any{"id": tc.Request}).
 				PlaceholderFormat(sq.Dollar).
@@ -247,7 +247,7 @@ func TestUsersDB_GetUserByEmail(t *testing.T) {
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(args...).
-					WillReturnRows(sqlmock.NewRows([]string{"id", "email", "name", "password_hashed", "salt_password", "avatar_upload_id", "rating"}).
+					WillReturnRows(sqlmock.NewRows([]string{"id", "email", "Name", "password_hashed", "salt_password", "avatar_upload_id", "rating"}).
 						AddRow(1, "email@email.com", "", []byte("hashed"), []byte("salt"), 0, 0))
 			},
 			ExpectedOut: &entity.User{
@@ -298,7 +298,7 @@ func TestUsersDB_GetUserByEmail(t *testing.T) {
 			}
 			// Ожидаемый запрос
 			query, args, err := sq.
-				Select("\"id\"", "email", "name", "password_hashed", "salt_password", "avatar_upload_id", "rating").
+				Select("\"id\"", "email", "Name", "password_hashed", "salt_password", "avatar_upload_id", "rating").
 				From("\"user\"").
 				Where(map[string]any{"email": tc.Request}).
 				PlaceholderFormat(sq.Dollar).
@@ -332,7 +332,7 @@ func TestUsersDB_UpdateUser(t *testing.T) {
 			User: &entity.User{
 				ID:             1,
 				Email:          "email@email.com",
-				Name:           "name",
+				Name:           "Name",
 				PasswordHash:   []byte("hashed"),
 				PasswordSalt:   []byte("salt"),
 				AvatarUploadID: 1,
@@ -349,7 +349,7 @@ func TestUsersDB_UpdateUser(t *testing.T) {
 			User: &entity.User{
 				ID:             1,
 				Email:          "email@email.com",
-				Name:           "name",
+				Name:           "Name",
 				PasswordHash:   []byte("hashed"),
 				PasswordSalt:   []byte("salt"),
 				AvatarUploadID: 1,
@@ -381,7 +381,7 @@ func TestUsersDB_UpdateUser(t *testing.T) {
 				Where(map[string]interface{}{"id": 1}).
 				SetMap(map[string]interface{}{
 					"email":            tc.User.Email,
-					"name":             tc.User.Name,
+					"Name":             tc.User.Name,
 					"password_hashed":  tc.User.PasswordHash,
 					"salt_password":    tc.User.PasswordSalt,
 					"avatar_upload_id": tc.User.AvatarUploadID,

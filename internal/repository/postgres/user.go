@@ -77,7 +77,7 @@ func (u *UsersDB) AddUser(email string, passwordHash, passwordSalt []byte) (*ent
 
 func (u *UsersDB) getUser(where map[string]any) (*entity.User, error) {
 	query, args, err := sq.
-		Select("\"id\"", "email", "name", "password_hashed", "salt_password", "avatar_upload_id", "rating").
+		Select("\"id\"", "email", "Name", "password_hashed", "salt_password", "avatar_upload_id", "rating").
 		From("\"user\"").
 		Where(where).
 		PlaceholderFormat(sq.Dollar).
@@ -123,7 +123,7 @@ func (u *UsersDB) UpdateUser(user *entity.User) error {
 		setMap["email"] = user.Email
 	}
 	if user.Name != "" {
-		setMap["name"] = user.Name
+		setMap["Name"] = user.Name
 	}
 	if len(user.PasswordHash) > 0 {
 		setMap["password_hashed"] = user.PasswordHash

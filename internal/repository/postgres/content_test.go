@@ -132,7 +132,7 @@ func setupGetGenreByIDSuccess(mock sqlmock.Sqlmock, genreID int, genreName strin
 func setupGetRoleIDByNameSuccess(mock sqlmock.Sqlmock, roleName string, roleID int) {
 	query, args, _ := sq.Select("id").
 		From("role").
-		Where(sq.Eq{"name": roleName}).
+		Where(sq.Eq{"name_en": roleName}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(getDriverValues(args)...).WillReturnRows(
@@ -221,7 +221,7 @@ func setupGetSeriesDataSuccess(mock sqlmock.Sqlmock, contentID int) {
 func setupGetSeasonsSuccess(mock sqlmock.Sqlmock, contentID int, seasons []int) {
 	query, args, _ := sq.Select("id").
 		From("season").
-		Where(sq.Eq{"content_id": contentID}).
+		Where(sq.Eq{"series_id": contentID}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	rows := sqlmock.NewRows([]string{"id"})

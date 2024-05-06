@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	mockrepo "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/mocks"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
 	"github.com/stretchr/testify/require"
@@ -33,7 +34,7 @@ func TestStaticService_GetStatic(t *testing.T) {
 		{
 			Name:        "Не существующий аватар",
 			Input:       2,
-			ExpectedErr: fmt.Errorf("не удалось получить аватар"),
+			ExpectedErr: entity.UsecaseWrap(fmt.Errorf("не удалось получить аватар"), fmt.Errorf("ошибка при получении статики")),
 			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {
 				repo.EXPECT().GetStatic(2).Return("", fmt.Errorf("не удалось получить аватар"))
 			},

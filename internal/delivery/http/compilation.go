@@ -71,7 +71,7 @@ func (h *CompilationEndpoints) GetCompilationsByCompilationType(ctx echo.Context
 // @Produce json
 // @Param id path int true "id подборки"
 // @Param page path int true "номер страницы"
-// @Success 200 {object} dto.CompilationContent
+// @Success 200 {object} dto.CompilationResponse
 // @Failure 400 {object} echo.HTTPError
 // @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError

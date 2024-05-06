@@ -1,23 +1,8 @@
 basePath: /api
 definitions:
-  dto.CompilationContent:
-    properties:
-      compilation_id:
-        example: 1
-        format: int
-        type: integer
-      content_id:
-        example: 1
-        format: int
-        type: integer
-    type: object
-  dto.CompilationResponse:
+  dto.Compilation:
     properties:
       compilation_type_id:
-        example: 1
-        format: int
-        type: integer
-      content_length:
         example: 1
         format: int
         type: integer
@@ -25,23 +10,40 @@ definitions:
         example: 1
         format: int
         type: integer
-      poster_upload_id:
-        example: 1
-        format: int
-        type: integer
+      poster:
+        example: static/poster.jpg
+        format: string
+        type: string
       title:
         example: The Best
         format: string
         type: string
     type: object
+  dto.CompilationResponse:
+    properties:
+      compilation:
+        $ref: '#/definitions/dto.Compilation'
+      content_ids:
+        items:
+          type: integer
+        type: array
+      content_length:
+        type: integer
+      page:
+        type: integer
+      per_page:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
   dto.CompilationResponseList:
     properties:
       compilations:
         items:
-          $ref: '#/definitions/dto.CompilationResponse'
+          $ref: '#/definitions/dto.Compilation'
         type: array
     type: object
-  dto.CompilationTypeResponse:
+  dto.CompilationType:
     properties:
       id:
         example: 1
@@ -56,7 +58,7 @@ definitions:
     properties:
       compilation_types:
         items:
-          $ref: '#/definitions/dto.CompilationTypeResponse'
+          $ref: '#/definitions/dto.CompilationType'
         type: array
     type: object
   dto.Content:
@@ -68,15 +70,12 @@ definitions:
       ageRestriction:
         example: 18
         type: integer
-      audience:
-        example: 1000000
-        type: integer
-      boxOffice:
-        example: 1000000
-        type: integer
+      backdropURL:
+        example: /static/backdrop.jpg
+        type: string
       budget:
-        example: 1000000
-        type: integer
+        example: "1000000"
+        type: string
       composers:
         items:
           $ref: '#/definitions/dto.PersonPreview'
@@ -99,6 +98,12 @@ definitions:
         items:
           $ref: '#/definitions/dto.PersonPreview'
         type: array
+      facts:
+        example:
+        - Факты о фильме или сериале
+        items:
+          type: string
+        type: array
       genres:
         example:
         - Боевик
@@ -112,9 +117,6 @@ definitions:
       imdbRating:
         example: 9.1
         type: number
-      marketing:
-        example: 1000000
-        type: integer
       movie:
         $ref: '#/definitions/dto.MovieContent'
       operators:
@@ -124,6 +126,13 @@ definitions:
       originalTitle:
         example: Batman
         type: string
+      picturesURL:
+        example:
+        - /static/picture1.jpg
+        - /static/picture2.jpg
+        items:
+          type: string
+        type: array
       posterURL:
         example: /static/poster.jpg
         type: string
@@ -142,6 +151,9 @@ definitions:
       title:
         example: Бэтмен
         type: string
+      trailerLink:
+        example: https://www.youtube.com/watch?v=123456
+        type: string
       type:
         example: movie
         type: string
@@ -152,6 +164,9 @@ definitions:
     type: object
   dto.Episode:
     properties:
+      duration:
+        example: 45
+        type: integer
       episodeNumber:
         example: 1
         type: integer
@@ -181,29 +196,17 @@ definitions:
       premiere:
         example: "2020-01-01"
         type: string
-      release:
-        example: "2020-01-01"
-        type: string
     type: object
   dto.Person:
     properties:
       birthDate:
         example: "1964-09-02"
         type: string
-      birthPlace:
-        example: Бейрут
-        type: string
-      children:
-        example: Homer, Bart, Lisa, Maggie
-        type: string
       deathDate:
         example: "2021-09-02"
         type: string
-      endCareer:
-        example: "2021-09-02"
-        type: string
-      firstName:
-        example: Киану
+      enName:
+        example: Keanu Reeves
         type: string
       height:
         example: 185
@@ -211,66 +214,43 @@ definitions:
       id:
         example: 1
         type: integer
-      lastName:
-        example: Ривз
+      name:
+        example: Киану Ривз
         type: string
       photoURL:
         example: /static/photo.jpg
         type: string
       roles:
-        items:
-          $ref: '#/definitions/dto.PreviewContentCard'
-        type: array
+        additionalProperties:
+          $ref: '#/definitions/dto.PreviewContentCardVertical'
+        type: object
       sex:
         example: M
-        type: string
-      spouse:
-        example: Алисия Викандер
-        type: string
-      startCareer:
-        example: "1984-09-02"
         type: string
     type: object
   dto.PersonPreview:
     properties:
-      firstName:
-        example: Киану
+      enName:
+        example: Keanu Reeves
         type: string
       id:
         example: 1
         type: integer
-      lastName:
-        example: Ривз
+      name:
+        example: Киану Ривз
         type: string
     type: object
-  dto.PreviewContentCard:
+  dto.PreviewContentCardVertical:
     properties:
-      actors:
+      genre:
         example:
-        - Том Хэнкс
-        - Сергей Бодров
+        - Боевик
         items:
           type: string
         type: array
-      country:
-        example: Россия
-        type: string
-      director:
-        example: Тарантино
-        type: string
-      duration:
-        description: Поля, которые есть только у фильмов
-        example: 134
-        type: integer
-      genre:
-        example: Боевик
-        type: string
       id:
         example: 1
         type: integer
-      originalTitle:
-        example: Batman
-        type: string
       poster:
         example: /static/poster.jpg
         type: string
@@ -278,11 +258,8 @@ definitions:
         example: 9.1
         type: number
       releaseYear:
+        description: Поля, которые есть только у фильмов
         example: 2020
-        type: integer
-      seasonsNumber:
-        description: Поля, которые есть только у сериалов
-        example: 1
         type: integer
       title:
         example: Бэтмен
@@ -294,6 +271,7 @@ definitions:
         example: 2021
         type: integer
       yearStart:
+        description: Поля, которые есть только у сериалов
         example: 2020
         type: integer
     type: object
@@ -380,10 +358,26 @@ definitions:
     type: object
   dto.ReviewResponseList:
     properties:
+      count:
+        example: 10
+        format: int
+        type: integer
+      page:
+        example: 1
+        format: int
+        type: integer
+      pages:
+        example: 1
+        format: int
+        type: integer
       reviews:
         items:
           $ref: '#/definitions/dto.ReviewResponse'
         type: array
+      total:
+        example: 1
+        format: int
+        type: integer
     type: object
   dto.ReviewUpdateRequest:
     properties:
@@ -412,12 +406,6 @@ definitions:
         type: array
       id:
         example: 1
-        type: integer
-      yearEnd:
-        example: 2020
-        type: integer
-      yearStart:
-        example: 2020
         type: integer
     type: object
   dto.SeriesContent:
@@ -459,14 +447,30 @@ definitions:
     type: object
   dto.UserReviewResponseList:
     properties:
+      count:
+        example: 10
+        format: int
+        type: integer
       me:
         example: true
         format: bool
         type: boolean
+      page:
+        example: 1
+        format: int
+        type: integer
+      pages:
+        example: 1
+        format: int
+        type: integer
       reviews:
         items:
           $ref: '#/definitions/dto.ReviewResponse'
         type: array
+      total:
+        example: 1
+        format: int
+        type: integer
     type: object
   dto.UserUpdate:
     properties:
@@ -568,7 +572,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.CompilationContent'
+            $ref: '#/definitions/dto.CompilationResponse'
         "400":
           description: Bad Request
           schema:
@@ -606,10 +610,6 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/echo.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/echo.HTTPError'
         "500":
           description: Internal Server Error
           schema:
@@ -629,14 +629,6 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/dto.CompilationTypeResponseList'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/echo.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/echo.HTTPError'
         "500":
           description: Internal Server Error
           schema:
@@ -741,6 +733,10 @@ paths:
             $ref: '#/definitions/echo.HTTPError'
         "401":
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
           schema:
             $ref: '#/definitions/echo.HTTPError'
         "409":
@@ -870,42 +866,7 @@ paths:
       summary: Получить рецензию
       tags:
       - review
-  /review/{id}/dislike:
-    put:
-      consumes:
-      - application/json
-      description: Поставить дизлайк рецензии
-      parameters:
-      - description: ID рецензии
-        in: path
-        name: id
-        required: true
-        type: integer
-      responses:
-        "200":
-          description: OK
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/echo.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/echo.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/echo.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/echo.HTTPError'
-      security:
-      - _csrf: []
-      summary: Поставить дизлайк рецензии
-      tags:
-      - review
-  /review/{id}/like:
+  /review/{id}/vote:
     delete:
       consumes:
       - application/json
@@ -943,13 +904,18 @@ paths:
     put:
       consumes:
       - application/json
-      description: Поставить лайк рецензии
+      description: Поставить оценку на рецензию
       parameters:
       - description: ID рецензии
         in: path
         name: id
         required: true
         type: integer
+      - description: Лайк или дизлайк
+        in: query
+        name: vote
+        required: true
+        type: boolean
       responses:
         "200":
           description: OK
@@ -971,7 +937,7 @@ paths:
             $ref: '#/definitions/echo.HTTPError'
       security:
       - _csrf: []
-      summary: Поставить лайк рецензии
+      summary: Поставить оценку на рецензию
       tags:
       - review
   /review/content/{id}/{page}:
@@ -1024,6 +990,10 @@ paths:
             $ref: '#/definitions/dto.ReviewResponse'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/echo.HTTPError'
         "404":
@@ -1113,6 +1083,30 @@ paths:
       summary: Получить последние рецензии пользователя
       tags:
       - review
+  /search:
+    get:
+      consumes:
+      - application/json
+      description: Поиск фильмов, сериалов и персон
+      parameters:
+      - description: Поисковый запрос
+        in: query
+        name: query
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      tags:
+      - Search
   /static/{id}:
     get:
       consumes:

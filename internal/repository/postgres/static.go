@@ -39,7 +39,7 @@ func (s StaticDB) GetMaxSize() int {
 // GetStatic возвращает путь к статике по его ID
 func (s StaticDB) GetStatic(staticID int) (string, error) {
 	query, args, err := sq.
-		Select("path", "name").
+		Select("path", "Name").
 		From("static").
 		Where(sq.Eq{"id": staticID}).
 		PlaceholderFormat(sq.Dollar).ToSql()
@@ -91,7 +91,7 @@ func (s StaticDB) UploadStatic(path, filename string, buf bytes.Buffer) (int, er
 	// Добавляем запись в базу данных
 	query, args, err := sq.
 		Insert("static").
-		Columns("path", "name").
+		Columns("path", "Name").
 		Values(path, filename).
 		Suffix("RETURNING id").
 		PlaceholderFormat(sq.Dollar).ToSql()

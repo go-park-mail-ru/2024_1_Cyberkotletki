@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
 	"github.com/google/uuid"
@@ -29,7 +30,15 @@ func NewStaticService(staticRepo repository.Static) usecase.Static {
 }
 
 func (s *StaticService) GetStatic(staticID int) (string, error) {
-	return s.staticRepo.GetStatic(staticID)
+	staticURL, err := s.staticRepo.GetStatic(staticID)
+	switch {
+	case errors.Is(err, repository.ErrStaticNotFound):
+		return "", usecase.ErrStaticNotFound
+	case err != nil:
+		return "", entity.UsecaseWrap(err, errors.New("ошибка при получении статики"))
+	default:
+		return staticURL, nil
+	}
 }
 
 func (s *StaticService) UploadAvatar(reader io.Reader) (int, error) {

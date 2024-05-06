@@ -24,12 +24,12 @@ func TestStaticDB_GetStatic(t *testing.T) {
 		{
 			name:           "Существующий файл",
 			requestId:      1,
-			expectedOutput: "path/name",
+			expectedOutput: "path/Name",
 			expectedErr:    nil,
 			setupMock: func(mock sqlmock.Sqlmock, query string) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(1).
-					WillReturnRows(sqlmock.NewRows([]string{"path", "name"}).AddRow("path", "name"))
+					WillReturnRows(sqlmock.NewRows([]string{"path", "Name"}).AddRow("path", "Name"))
 			},
 		},
 		{
@@ -66,7 +66,7 @@ func TestStaticDB_GetStatic(t *testing.T) {
 			}
 			repo := NewStaticRepository(db, "", 1)
 			query, _, err := sq.
-				Select("path", "name").
+				Select("path", "Name").
 				From("static").
 				Where(sq.Eq{"id": tc.requestId}).
 				PlaceholderFormat(sq.Dollar).ToSql()

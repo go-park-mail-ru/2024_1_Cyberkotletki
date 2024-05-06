@@ -169,7 +169,7 @@ func (c *ContentDB) getSeasonData(id int) (*entity.Season, error) {
 func (c *ContentDB) getSeasonsByContentID(contentID int) ([]entity.Season, error) {
 	query, args, err := sq.Select("id").
 		From("season").
-		Where(sq.Eq{"content_id": contentID}).
+		Where(sq.Eq{"series_id": contentID}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
@@ -205,7 +205,7 @@ func (c *ContentDB) getSeasonsByContentID(contentID int) ([]entity.Season, error
 func (c *ContentDB) getRoleIDByName(role string) (int, error) {
 	query, args, err := sq.Select("id").
 		From("role").
-		Where(sq.Eq{"name": role}).
+		Where(sq.Eq{"name_en": role}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {

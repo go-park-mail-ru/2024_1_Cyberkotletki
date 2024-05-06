@@ -6,7 +6,6 @@ type PreviewContentCard struct {
 	ID            int      `json:"id"            example:"1"`
 	Title         string   `json:"title"         example:"Бэтмен"`
 	OriginalTitle string   `json:"originalTitle" example:"Batman"`
-	ReleaseYear   int      `json:"releaseYear"   example:"2020"`
 	Country       string   `json:"country"       example:"Россия"`
 	Genre         string   `json:"genre"         example:"Боевик"`
 	Director      string   `json:"director"      example:"Тарантино"`
@@ -65,6 +64,13 @@ type PersonPreview struct {
 	ID     int    `json:"id"     example:"1"`
 	Name   string `json:"name"   example:"Киану Ривз"`
 	EnName string `json:"enName" example:"Keanu Reeves"`
+}
+
+type PersonPreviewWithPhoto struct {
+	ID       int    `json:"id"       example:"1"`
+	Name     string `json:"name"     example:"Киану Ривз"`
+	EnName   string `json:"enName"   example:"Keanu Reeves"`
+	PhotoURL string `json:"photoURL" example:"/static/photo.jpg"`
 }
 
 type Person struct {
