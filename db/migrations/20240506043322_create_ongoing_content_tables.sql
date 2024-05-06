@@ -34,17 +34,17 @@ CREATE TABLE IF NOT EXISTS genre_ongoing_content
 
 -- Вставка данных в таблицу ongoing_content
 INSERT INTO ongoing_content (title, poster_upload_id, release_date)
-VALUES  ('Title 1', 1, '2022-01-01 00:00:00', 'movie'),
-        ('Title 2', 2, '2022-02-01 00:00:00', 'movie'),
-        ('Title 3', 3, '2022-03-01 00:00:00', 'movie'),
-        ('Title 4', 4, '2022-04-01 00:00:00', 'series'),
-        ('Title 5', 5, '2022-05-01 00:00:00', 'series');
+VALUES  ('Title 1', 1, '2024-08-01 00:00:00', 'movie'),
+        ('Title 2', 2, '2024-08-01 00:00:00', 'movie'),
+        ('Title 3', 3, '2024-08-03 00:00:00', 'movie'),
+        ('Title 4', 4, '2024-09-01 00:00:00', 'series'),
+        ('Title 5', 5, '2025-01-01 00:00:00', 'series');
 
 
 -- Вставка данных в таблицу genre_ongoing_content
 INSERT INTO genre_ongoing_content (genre_id, ongoing_content_id)
 VALUES (1, 1),
        (2, 2),
-       (3, 3);
+       (1, 3);
        (1, 4),
        (2, 5);

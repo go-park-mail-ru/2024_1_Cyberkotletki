@@ -14,20 +14,6 @@ type OngoingContentService struct {
 	staticRepo         repository.Static
 }
 
-func ongoindMovieEntityToDTO(ongoingMovieEntity entity.OngoingMovie) dto.OngoingMovie {
-	return dto.OngoingMovie{
-		Duration: ongoingMovieEntity.Duration,
-		Premiere: ongoingMovieEntity.Premiere,
-	}
-}
-
-func ongoingSeriesEntityToDTO(ongoingSeriesEntity entity.OngoingSeries) dto.OngoingSeries {
-	return dto.OngoingSeries{
-		YearStart: ongoingSeriesEntity.YearStart,
-		YearEnd:   ongoingSeriesEntity.YearEnd,
-	}
-}
-
 // GetAllReleaseYears implements usecase.OngoingContent.
 func (o *OngoingContentService) GetAllReleaseYears() ([]int, error) {
 	return o.ongoingContentRepo.GetAllReleaseYears()
@@ -54,12 +40,7 @@ func (o *OngoingContentService) ongoindContentEntityToDTO(ongoingContentEntity *
 		Poster:      posterURL,
 		ReleaseDate: ongoingContent.ReleaseDate,
 		Genres:      genreEntityToDTO(ongoingContent.Genres),
-	}
-	switch ongoingContent.Type {
-	case entity.OngoingContentTypeMovie:
-		ongoingContentDTO.Movie = ongoindMovieEntityToDTO(*ongoingContent.Movie)
-	case entity.OngoingContentTypeSeries:
-		ongoingContentDTO.Series = ongoingSeriesEntityToDTO(*ongoingContent.Series)
+		Type:        ongoingContent.Type,
 	}
 
 	return ongoingContentDTO, nil
@@ -104,12 +85,7 @@ func (o *OngoingContentService) GetOngoingContentByContentID(contentID int) (*dt
 		Poster:      posterURL,
 		ReleaseDate: ongoingContent.ReleaseDate,
 		Genres:      genreEntityToDTO(ongoingContent.Genres),
-	}
-	switch ongoingContent.Type {
-	case entity.OngoingContentTypeMovie:
-		ongoingContentDTO.Movie = ongoindMovieEntityToDTO(*ongoingContent.Movie)
-	case entity.OngoingContentTypeSeries:
-		ongoingContentDTO.Series = ongoingSeriesEntityToDTO(*ongoingContent.Series)
+		Type:        ongoingContent.Type,
 	}
 
 	return ongoingContentDTO, nil

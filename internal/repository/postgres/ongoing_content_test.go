@@ -53,24 +53,32 @@ func setupGetOngoingContentSuccess(mock sqlmock.Sqlmock, contentID int, contentT
 			releaseDateTmp,
 		))
 }
-func setupGetOngoingMovieDataSuccess(mock sqlmock.Sqlmock, contentID int, premiere time.Time, duration int) {
-	query, args, _ := sq.Select("premiere", "duration").
-		From("ongoing_movie").
-		Where(sq.Eq{"ongoing_content_id": contentID}).
+func setupGetOngoingContentSuccessTime(mock sqlmock.Sqlmock, contentID int, releaseDate time.Time) {
+	query, args, _ := sq.Select(
+		"id",
+		"content_type",
+		"title",
+		"poster_static_id",
+		"release_date",
+	).
+		From("ongoing_content").
+		Where(sq.Eq{"id": contentID}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(getDriverValues(args)...).WillReturnRows(
-		sqlmock.NewRows([]string{"premiere", "duration"}).AddRow(premiere, duration))
-}
-
-func setupGetOngoingSeriesDataSuccess(mock sqlmock.Sqlmock, contentID int, yearStart int, yearEnd int) {
-	query, args, _ := sq.Select("year_start", "year_end").
-		From("ongoing_series").
-		Where(sq.Eq{"ongoing_content_id": contentID}).
-		PlaceholderFormat(sq.Dollar).
-		ToSql()
-	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(getDriverValues(args)...).WillReturnRows(
-		sqlmock.NewRows([]string{"year_start", "year_end"}).AddRow(yearStart, yearEnd))
+		sqlmock.NewRows([]string{
+			"id",
+			"content_type",
+			"title",
+			"poster_static_id",
+			"release_date",
+		}).AddRow(
+			contentID,
+			"movie",
+			"title",
+			1,
+			releaseDate,
+		))
 }
 
 func setupGetOngoingContentGenresSuccess(mock sqlmock.Sqlmock, contentID int, genresID []int) {
@@ -120,7 +128,7 @@ func TestOngoingContentRepository_GetOngoingContentByID(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(mock sqlmock.Sqlmock) {
 				// устанавливаем порядок вызовов и мокаем их
-				setupGetOngoingMovieDataSuccess(mock, 1, time.Time{}, 100)
+				setupGetOngoingContentSuccess(mock, 1, "movie")
 				setupGetOngoingContentGenresSuccess(mock, 1, []int{1})
 				setupGetOngoingGenreByIDSuccess(mock, 1, "Action")
 			},
@@ -139,7 +147,7 @@ func TestOngoingContentRepository_GetOngoingContentByID(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(mock sqlmock.Sqlmock) {
 				// устанавливаем порядок вызовов и мокаем их
-				setupGetOngoingSeriesDataSuccess(mock, 1, 1980, 1981)
+				setupGetOngoingContentSuccess(mock, 1, "series")
 				setupGetOngoingContentGenresSuccess(mock, 1, []int{1})
 				setupGetOngoingGenreByIDSuccess(mock, 1, "Action")
 			},
