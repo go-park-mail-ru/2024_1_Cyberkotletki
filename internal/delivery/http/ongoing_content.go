@@ -21,10 +21,10 @@ func NewOngoingContentEndpoints(usecase usecase.OngoingContent) *OngoingContentE
 }
 
 func (h *OngoingContentEndpoints) Configure(server *echo.Group) {
-	server.GET("/ongoing_content/:id", h.GetOngoingContentByContentID)
-	server.GET("/ongoing_content/nearest", h.GetNearestOngoings)
-	server.GET("/ongoing_content/year/:year/month/:month", h.GetOngoingContentByMonthAndYear)
-	server.GET("/ongoing_content/years", h.GetAllReleaseYears)
+	server.GET("/:id", h.GetOngoingContentByContentID)
+	server.GET("/nearest", h.GetNearestOngoings)
+	server.GET("/:year/:month", h.GetOngoingContentByMonthAndYear)
+	server.GET("/years", h.GetAllReleaseYears)
 }
 
 // GetOngoingContentByContentID godoc
@@ -36,7 +36,7 @@ func (h *OngoingContentEndpoints) Configure(server *echo.Group) {
 // @Failure 400 {object} echo.HTTPError
 // @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
-// @Router /ongoing_content/{id} [get]
+// @Router /ongoing/{id} [get]
 func (h *OngoingContentEndpoints) GetOngoingContentByContentID(ctx echo.Context) error {
 	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
@@ -62,7 +62,7 @@ func (h *OngoingContentEndpoints) GetOngoingContentByContentID(ctx echo.Context)
 // @Success 200 {array} dto.PreviewOngoingContentCardVertical
 // @Failure 400 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
-// @Router /ongoing_content/nearest [get]
+// @Router /ongoing/nearest [get]
 func (h *OngoingContentEndpoints) GetNearestOngoings(ctx echo.Context) error {
 	limit, err := strconv.ParseInt(ctx.QueryParam("limit"), 10, 64)
 	if err != nil {
@@ -90,7 +90,7 @@ func (h *OngoingContentEndpoints) GetNearestOngoings(ctx echo.Context) error {
 // @Failure 400 {object} echo.HTTPError
 // @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
-// @Router /ongoing_content/year/{year}/month/{month} [get]
+// @Router /ongoing/{year}/{month} [get]
 func (h *OngoingContentEndpoints) GetOngoingContentByMonthAndYear(ctx echo.Context) error {
 	month, err := strconv.ParseInt(ctx.Param("month"), 10, 64)
 	if err != nil {
@@ -119,7 +119,7 @@ func (h *OngoingContentEndpoints) GetOngoingContentByMonthAndYear(ctx echo.Conte
 // @Success 200 {array} int
 // @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
-// @Router /ongoing_content/years [get]
+// @Router /ongoing/years [get]
 func (h *OngoingContentEndpoints) GetAllReleaseYears(ctx echo.Context) error {
 	years, err := h.usecase.GetAllReleaseYears()
 	switch {

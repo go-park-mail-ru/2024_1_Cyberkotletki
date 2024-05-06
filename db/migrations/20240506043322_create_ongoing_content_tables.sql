@@ -1,12 +1,4 @@
 -- +goose Up
--- +goose StatementBegin
-SELECT 'up SQL query';
--- +goose StatementEnd
-
--- +goose Down
--- +goose StatementBegin
-SELECT 'down SQL query';
--- +goose StatementEnd
 
 -- Создание таблицы ongoing_content
 CREATE TABLE IF NOT EXISTS ongoing_content
@@ -17,9 +9,7 @@ CREATE TABLE IF NOT EXISTS ongoing_content
     title      TEXT
         CONSTRAINT ongoing_content_title_length CHECK (LENGTH(title) <= 150) NOT NULL,
     poster_upload_id INT,
-    release_date TIMESTAMPTZ NOT NULL,
-    
-    
+    release_date TIMESTAMPTZ NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS genre_ongoing_content
@@ -28,12 +18,12 @@ CREATE TABLE IF NOT EXISTS genre_ongoing_content
     ongoing_content_id INT NOT NULL,
     FOREIGN KEY (genre_id) REFERENCES genre (id) ON DELETE CASCADE,
     FOREIGN KEY (ongoing_content_id) REFERENCES ongoing_content (id) ON DELETE CASCADE,
-    CONSTRAINT genre_content_unique UNIQUE (genre_id, ongoing_content_id)
+    CONSTRAINT genre_ongoing_content_unique UNIQUE (genre_id, ongoing_content_id)
 );
 
 
 -- Вставка данных в таблицу ongoing_content
-INSERT INTO ongoing_content (title, poster_upload_id, release_date)
+INSERT INTO ongoing_content (title, poster_upload_id, release_date, type)
 VALUES  ('Title 1', 1, '2024-08-01 00:00:00', 'movie'),
         ('Title 2', 2, '2024-08-01 00:00:00', 'movie'),
         ('Title 3', 3, '2024-08-03 00:00:00', 'movie'),
@@ -45,6 +35,6 @@ VALUES  ('Title 1', 1, '2024-08-01 00:00:00', 'movie'),
 INSERT INTO genre_ongoing_content (genre_id, ongoing_content_id)
 VALUES (1, 1),
        (2, 2),
-       (1, 3);
+       (1, 3),
        (1, 4),
        (2, 5);

@@ -108,9 +108,9 @@ func (o *OngoingContentService) GetOngoingContentByMonthAndYear(month int, year 
 	return ongoingContentDTOs, nil
 }
 
-// IsOngoingConentFinished implements usecase.OngoingContent.
-func (o *OngoingContentService) IsOngoingConentFinished(contentID int) (bool, error) {
-	return o.ongoingContentRepo.IsOngoingConentFinished(contentID)
+// IsOngoingContentFinished implements usecase.OngoingContent.
+func (o *OngoingContentService) IsOngoingContentFinished(contentID int) (bool, error) {
+	return o.ongoingContentRepo.IsOngoingContentFinished(contentID)
 }
 
 func NewOngoingContentService(ongoingContentRepo repository.OngoingContent, staticRepo repository.Static) usecase.OngoingContent {

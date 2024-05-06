@@ -20,9 +20,9 @@ type OngoingContent interface {
 	// GetAllReleaseYears возвращает все года релизов
 	// Если годы не найдены, возвращает ErrOngoingContentYearsNotFound
 	GetAllReleaseYears() ([]int, error)
-	// IsConentFinished возвращает true, если контент вышел
+	// IsOngoingContentFinished возвращает true, если контент вышел.
 	// Возвращает 1, если вышел, 0, если нет
-	IsOngoingConentFinished(contentID int) (bool, error)
+	IsOngoingContentFinished(contentID int) (bool, error)
 }
 
 var (

@@ -24,14 +24,14 @@ type ScanOngoingContent struct {
 	ReleaseDate    time.Time
 }
 
-func scanAllFieldsOnoingContent(row sq.RowScanner) (*entity.OngoingContent, error) {
+func scanAllFieldsOngoingContent(row sq.RowScanner) (*entity.OngoingContent, error) {
 	ongoingContent := &entity.OngoingContent{}
 	err := row.Scan(
 		&ongoingContent.ID,
 		&ongoingContent.Type,
 		&ongoingContent.Title,
-		&ongoingContent.ReleaseDate,
 		&ongoingContent.PosterStaticID,
+		&ongoingContent.ReleaseDate,
 	)
 	return ongoingContent, err
 }
@@ -59,7 +59,7 @@ func (oc *OngoingContentDB) getGenreByID(genreID int) (*entity.Genre, error) {
 
 func (oc *OngoingContentDB) getOngoingContentGenres(contentID int) ([]entity.Genre, error) {
 	query, args, err := sq.Select("genre_id").
-		From("ongoing_content_genre").
+		From("genre_ongoing_content").
 		Where(sq.Eq{"ongoing_content_id": contentID}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
@@ -88,7 +88,7 @@ func (oc *OngoingContentDB) getOngoingContentGenres(contentID int) ([]entity.Gen
 }
 
 func (oc *OngoingContentDB) getOngoingContentInfo(contentID int) (*entity.OngoingContent, error) {
-	query, args, err := sq.Select("id", "content_type, title, poster_static_id, release_date").
+	query, args, err := sq.Select("id", "type, title, poster_upload_id, release_date").
 		From("ongoing_content").
 		Where(sq.Eq{"id": contentID}).
 		PlaceholderFormat(sq.Dollar).
@@ -146,9 +146,8 @@ func (oc *OngoingContentDB) GetOngoingContentByID(id int) (*entity.OngoingConten
 
 // GetNearestOngoings возвращает ближайшие релизы
 func (oc *OngoingContentDB) GetNearestOngoings(limit int) ([]*entity.OngoingContent, error) {
-	query, args, err := selectAllFields().
+	query, args, err := sq.Select("id", "type, title, poster_upload_id, release_date").
 		From("ongoing_content").
-		Where(sq.Gt{"release_date": time.Now()}).
 		OrderBy("release_date").
 		Limit(uint64(limit)).
 		PlaceholderFormat(sq.Dollar).
@@ -163,9 +162,9 @@ func (oc *OngoingContentDB) GetNearestOngoings(limit int) ([]*entity.OngoingCont
 	defer rows.Close()
 	ongoingContents := make([]*entity.OngoingContent, 0)
 	for rows.Next() {
-		ongoingContent, err := scanAllFieldsOnoingContent(rows)
+		ongoingContent, err := scanAllFieldsOngoingContent(rows)
 		if err != nil {
-			return nil, entity.PSQLQueryErr("GetNearestOngoings", err)
+			return nil, entity.PSQLQueryErr("GetNearestOngoings при сканировании", err)
 		}
 		ongoingContents = append(ongoingContents, ongoingContent)
 	}
@@ -174,7 +173,7 @@ func (oc *OngoingContentDB) GetNearestOngoings(limit int) ([]*entity.OngoingCont
 
 // GetOngoingContentByMonthAndYear возвращает релизы по месяцу и году
 func (oc *OngoingContentDB) GetOngoingContentByMonthAndYear(month, year int) ([]*entity.OngoingContent, error) {
-	query, args, err := selectAllFields().
+	query, args, err := sq.Select("id", "type, title, poster_upload_id, release_date").
 		From("ongoing_content").
 		Where(sq.Eq{"extract(month from release_date)": month, "extract(year from release_date)": year}).
 		PlaceholderFormat(sq.Dollar).
@@ -189,12 +188,12 @@ func (oc *OngoingContentDB) GetOngoingContentByMonthAndYear(month, year int) ([]
 	defer rows.Close()
 	ongoingContents := make([]*entity.OngoingContent, 0)
 	for rows.Next() {
-		ongoingContent, err := scanAllFieldsOnoingContent(rows)
+		ongoingContent, err := scanAllFieldsOngoingContent(rows)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				return nil, repository.ErrOngoingContentNotFound
 			}
-			return nil, entity.PSQLQueryErr("GetOngoingContentByMonthAndYear при сканировании клендаря релизов", err)
+			return nil, entity.PSQLQueryErr("GetOngoingContentByMonthAndYear при сканировании календаря релизов", err)
 		}
 		ongoingContents = append(ongoingContents, ongoingContent)
 	}
@@ -232,8 +231,8 @@ func (oc *OngoingContentDB) GetAllReleaseYears() ([]int, error) {
 	return years, nil
 }
 
-// IsOngoingConentFinished возвращает true, если контент завершен
-func (oc *OngoingContentDB) IsOngoingConentFinished(contentID int) (bool, error) {
+// IsOngoingContentFinished возвращает true, если контент завершен
+func (oc *OngoingContentDB) IsOngoingContentFinished(contentID int) (bool, error) {
 	query, args, err := sq.Select("release_date").
 		From("ongoing_content").
 		Where(sq.Eq{"id": contentID}).
@@ -248,7 +247,7 @@ func (oc *OngoingContentDB) IsOngoingConentFinished(contentID int) (bool, error)
 		if errors.Is(err, sql.ErrNoRows) {
 			return false, repository.ErrOngoingContentNotFound
 		}
-		return false, entity.PSQLQueryErr("IsOngoingConentFinished", err)
+		return false, entity.PSQLQueryErr("IsOngoingContentFinished", err)
 	}
 	if time.Now().After(releaseDate) {
 		return true, nil
