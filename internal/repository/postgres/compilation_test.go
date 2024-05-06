@@ -8,6 +8,7 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
+	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
 	"regexp"
 	"testing"
@@ -52,8 +53,9 @@ func TestCompilationDB_GetCompilationsByTypeID(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			db, mock, err := sqlmock.New()
+			dbx := sqlx.NewDb(db, "sqlmock")
 			require.NoError(t, err)
-			repo := NewCompilationRepository(db)
+			repo := NewCompilationRepository(dbx)
 			query, args, err := sq.Select("id", "title", "compilation_type_id", "poster_upload_id").
 				From("compilation").
 				Where(sq.Eq{"compilation_type_id": tc.RequestID}).
@@ -112,10 +114,9 @@ func TestCompilationDB_GetCompilationContentLength(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			db, mock, err := sqlmock.New()
+			dbx := sqlx.NewDb(db, "sqlmock")
 			require.NoError(t, err)
-			repo := &CompilationDB{
-				DB: db,
-			}
+			repo := NewCompilationRepository(dbx)
 			query, args, _ := sq.Select("count(*)").
 				From("compilation_content").
 				Where(sq.Eq{"compilation_id": tc.RequestID}).
@@ -197,15 +198,14 @@ func TestCompilationDB_GetCompilationContent(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			db, mock, err := sqlmock.New()
+			dbx := sqlx.NewDb(db, "sqlmock")
 			require.NoError(t, err)
-			repo := &CompilationDB{
-				DB: db,
-			}
+			repo := NewCompilationRepository(dbx)
 			query, args, err := sq.Select("content_id").
 				From("compilation_content").
 				Join("content ON compilation_content.content_id = content.id").
 				Where(sq.Eq{"compilation_id": tc.RequestID}).
-				OrderBy("content.rating DESC").
+				OrderBy("content.rating DESC", "id ASC").
 				Limit(uint64(tc.Limit)).
 				Offset(uint64((tc.Page - 1) * tc.Limit)).
 				PlaceholderFormat(sq.Dollar).
@@ -257,10 +257,9 @@ func TestCompilationDB_GetAllCompilationTypes(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			db, mock, err := sqlmock.New()
+			dbx := sqlx.NewDb(db, "sqlmock")
 			require.NoError(t, err)
-			repo := &CompilationDB{
-				DB: db,
-			}
+			repo := NewCompilationRepository(dbx)
 			query, _, _ := sq.Select("id", "type").
 				From("compilation_type").
 				OrderBy("id ASC").

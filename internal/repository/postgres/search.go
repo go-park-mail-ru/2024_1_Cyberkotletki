@@ -1,20 +1,20 @@
 package postgres
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
+	"github.com/jmoiron/sqlx"
 )
 
 type SearchDB struct {
 	ContentDB repository.Content
-	DB        *sql.DB
+	DB        *sqlx.DB
 }
 
-func NewSearchRepository(db *sql.DB, contentDB repository.Content) repository.Search {
+func NewSearchRepository(db *sqlx.DB, contentDB repository.Content) repository.Search {
 	return &SearchDB{
 		DB:        db,
 		ContentDB: contentDB,

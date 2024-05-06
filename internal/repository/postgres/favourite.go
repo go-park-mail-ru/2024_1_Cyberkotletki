@@ -7,14 +7,15 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
+	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
 type FavouriteDB struct {
-	DB *sql.DB
+	DB *sqlx.DB
 }
 
-func NewFavouriteRepository(db *sql.DB) repository.Favourite {
+func NewFavouriteRepository(db *sqlx.DB) repository.Favourite {
 	return &FavouriteDB{
 		DB: db,
 	}

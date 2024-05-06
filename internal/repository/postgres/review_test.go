@@ -8,6 +8,7 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
+	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/require"
 	"regexp"
@@ -171,10 +172,9 @@ func TestReviewDB_AddReview(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			db, mock, err := sqlmock.New()
+			dbx := sqlx.NewDb(db, "sqlmock")
 			require.NoError(t, err)
-			repo := &ReviewDB{
-				DB: db,
-			}
+			repo := NewReviewRepository(dbx)
 			query, args, err := sq.Insert("review").
 				Columns("user_id", "content_id", "title", "text", "content_rating").
 				Values(tc.RequestReview.AuthorID, tc.RequestReview.ContentID, tc.RequestReview.Title, tc.RequestReview.Text, tc.RequestReview.ContentRating).
@@ -272,8 +272,9 @@ func TestReviewDB_GetReviewByID(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			db, mock, err := sqlmock.New()
+			dbx := sqlx.NewDb(db, "sqlmock")
 			require.NoError(t, err)
-			repo := NewReviewRepository(db)
+			repo := NewReviewRepository(dbx)
 			query, args, err := selectAllFields().
 				From("review").
 				Where(sq.Eq{"id": tc.RequestID}).
@@ -332,8 +333,9 @@ func TestReviewDB_GetReviewsCountByContentID(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			db, mock, err := sqlmock.New()
+			dbx := sqlx.NewDb(db, "sqlmock")
 			require.NoError(t, err)
-			repo := NewReviewRepository(db)
+			repo := NewReviewRepository(dbx)
 			query, args, err := sq.Select("COUNT(*)").
 				From("review").
 				Where(sq.Eq{"content_id": tc.RequestContentID}).
@@ -457,14 +459,13 @@ func TestReviewDB_GetReviewsByContentID(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			db, mock, err := sqlmock.New()
+			dbx := sqlx.NewDb(db, "sqlmock")
 			require.NoError(t, err)
-			repo := &ReviewDB{
-				DB: db,
-			}
+			repo := NewReviewRepository(dbx)
 			query, args, err := selectAllFields().
 				From("review").
 				Where(sq.Eq{"content_id": tc.Request.ContentID}).
-				OrderBy("rating DESC").
+				OrderBy("rating DESC", "id ASC").
 				Limit(uint64(tc.Request.Limit)).
 				Offset(uint64((tc.Request.Page - 1) * tc.Request.Limit)).
 				PlaceholderFormat(sq.Dollar).
@@ -581,10 +582,9 @@ func TestReviewDB_UpdateReview(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			db, mock, err := sqlmock.New()
+			dbx := sqlx.NewDb(db, "sqlmock")
 			require.NoError(t, err)
-			repo := &ReviewDB{
-				DB: db,
-			}
+			repo := NewReviewRepository(dbx)
 			query, args, err := sq.Update("review").
 				Set("title", tc.RequestReview.Title).
 				Set("text", tc.RequestReview.Text).
@@ -644,10 +644,9 @@ func TestReviewDB_DeleteReviewByID(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			db, mock, err := sqlmock.New()
+			dbx := sqlx.NewDb(db, "sqlmock")
 			require.NoError(t, err)
-			repo := &ReviewDB{
-				DB: db,
-			}
+			repo := NewReviewRepository(dbx)
 			query, args, err := sq.Delete("review").
 				Where(sq.Eq{"id": tc.RequestID}).
 				PlaceholderFormat(sq.Dollar).
@@ -769,14 +768,13 @@ func TestReviewDB_GetReviewsByAuthorID(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			db, mock, err := sqlmock.New()
+			dbx := sqlx.NewDb(db, "sqlmock")
 			require.NoError(t, err)
-			repo := &ReviewDB{
-				DB: db,
-			}
+			repo := NewReviewRepository(dbx)
 			query, args, err := selectAllFields().
 				From("review").
 				Where(sq.Eq{"user_id": tc.Request.AuthorID}).
-				OrderBy("created_at DESC").
+				OrderBy("created_at DESC", "id ASC").
 				Limit(uint64(tc.Request.Limit)).
 				Offset(uint64((tc.Request.Page - 1) * tc.Request.Limit)).
 				PlaceholderFormat(sq.Dollar).
@@ -890,10 +888,9 @@ func TestReviewDB_GetContentReviewByAuthor(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			db, mock, err := sqlmock.New()
+			dbx := sqlx.NewDb(db, "sqlmock")
 			require.NoError(t, err)
-			repo := &ReviewDB{
-				DB: db,
-			}
+			repo := NewReviewRepository(dbx)
 			query, args, err := selectAllFields().
 				From("review").
 				Where(sq.Eq{"user_id": tc.Request.AuthorID, "content_id": tc.Request.ContentID}).
@@ -989,13 +986,12 @@ func TestReviewDB_GetLatestReviews(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			db, mock, err := sqlmock.New()
+			dbx := sqlx.NewDb(db, "sqlmock")
 			require.NoError(t, err)
-			repo := &ReviewDB{
-				DB: db,
-			}
+			repo := NewReviewRepository(dbx)
 			query, args, err := selectAllFields().
 				From("review").
-				OrderBy("created_at DESC").
+				OrderBy("created_at DESC", "id ASC").
 				Limit(uint64(tc.RequestLimit)).
 				PlaceholderFormat(sq.Dollar).
 				ToSql()
@@ -1114,10 +1110,9 @@ func TestReviewDB_VoteReview(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			db, mock, err := sqlmock.New()
+			dbx := sqlx.NewDb(db, "sqlmock")
 			require.NoError(t, err)
-			repo := &ReviewDB{
-				DB: db,
-			}
+			repo := NewReviewRepository(dbx)
 			query, args, err := sq.Insert("review_vote").
 				Columns("review_id", "user_id", "value").
 				Values(tc.Request.ReviewID, tc.Request.UserID, tc.Request.Value).
@@ -1200,8 +1195,9 @@ func TestReviewDB_UnVoteReview(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			db, mock, err := sqlmock.New()
+			dbx := sqlx.NewDb(db, "sqlmock")
 			require.NoError(t, err)
-			repo := NewReviewRepository(db)
+			repo := NewReviewRepository(dbx)
 			query, args, err := sq.Delete("review_vote").
 				Where(sq.Eq{"review_id": tc.Request.ReviewID, "user_id": tc.Request.UserID}).
 				PlaceholderFormat(sq.Dollar).
@@ -1304,8 +1300,9 @@ func TestReviewDB_IsVotedByUser(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			db, mock, err := sqlmock.New()
+			dbx := sqlx.NewDb(db, "sqlmock")
 			require.NoError(t, err)
-			repo := NewReviewRepository(db)
+			repo := NewReviewRepository(dbx)
 			query, args, err := sq.Select("value").
 				From("review_vote").
 				Where(sq.Eq{"review_id": tc.Request.ReviewID, "user_id": tc.Request.UserID}).

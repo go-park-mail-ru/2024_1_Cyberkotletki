@@ -162,14 +162,29 @@ func (c *ContentService) GetPersonByID(id int) (*dto.Person, error) {
 	case err != nil:
 		return nil, entity.UsecaseWrap(errors.New("ошибка при получении персоны"), err)
 	}
+	photo, err := c.staticRepo.GetStatic(personEntity.GetPhotoStaticID())
+	switch {
+	case errors.Is(err, repository.ErrStaticNotFound):
+		// Если фото не найдено, возвращаем пустую строку
+		photo = ""
+	case err != nil:
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении фото"), err)
+	}
 	personDTO := dto.Person{
-		ID:        personEntity.ID,
-		Name:      personEntity.Name,
-		EnName:    personEntity.EnName,
-		BirthDate: personEntity.BirthDate,
-		DeathDate: personEntity.DeathDate,
-		Sex:       personEntity.Sex,
-		Height:    personEntity.Height,
+		ID:       personEntity.ID,
+		Name:     personEntity.Name,
+		EnName:   personEntity.EnName,
+		Sex:      personEntity.Sex,
+		PhotoURL: photo,
+	}
+	if personEntity.BirthDate.Valid {
+		personDTO.BirthDate = &personEntity.BirthDate.Time
+	}
+	if personEntity.DeathDate.Valid {
+		personDTO.DeathDate = &personEntity.DeathDate.Time
+	}
+	if personEntity.Height.Valid {
+		personDTO.Height = int(personEntity.Height.Int64)
 	}
 	contentRoles, err := c.contentRepo.GetPersonRoles(personEntity.ID)
 	if err != nil {

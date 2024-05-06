@@ -5,6 +5,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
+	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
 	"regexp"
 	"testing"
@@ -33,8 +34,8 @@ func TestSearchDB_SearchContent(t *testing.T) {
 					PosterStaticID: 1,
 					Genres:         []entity.Genre{{ID: 1, Name: "genre"}},
 					Country:        []entity.Country{{ID: 1, Name: "country"}},
-					Actors:         []entity.Person{{ID: 1, Name: "name", EnName: "en_name", BirthDate: time.Time{}, DeathDate: time.Time{}, Sex: "M", Height: 100, PhotoStaticID: 1}},
-					Directors:      []entity.Person{{ID: 1, Name: "name", EnName: "en_name", BirthDate: time.Time{}, DeathDate: time.Time{}, Sex: "M", Height: 100, PhotoStaticID: 1}},
+					Actors:         []entity.Person{entity.GetExamplePerson()},
+					Directors:      []entity.Person{entity.GetExamplePerson()},
 					Type:           "movie",
 					Movie:          &entity.Movie{Premiere: time.Time{}, Duration: 100},
 				},
@@ -78,11 +79,11 @@ func TestSearchDB_SearchContent(t *testing.T) {
 				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, name, en_name, birth_date, death_date, sex, height, photo_upload_id FROM person WHERE id = $1")).
 					WithArgs(1).
 					WillReturnRows(sqlmock.NewRows([]string{"id", "name", "en_name", "birth_date", "death_date", "sex", "height", "photo_upload_id"}).
-						AddRow(1, "name", "en_name", time.Time{}, time.Time{}, "M", 100, 1))
+						AddRow(1, "Имя", "Name", time.Time{}, time.Time{}, "M", 175, 1))
 				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, name, en_name, birth_date, death_date, sex, height, photo_upload_id FROM person WHERE id = $1")).
 					WithArgs(1).
 					WillReturnRows(sqlmock.NewRows([]string{"id", "name", "en_name", "birth_date", "death_date", "sex", "height", "photo_upload_id"}).
-						AddRow(1, "name", "en_name", time.Time{}, time.Time{}, "M", 100, 1))
+						AddRow(1, "Имя", "Name", time.Time{}, time.Time{}, "M", 175, 1))
 			},
 		},
 	}
@@ -92,12 +93,13 @@ func TestSearchDB_SearchContent(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			db, mock, err := sqlmock.New()
+			dbx := sqlx.NewDb(db, "sqlmock")
 			if err != nil {
 				t.Fatalf("не удалось создать мок: %s", err)
 			}
 			mock.MatchExpectationsInOrder(false)
-			mockContent := NewContentRepository(db)
-			repo := NewSearchRepository(db, mockContent)
+			mockContent := NewContentRepository(dbx)
+			repo := NewSearchRepository(dbx, mockContent)
 			query, _, err := sq.Select("id").
 				From("content").
 				Where(sq.Or{
@@ -132,20 +134,9 @@ func TestSearchDB_SearchPerson(t *testing.T) {
 		SetupMock   func(mock sqlmock.Sqlmock, query string)
 	}{
 		{
-			Name:  "Успешный поиск",
-			Query: "Query",
-			ExpectedOut: []entity.Person{
-				{
-					ID:            1,
-					Name:          "name",
-					EnName:        "en_name",
-					Sex:           "M",
-					Height:        100,
-					PhotoStaticID: 1,
-					BirthDate:     time.Time{},
-					DeathDate:     time.Time{},
-				},
-			},
+			Name:        "Успешный поиск",
+			Query:       "Query",
+			ExpectedOut: []entity.Person{entity.GetExamplePerson()},
 			ExpectedErr: nil,
 			SetupMock: func(mock sqlmock.Sqlmock, query string) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
@@ -154,7 +145,7 @@ func TestSearchDB_SearchPerson(t *testing.T) {
 				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, name, en_name, birth_date, death_date, sex, height, photo_upload_id FROM person WHERE id = $1")).
 					WithArgs(1).
 					WillReturnRows(sqlmock.NewRows([]string{"id", "name", "en_name", "birth_date", "death_date", "sex", "height", "photo_upload_id"}).
-						AddRow(1, "name", "en_name", time.Time{}, time.Time{}, "M", 100, 1))
+						AddRow(1, "Имя", "Name", time.Time{}, time.Time{}, "M", 175, 1))
 			},
 		},
 	}
@@ -164,12 +155,11 @@ func TestSearchDB_SearchPerson(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			db, mock, err := sqlmock.New()
-			if err != nil {
-				t.Fatalf("не удалось создать мок: %s", err)
-			}
+			dbx := sqlx.NewDb(db, "sqlmock")
+			require.NoError(t, err)
 			mock.MatchExpectationsInOrder(false)
-			mockContent := NewContentRepository(db)
-			repo := NewSearchRepository(db, mockContent)
+			mockContent := NewContentRepository(dbx)
+			repo := NewSearchRepository(dbx, mockContent)
 			query, _, err := sq.Select("id").
 				From("person").
 				Where(sq.Or{

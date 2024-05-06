@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"errors"
 	"github.com/labstack/echo/v4"
 	"io"
 	"net/http"
@@ -51,5 +50,3 @@ func GetErrMsgFromContext(ctx echo.Context, err error) ServerErrorMsg {
 		Error:       err,
 	}
 }
-
-var ErrBadJSON = errors.New("невалидный JSON")

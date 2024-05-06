@@ -1,6 +1,7 @@
 package service
 
 import (
+	"database/sql"
 	"errors"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	mockrepo "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/mocks"
@@ -64,13 +65,13 @@ var (
 			ID:            1,
 			Name:          "Иван",
 			EnName:        "Ivan",
-			PhotoStaticID: 2,
+			PhotoStaticID: sql.NullInt64{Int64: 2, Valid: true},
 		},
 		{
 			ID:            2,
 			Name:          "Петр",
 			EnName:        "Petr",
-			PhotoStaticID: 3,
+			PhotoStaticID: sql.NullInt64{Int64: 3, Valid: true},
 		},
 	}
 )

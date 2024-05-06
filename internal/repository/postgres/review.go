@@ -6,14 +6,15 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
+	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
 type ReviewDB struct {
-	DB *sql.DB
+	DB *sqlx.DB
 }
 
-func NewReviewRepository(db *sql.DB) repository.Review {
+func NewReviewRepository(db *sqlx.DB) repository.Review {
 	return &ReviewDB{
 		DB: db,
 	}
@@ -53,14 +54,15 @@ func scanAllFields(row sq.RowScanner) (*entity.Review, error) {
 	return review, err
 }
 
-func scanRows(rows *sql.Rows) ([]*entity.Review, error) {
+func scanRows(rows *sqlx.Rows) ([]*entity.Review, error) {
 	reviews := make([]*entity.Review, 0)
 	for rows.Next() {
-		review, err := scanAllFields(rows)
+		reviewEntity := new(entity.Review)
+		err := rows.StructScan(reviewEntity)
 		if err != nil {
 			return nil, entity.PSQLQueryErr("scanRows при сканировании рецензий", err)
 		}
-		reviews = append(reviews, review)
+		reviews = append(reviews, reviewEntity)
 	}
 	return reviews, nil
 }
@@ -69,14 +71,14 @@ func scanRows(rows *sql.Rows) ([]*entity.Review, error) {
 func (r *ReviewDB) GetLatestReviews(limit int) ([]*entity.Review, error) {
 	query, args, err := selectAllFields().
 		From("review").
-		OrderBy("created_at DESC").
+		OrderBy("created_at DESC", "id ASC").
 		Limit(uint64(limit)).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
 		return nil, entity.PSQLWrap(err, errors.New("ошибка при составлении запроса GetLatestReviews"))
 	}
-	rows, err := r.DB.Query(query, args...)
+	rows, err := r.DB.Queryx(query, args...)
 	if err != nil {
 		return nil, entity.PSQLQueryErr("GetLatestReviews", err)
 	}
@@ -159,7 +161,7 @@ func (r *ReviewDB) GetReviewsByContentID(contentID, page, limit int) ([]*entity.
 	query, args, err := selectAllFields().
 		From("review").
 		Where(sq.Eq{"content_id": contentID}).
-		OrderBy("rating DESC").
+		OrderBy("rating DESC", "id ASC").
 		Limit(uint64(limit)).
 		Offset(uint64((page - 1) * limit)).
 		PlaceholderFormat(sq.Dollar).
@@ -167,7 +169,7 @@ func (r *ReviewDB) GetReviewsByContentID(contentID, page, limit int) ([]*entity.
 	if err != nil {
 		return nil, entity.PSQLWrap(err, errors.New("ошибка при составлении запроса GetReviewsByContentID"))
 	}
-	rows, err := r.DB.Query(query, args...)
+	rows, err := r.DB.Queryx(query, args...)
 	if err != nil {
 		return nil, entity.PSQLQueryErr("GetReviewsByContentID", err)
 	}
@@ -247,7 +249,7 @@ func (r *ReviewDB) GetReviewsByAuthorID(authorID, page, limit int) ([]*entity.Re
 	query, args, err := selectAllFields().
 		From("review").
 		Where(sq.Eq{"user_id": authorID}).
-		OrderBy("created_at DESC").
+		OrderBy("created_at DESC", "id ASC").
 		Limit(uint64(limit)).
 		Offset(uint64((page - 1) * limit)).
 		PlaceholderFormat(sq.Dollar).
@@ -255,7 +257,7 @@ func (r *ReviewDB) GetReviewsByAuthorID(authorID, page, limit int) ([]*entity.Re
 	if err != nil {
 		return nil, entity.PSQLWrap(err, errors.New("ошибка при составлении запроса GetReviewsByAuthorID"))
 	}
-	rows, err := r.DB.Query(query, args...)
+	rows, err := r.DB.Queryx(query, args...)
 	if err != nil {
 		return nil, entity.PSQLQueryErr("GetReviewsByAuthorID", err)
 	}

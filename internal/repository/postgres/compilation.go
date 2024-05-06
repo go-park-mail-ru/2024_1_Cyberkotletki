@@ -6,14 +6,15 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
+	"github.com/jmoiron/sqlx"
 )
 
 type CompilationDB struct {
-	DB *sql.DB
+	DB *sqlx.DB
 }
 
 // NewCompilationRepository создает новый репозиторий подборок
-func NewCompilationRepository(db *sql.DB) repository.Compilation {
+func NewCompilationRepository(db *sqlx.DB) repository.Compilation {
 	return &CompilationDB{
 		DB: db,
 	}
@@ -111,7 +112,7 @@ func (c *CompilationDB) GetCompilationContent(id, page, limit int) ([]int, error
 		From("compilation_content").
 		Join("content ON compilation_content.content_id = content.id").
 		Where(sq.Eq{"compilation_id": id}).
-		OrderBy("content.rating DESC").
+		OrderBy("content.rating DESC", "id ASC").
 		Limit(uint64(limit)).
 		Offset(uint64((page - 1) * limit)).
 		PlaceholderFormat(sq.Dollar).

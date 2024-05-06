@@ -35,7 +35,7 @@ func (s SearchService) Search(query string) (*dto.SearchResult, error) {
 		Persons: make([]dto.PersonPreviewWithPhoto, len(persons)),
 	}
 	for index, content := range contents {
-		posterURL, err := s.staticUC.GetStatic(content.ID)
+		posterURL, err := s.staticUC.GetStatic(content.PosterStaticID)
 		switch {
 		case errors.Is(err, usecase.ErrStaticNotFound):
 			posterURL = ""
@@ -91,7 +91,7 @@ func (s SearchService) Search(query string) (*dto.SearchResult, error) {
 		result.Content[index] = contentDTO
 	}
 	for index, person := range persons {
-		posterURL, err := s.staticUC.GetStatic(person.PhotoStaticID)
+		posterURL, err := s.staticUC.GetStatic(person.GetPhotoStaticID())
 		switch {
 		case errors.Is(err, usecase.ErrStaticNotFound):
 			posterURL = ""

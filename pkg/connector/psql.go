@@ -1,11 +1,9 @@
 package connector
 
-import (
-	"database/sql"
-)
+import "github.com/jmoiron/sqlx"
 
-func GetPostgresConnector(dsn string) (*sql.DB, error) {
-	db, err := sql.Open("postgres", dsn)
+func GetPostgresConnector(dsn string) (*sqlx.DB, error) {
+	db, err := sqlx.Open("postgres", dsn)
 	if err != nil {
 		return nil, err
 	}

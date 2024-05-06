@@ -7,6 +7,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
+	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
 	"regexp"
 	"testing"
@@ -149,7 +150,7 @@ func setupGetPersonsByRoleAndContentIDSuccess(mock sqlmock.Sqlmock, roleID, cont
 		sqlmock.NewRows([]string{"person_id"}).AddRow(personID))
 }
 
-func setupGetPerson(mock sqlmock.Sqlmock, personID int, personFirstName, personLastName string) {
+func setupGetPerson(mock sqlmock.Sqlmock) {
 	query, args, _ := sq.Select(
 		"id",
 		"name",
@@ -161,7 +162,7 @@ func setupGetPerson(mock sqlmock.Sqlmock, personID int, personFirstName, personL
 		"photo_upload_id",
 	).
 		From("person").
-		Where(sq.Eq{"id": personID}).
+		Where(sq.Eq{"id": 1}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(getDriverValues(args)...).WillReturnRows(
@@ -175,13 +176,13 @@ func setupGetPerson(mock sqlmock.Sqlmock, personID int, personFirstName, personL
 			"height",
 			"photo_upload_id",
 		}).AddRow(
-			personID,
-			personFirstName,
-			personLastName,
+			1,
+			"Имя",
+			"Name",
 			time.Time{},
 			time.Time{},
 			"M",
-			180,
+			175,
 			1,
 		))
 }
@@ -320,13 +321,13 @@ func TestContentDB_GetContent(t *testing.T) {
 				Facts:            []string{"fact"},
 				Country:          []entity.Country{{ID: 1, Name: "Russia"}},
 				Genres:           []entity.Genre{{ID: 1, Name: "Action"}},
-				Actors:           []entity.Person{{ID: 10, Name: "Actor", EnName: "Actorov", Sex: "M", Height: 180, PhotoStaticID: 1}},
-				Directors:        []entity.Person{{ID: 11, Name: "Director", EnName: "Directorov", Sex: "M", Height: 180, PhotoStaticID: 1}},
-				Producers:        []entity.Person{{ID: 12, Name: "Producer", EnName: "Producerov", Sex: "M", Height: 180, PhotoStaticID: 1}},
-				Writers:          []entity.Person{{ID: 13, Name: "Writer", EnName: "Writerov", Sex: "M", Height: 180, PhotoStaticID: 1}},
-				Operators:        []entity.Person{{ID: 14, Name: "Operator", EnName: "Operatorov", Sex: "M", Height: 180, PhotoStaticID: 1}},
-				Composers:        []entity.Person{{ID: 15, Name: "Composer", EnName: "Composerov", Sex: "M", Height: 180, PhotoStaticID: 1}},
-				Editors:          []entity.Person{{ID: 16, Name: "Editor", EnName: "Editorov", Sex: "M", Height: 180, PhotoStaticID: 1}},
+				Actors:           []entity.Person{entity.GetExamplePerson()},
+				Directors:        []entity.Person{entity.GetExamplePerson()},
+				Producers:        []entity.Person{entity.GetExamplePerson()},
+				Writers:          []entity.Person{entity.GetExamplePerson()},
+				Operators:        []entity.Person{entity.GetExamplePerson()},
+				Composers:        []entity.Person{entity.GetExamplePerson()},
+				Editors:          []entity.Person{entity.GetExamplePerson()},
 				Type:             "movie",
 				Movie: &entity.Movie{
 					Premiere: time.Time{},
@@ -344,32 +345,32 @@ func TestContentDB_GetContent(t *testing.T) {
 				setupGetGenreByIDSuccess(mock, 1, "Action")
 
 				setupGetRoleIDByNameSuccess(mock, "actor", 1)
-				setupGetPersonsByRoleAndContentIDSuccess(mock, 1, 1, 10)
-				setupGetPerson(mock, 10, "Actor", "Actorov")
+				setupGetPersonsByRoleAndContentIDSuccess(mock, 1, 1, 1)
+				setupGetPerson(mock)
 
 				setupGetRoleIDByNameSuccess(mock, "director", 2)
-				setupGetPersonsByRoleAndContentIDSuccess(mock, 2, 1, 11)
-				setupGetPerson(mock, 11, "Director", "Directorov")
+				setupGetPersonsByRoleAndContentIDSuccess(mock, 2, 1, 1)
+				setupGetPerson(mock)
 
 				setupGetRoleIDByNameSuccess(mock, "producer", 3)
-				setupGetPersonsByRoleAndContentIDSuccess(mock, 3, 1, 12)
-				setupGetPerson(mock, 12, "Producer", "Producerov")
+				setupGetPersonsByRoleAndContentIDSuccess(mock, 3, 1, 1)
+				setupGetPerson(mock)
 
 				setupGetRoleIDByNameSuccess(mock, "writer", 4)
-				setupGetPersonsByRoleAndContentIDSuccess(mock, 4, 1, 13)
-				setupGetPerson(mock, 13, "Writer", "Writerov")
+				setupGetPersonsByRoleAndContentIDSuccess(mock, 4, 1, 1)
+				setupGetPerson(mock)
 
 				setupGetRoleIDByNameSuccess(mock, "operator", 5)
-				setupGetPersonsByRoleAndContentIDSuccess(mock, 5, 1, 14)
-				setupGetPerson(mock, 14, "Operator", "Operatorov")
+				setupGetPersonsByRoleAndContentIDSuccess(mock, 5, 1, 1)
+				setupGetPerson(mock)
 
 				setupGetRoleIDByNameSuccess(mock, "composer", 6)
-				setupGetPersonsByRoleAndContentIDSuccess(mock, 6, 1, 15)
-				setupGetPerson(mock, 15, "Composer", "Composerov")
+				setupGetPersonsByRoleAndContentIDSuccess(mock, 6, 1, 1)
+				setupGetPerson(mock)
 
 				setupGetRoleIDByNameSuccess(mock, "editor", 7)
-				setupGetPersonsByRoleAndContentIDSuccess(mock, 7, 1, 16)
-				setupGetPerson(mock, 16, "Editor", "Editorov")
+				setupGetPersonsByRoleAndContentIDSuccess(mock, 7, 1, 1)
+				setupGetPerson(mock)
 
 				setupGetMovieDataSuccess(mock, 1)
 				setupGetFactsSuccess(mock, 1, []string{"fact"})
@@ -396,13 +397,13 @@ func TestContentDB_GetContent(t *testing.T) {
 				Facts:            []string{"fact"},
 				Country:          []entity.Country{{ID: 1, Name: "Russia"}},
 				Genres:           []entity.Genre{{ID: 1, Name: "Action"}},
-				Actors:           []entity.Person{{ID: 10, Name: "Actor", EnName: "Actorov", Sex: "M", Height: 180, PhotoStaticID: 1}},
-				Directors:        []entity.Person{{ID: 11, Name: "Director", EnName: "Directorov", Sex: "M", Height: 180, PhotoStaticID: 1}},
-				Producers:        []entity.Person{{ID: 12, Name: "Producer", EnName: "Producerov", Sex: "M", Height: 180, PhotoStaticID: 1}},
-				Writers:          []entity.Person{{ID: 13, Name: "Writer", EnName: "Writerov", Sex: "M", Height: 180, PhotoStaticID: 1}},
-				Operators:        []entity.Person{{ID: 14, Name: "Operator", EnName: "Operatorov", Sex: "M", Height: 180, PhotoStaticID: 1}},
-				Composers:        []entity.Person{{ID: 15, Name: "Composer", EnName: "Composerov", Sex: "M", Height: 180, PhotoStaticID: 1}},
-				Editors:          []entity.Person{{ID: 16, Name: "Editor", EnName: "Editorov", Sex: "M", Height: 180, PhotoStaticID: 1}},
+				Actors:           []entity.Person{entity.GetExamplePerson()},
+				Directors:        []entity.Person{entity.GetExamplePerson()},
+				Producers:        []entity.Person{entity.GetExamplePerson()},
+				Writers:          []entity.Person{entity.GetExamplePerson()},
+				Operators:        []entity.Person{entity.GetExamplePerson()},
+				Composers:        []entity.Person{entity.GetExamplePerson()},
+				Editors:          []entity.Person{entity.GetExamplePerson()},
 				Type:             "series",
 				Movie:            nil,
 				Series: &entity.Series{
@@ -435,32 +436,32 @@ func TestContentDB_GetContent(t *testing.T) {
 				setupGetGenreByIDSuccess(mock, 1, "Action")
 
 				setupGetRoleIDByNameSuccess(mock, "actor", 1)
-				setupGetPersonsByRoleAndContentIDSuccess(mock, 1, 1, 10)
-				setupGetPerson(mock, 10, "Actor", "Actorov")
+				setupGetPersonsByRoleAndContentIDSuccess(mock, 1, 1, 1)
+				setupGetPerson(mock)
 
 				setupGetRoleIDByNameSuccess(mock, "director", 2)
-				setupGetPersonsByRoleAndContentIDSuccess(mock, 2, 1, 11)
-				setupGetPerson(mock, 11, "Director", "Directorov")
+				setupGetPersonsByRoleAndContentIDSuccess(mock, 2, 1, 1)
+				setupGetPerson(mock)
 
 				setupGetRoleIDByNameSuccess(mock, "producer", 3)
-				setupGetPersonsByRoleAndContentIDSuccess(mock, 3, 1, 12)
-				setupGetPerson(mock, 12, "Producer", "Producerov")
+				setupGetPersonsByRoleAndContentIDSuccess(mock, 3, 1, 1)
+				setupGetPerson(mock)
 
 				setupGetRoleIDByNameSuccess(mock, "writer", 4)
-				setupGetPersonsByRoleAndContentIDSuccess(mock, 4, 1, 13)
-				setupGetPerson(mock, 13, "Writer", "Writerov")
+				setupGetPersonsByRoleAndContentIDSuccess(mock, 4, 1, 1)
+				setupGetPerson(mock)
 
 				setupGetRoleIDByNameSuccess(mock, "operator", 5)
-				setupGetPersonsByRoleAndContentIDSuccess(mock, 5, 1, 14)
-				setupGetPerson(mock, 14, "Operator", "Operatorov")
+				setupGetPersonsByRoleAndContentIDSuccess(mock, 5, 1, 1)
+				setupGetPerson(mock)
 
 				setupGetRoleIDByNameSuccess(mock, "composer", 6)
-				setupGetPersonsByRoleAndContentIDSuccess(mock, 6, 1, 15)
-				setupGetPerson(mock, 15, "Composer", "Composerov")
+				setupGetPersonsByRoleAndContentIDSuccess(mock, 6, 1, 1)
+				setupGetPerson(mock)
 
 				setupGetRoleIDByNameSuccess(mock, "editor", 7)
-				setupGetPersonsByRoleAndContentIDSuccess(mock, 7, 1, 16)
-				setupGetPerson(mock, 16, "Editor", "Editorov")
+				setupGetPersonsByRoleAndContentIDSuccess(mock, 7, 1, 1)
+				setupGetPerson(mock)
 
 				setupGetSeriesDataSuccess(mock, 1)
 				setupGetSeasonsSuccess(mock, 1, []int{1})
@@ -479,9 +480,10 @@ func TestContentDB_GetContent(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			db, mock, err := sqlmock.New()
+			dbx := sqlx.NewDb(db, "sqlmock")
 			mock.MatchExpectationsInOrder(false)
 			require.NoError(t, err)
-			repo := NewContentRepository(db)
+			repo := NewContentRepository(dbx)
 			tc.SetupMock(mock)
 			output, err := repo.GetContent(tc.Request)
 			if !errors.Is(err, tc.ExpectedErr) {

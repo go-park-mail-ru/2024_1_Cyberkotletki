@@ -7,11 +7,12 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
+	"github.com/jmoiron/sqlx"
 	"sync"
 )
 
 type ContentDB struct {
-	DB *sql.DB
+	DB *sqlx.DB
 }
 
 type ScanContent struct {
@@ -30,18 +31,7 @@ type ScanContent struct {
 	BackdropStaticID sql.NullInt64
 }
 
-type ScanPerson struct {
-	ID            int
-	Name          string
-	EnName        string
-	BirthDate     sql.NullTime
-	DeathDate     sql.NullTime
-	Sex           string
-	Height        sql.NullInt64
-	PhotoUploadID sql.NullInt64
-}
-
-func NewContentRepository(db *sql.DB) repository.Content {
+func NewContentRepository(db *sqlx.DB) repository.Content {
 	return &ContentDB{
 		DB: db,
 	}
@@ -757,38 +747,16 @@ func (c *ContentDB) GetPerson(id int) (*entity.Person, error) {
 	if err != nil {
 		return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при формировании запроса GetPerson"))
 	}
-	var scanPerson ScanPerson
-	var person entity.Person
-	err = c.DB.QueryRow(query, args...).Scan(
-		&scanPerson.ID,
-		&scanPerson.Name,
-		&scanPerson.EnName,
-		&scanPerson.BirthDate,
-		&scanPerson.DeathDate,
-		&scanPerson.Sex,
-		&scanPerson.Height,
-		&scanPerson.PhotoUploadID,
-	)
+	person := new(entity.Person)
+	err = c.DB.QueryRowx(query, args...).StructScan(person)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, repository.ErrPersonNotFound
 		}
 		return nil, entity.PSQLQueryErr("GetPerson", err)
 	}
-	person.ID = scanPerson.ID
-	person.Name = scanPerson.Name
-	person.EnName = scanPerson.EnName
-	person.BirthDate = scanPerson.BirthDate.Time
-	person.DeathDate = scanPerson.DeathDate.Time
-	person.Sex = scanPerson.Sex
-	if scanPerson.Height.Valid {
-		person.Height = int(scanPerson.Height.Int64)
-	}
-	if scanPerson.PhotoUploadID.Valid {
-		person.PhotoStaticID = int(scanPerson.PhotoUploadID.Int64)
-	}
 
-	return &person, nil
+	return person, nil
 }
 
 // GetPersonRoles возвращает список контента, в создании которого персона принимала участие по ID персоны.

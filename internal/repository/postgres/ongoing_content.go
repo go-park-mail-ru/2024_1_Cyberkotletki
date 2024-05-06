@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/jmoiron/sqlx"
 	"sync"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 )
 
 type OngoingContentDB struct {
-	DB *sql.DB
+	DB *sqlx.DB
 }
 
 type ScanOngoingContent struct {
@@ -36,7 +37,7 @@ func scanAllFieldsOngoingContent(row sq.RowScanner) (*entity.OngoingContent, err
 	return ongoingContent, err
 }
 
-func NewOngoingContentRepository(db *sql.DB) repository.OngoingContent {
+func NewOngoingContentRepository(db *sqlx.DB) repository.OngoingContent {
 	return &OngoingContentDB{
 		DB: db,
 	}

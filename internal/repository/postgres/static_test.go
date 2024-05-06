@@ -6,6 +6,7 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
+	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
 	"regexp"
 	"testing"
@@ -61,10 +62,9 @@ func TestStaticDB_GetStatic(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			db, mock, err := sqlmock.New()
-			if err != nil {
-				t.Fatalf("не удалось создать мок: %s", err)
-			}
-			repo := NewStaticRepository(db, "", 1)
+			dbx := sqlx.NewDb(db, "sqlmock")
+			require.NoError(t, err)
+			repo := NewStaticRepository(dbx, "", 1)
 			query, _, err := sq.
 				Select("path", "Name").
 				From("static").

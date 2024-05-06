@@ -6,11 +6,12 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
+	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
 type UsersDB struct {
-	DB *sql.DB
+	DB *sqlx.DB
 }
 
 type DBUser struct {
@@ -34,7 +35,7 @@ func (u *DBUser) GetEntity() *entity.User {
 	}
 }
 
-func NewUserRepository(db *sql.DB) repository.User {
+func NewUserRepository(db *sqlx.DB) repository.User {
 	return &UsersDB{
 		DB: db,
 	}

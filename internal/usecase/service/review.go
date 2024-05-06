@@ -81,7 +81,7 @@ func (r *ReviewService) reviewEntityToDTO(reviewEntity *entity.Review) (*dto.Rev
 
 // reviewEntitiesToDTO конвертирует массив entity.Review в массив dto.ReviewResponse
 func (r *ReviewService) reviewEntitiesToDTO(reviewEntities []*entity.Review) (*dto.ReviewResponseList, error) {
-	reviews := make([]dto.ReviewResponse, 0, len(reviewEntities))
+	reviews := make([]dto.ReviewResponse, len(reviewEntities))
 	for i, review := range reviewEntities {
 		toDTO, err := r.reviewEntityToDTO(review)
 		if err != nil {

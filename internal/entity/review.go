@@ -8,17 +8,17 @@ import (
 )
 
 type Review struct {
-	ID            int       `json:"id"            example:"1"                    format:"int"`
-	AuthorID      int       `json:"authorID"      example:"1"                    format:"int"`
-	ContentID     int       `json:"contentID"     example:"1"                    format:"int"`
-	ContentRating int       `json:"contentRating" example:"5"                    format:"int"`
-	Title         string    `json:"title"         example:"Title"                format:"string"`
-	Text          string    `json:"text"          example:"i like it"            format:"string"`
-	CreatedAt     time.Time `json:"createdAt"     example:"2022-01-02T15:04:05Z" format:"int"`
-	UpdatedAt     time.Time `json:"updatedAt"     example:"2022-01-02T15:04:05Z" format:"int"`
-	Rating        int       `json:"rating"        example:"5"                    format:"int"`
-	Likes         int       `json:"likes"         example:"5"                    format:"int"`
-	Dislikes      int       `json:"dislikes"      example:"5"                    format:"int"`
+	ID            int       `db:"id"`
+	AuthorID      int       `db:"user_id"`
+	ContentID     int       `db:"content_id"`
+	ContentRating int       `db:"content_rating"`
+	Title         string    `db:"title"`
+	Text          string    `db:"text"`
+	CreatedAt     time.Time `db:"created_at"`
+	UpdatedAt     time.Time `db:"updated_at"`
+	Rating        int       `db:"rating"`
+	Likes         int       `db:"likes"`
+	Dislikes      int       `db:"dislikes"`
 }
 
 // ValidateReviewRating проверяет, что рейтинг находится в диапазоне от 1 до 10

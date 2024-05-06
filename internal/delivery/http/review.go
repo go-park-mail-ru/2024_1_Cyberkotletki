@@ -307,7 +307,7 @@ func (h *ReviewEndpoints) GetContentReviews(ctx echo.Context) error {
 		return utils.NewError(ctx, http.StatusBadRequest, "Невалидный id контента", nil)
 	}
 	page, err := strconv.ParseInt(ctx.Param("page"), 10, 64)
-	if err != nil {
+	if err != nil || page < 1 {
 		return utils.NewError(ctx, http.StatusBadRequest, "Невалидный номер страницы", nil)
 	}
 	reviews, err := h.reviewUC.GetContentReviews(int(contentID), 10, int(page))

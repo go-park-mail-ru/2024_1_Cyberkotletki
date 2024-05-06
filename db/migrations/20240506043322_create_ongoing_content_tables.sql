@@ -21,21 +21,100 @@ CREATE TABLE IF NOT EXISTS genre_ongoing_content
     CONSTRAINT genre_ongoing_content_unique UNIQUE (genre_id, ongoing_content_id)
 );
 
+BEGIN;
 
--- Вставка данных в таблицу ongoing_content
-INSERT INTO ongoing_content (title, poster_upload_id, release_date, type)
-VALUES  ('Пророк. История Александра Пушкина', 1, '2025-02-14 00:00:00', 'movie'),
-        ('Волшебник Изумрудного города', 2, '2025-01-01 00:00:00', 'movie'),
-        ('Ворон', 3, '2024-08-21 00:00:00', 'movie'),
-        ('Ждун в кино', 4, '2025-01-01 00:00:00', 'movie'),
-        ('Сказосные выходные', 5, '2025-08-07 00:00:00', 'movie'),
-        ('Финик 2', 6, '2025-10-23 00:00:00', 'movie'),
-        ('Красный шелк', 7, '2025-02-20 00:00:00', 'movie'),
-        ('Грязные деньги', 8, '2025-01-16 00:00:00', 'movie'),
-        ('Сивка-бурка', 9, '2026-01-01 00:00:00', 'movie'),
-        ('Сказка о царе Салтане', 10, '2026-02-19 00:00:00', 'movie');
+WITH new_static AS (
+INSERT INTO static (name, path)
+VALUES ('1.webp', 'ongoing')
+    RETURNING id
+    )
+INSERT INTO ongoing_content (type, title, poster_upload_id, release_date)
+SELECT 'movie', 'Пророк. История Александра Пушкина', new_static.id, '2025-02-14 00:00:00'
+FROM new_static;
 
 
+WITH new_static AS (
+INSERT INTO static (name, path)
+VALUES ('2.webp', 'ongoing')
+    RETURNING id
+    )
+INSERT INTO ongoing_content (type, title, poster_upload_id, release_date)
+SELECT 'movie', 'Волшебник Изумрудного города', new_static.id, '2025-01-01 00:00:00'
+FROM new_static;
+
+WITH new_static AS (
+INSERT INTO static (name, path)
+VALUES ('3.webp', 'ongoing')
+    RETURNING id
+    )
+INSERT INTO ongoing_content (type, title, poster_upload_id, release_date)
+SELECT 'movie', 'Ворон', new_static.id, '2024-08-21 00:00:00'
+FROM new_static;
+
+WITH new_static AS (
+INSERT INTO static (name, path)
+VALUES ('4.webp', 'ongoing')
+    RETURNING id
+    )
+INSERT INTO ongoing_content (type, title, poster_upload_id, release_date)
+SELECT 'movie', 'Ждун в кино', new_static.id, '2025-01-01 00:00:00'
+FROM new_static;
+
+WITH new_static AS (
+INSERT INTO static (name, path)
+VALUES ('5.webp', 'ongoing')
+    RETURNING id
+    )
+INSERT INTO ongoing_content (type, title, poster_upload_id, release_date)
+SELECT 'movie', 'Сказосные выходные', new_static.id, '2025-08-07 00:00:00'
+FROM new_static;
+
+WITH new_static AS (
+INSERT INTO static (name, path)
+VALUES ('6.webp', 'ongoing')
+    RETURNING id
+    )
+INSERT INTO ongoing_content (type, title, poster_upload_id, release_date)
+SELECT 'movie', 'Финик 2', new_static.id, '2025-10-23 00:00:00'
+FROM new_static;
+
+WITH new_static AS (
+INSERT INTO static (name, path)
+VALUES ('7.webp', 'ongoing')
+    RETURNING id
+    )
+INSERT INTO ongoing_content (type, title, poster_upload_id, release_date)
+SELECT 'movie', 'Красный шелк', new_static.id, '2025-02-20 00:00:00'
+FROM new_static;
+
+WITH new_static AS (
+INSERT INTO static (name, path)
+VALUES ('8.webp', 'ongoing')
+    RETURNING id
+    )
+INSERT INTO ongoing_content (type, title, poster_upload_id, release_date)
+SELECT 'movie', 'Грязные деньги', new_static.id, '2025-01-16 00:00:00'
+FROM new_static;
+
+WITH new_static AS (
+INSERT INTO static (name, path)
+VALUES ('9.webp', 'ongoing')
+    RETURNING id
+    )
+INSERT INTO ongoing_content (type, title, poster_upload_id, release_date)
+SELECT 'movie', 'Сивка-бурка', new_static.id, '2026-01-01 00:00:00'
+FROM new_static;
+
+WITH new_static AS (
+INSERT INTO static (name, path)
+VALUES ('10.webp', 'ongoing')
+    RETURNING id
+    )
+INSERT INTO ongoing_content (type, title, poster_upload_id, release_date)
+SELECT 'movie', 'Сказка о царе Салтане', new_static.id, '2026-02-19 00:00:00'
+FROM new_static;
+
+COMMIT;
 
 -- Вставка данных в таблицу genre_ongoing_content
 INSERT INTO genre_ongoing_content (genre_id, ongoing_content_id)

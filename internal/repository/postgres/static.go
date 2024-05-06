@@ -8,6 +8,7 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
+	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // Драйвер для работы с PostgreSQL
 	"io"
 	"os"
@@ -15,12 +16,12 @@ import (
 )
 
 type StaticDB struct {
-	DB        *sql.DB
+	DB        *sqlx.DB
 	basicPath string
 	maxSize   int
 }
 
-func NewStaticRepository(db *sql.DB, basicPath string, maxSize int) repository.Static {
+func NewStaticRepository(db *sqlx.DB, basicPath string, maxSize int) repository.Static {
 	return &StaticDB{
 		DB:        db,
 		basicPath: basicPath,
