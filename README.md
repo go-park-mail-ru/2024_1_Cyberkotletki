@@ -1,4 +1,4 @@
-![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/go-park-mail-ru/2024_1_Cyberkotletki/refactoring/coverage.json)
+![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/go-park-mail-ru/2024_1_Cyberkotletki/dev-deploy/coverage.json)
 # 2024_1_Cyberkotletki
 
 
