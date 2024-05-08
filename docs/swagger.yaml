@@ -1,4 +1,3 @@
-basePath: /api
 definitions:
   dto.Compilation:
     properties:
@@ -244,7 +243,9 @@ definitions:
         type: string
       roles:
         additionalProperties:
-          $ref: '#/definitions/dto.PreviewContentCardVertical'
+          items:
+            $ref: '#/definitions/dto.PreviewContentCardVertical'
+          type: array
         type: object
       sex:
         example: M
@@ -612,7 +613,7 @@ info:
   title: API Киноскопа
   version: "1.0"
 paths:
-  /auth/isAuth:
+  /api/auth/isAuth:
     get:
       description: Проверяет, авторизован ли пользователь
       parameters:
@@ -635,7 +636,7 @@ paths:
             $ref: '#/definitions/echo.HTTPError'
       tags:
       - Auth
-  /auth/logout:
+  /api/auth/logout:
     post:
       description: Удаляет сессию
       parameters:
@@ -652,7 +653,7 @@ paths:
       - _csrf: []
       tags:
       - Auth
-  /auth/logoutAll:
+  /api/auth/logoutAll:
     post:
       description: Удаляет все сессии пользователя
       parameters:
@@ -673,7 +674,7 @@ paths:
       - _csrf: []
       tags:
       - Auth
-  /compilation/{id}/{page}:
+  /api/compilation/{id}/{page}:
     get:
       consumes:
       - application/json
@@ -711,7 +712,7 @@ paths:
       summary: Получение карточек контента подборки
       tags:
       - compilation
-  /compilation/type/{compilationType}:
+  /api/compilation/type/{compilationType}:
     get:
       consumes:
       - application/json
@@ -740,7 +741,7 @@ paths:
       summary: Получение списка подборок по типу подборок
       tags:
       - compilation
-  /compilation/types:
+  /api/compilation/types:
     get:
       consumes:
       - application/json
@@ -759,7 +760,7 @@ paths:
       summary: Получение списка подборок
       tags:
       - compilation
-  /content/{id}:
+  /api/content/{id}:
     get:
       description: Получение контента по id
       parameters:
@@ -790,7 +791,7 @@ paths:
       summary: Получение контента по id
       tags:
       - content
-  /content/person/{id}:
+  /api/content/person/{id}:
     get:
       description: Получение персоны по id
       parameters:
@@ -821,7 +822,7 @@ paths:
       summary: Получение персоны по id
       tags:
       - content
-  /favourite:
+  /api/favourite:
     put:
       consumes:
       - application/json
@@ -853,7 +854,7 @@ paths:
       - _csrf: []
       tags:
       - Favourite
-  /favourite/{id}:
+  /api/favourite/{id}:
     delete:
       description: Удаление из избранного.
       parameters:
@@ -912,7 +913,7 @@ paths:
             $ref: '#/definitions/echo.HTTPError'
       tags:
       - Favourite
-  /favourite/my:
+  /api/favourite/my:
     get:
       description: Получение избранного пользователя
       responses:
@@ -934,7 +935,7 @@ paths:
             $ref: '#/definitions/echo.HTTPError'
       tags:
       - Favourite
-  /favourite/status/{id}:
+  /api/favourite/status/{id}:
     get:
       description: Получение статуса контента в избранном
       parameters:
@@ -966,7 +967,7 @@ paths:
             $ref: '#/definitions/echo.HTTPError'
       tags:
       - Favourite
-  /ongoing/{id}:
+  /api/ongoing/{id}:
     get:
       parameters:
       - description: ID контента календаря релизов
@@ -996,7 +997,7 @@ paths:
       summary: Получить контент календаря релизов по id контента
       tags:
       - ongoing_content
-  /ongoing/{year}/{month}:
+  /api/ongoing/{year}/{month}:
     get:
       parameters:
       - description: Месяц
@@ -1033,7 +1034,7 @@ paths:
       summary: Получить релизы по месяцу и году
       tags:
       - ongoing_content
-  /ongoing/nearest:
+  /api/ongoing/nearest:
     get:
       parameters:
       - description: Количество релизов
@@ -1060,7 +1061,7 @@ paths:
       summary: Получить ближайшие релизы
       tags:
       - ongoing_content
-  /ongoing/years:
+  /api/ongoing/years:
     get:
       produces:
       - application/json
@@ -1082,7 +1083,7 @@ paths:
       summary: Получить все года релизов
       tags:
       - ongoing_content
-  /playground/ping:
+  /api/playground/ping:
     get:
       description: Проверка соединения через классический ping pong
       responses:
@@ -1092,7 +1093,7 @@ paths:
             type: string
       tags:
       - Playground
-  /review:
+  /api/review:
     post:
       consumes:
       - application/json
@@ -1179,7 +1180,7 @@ paths:
       summary: Обновить рецензию
       tags:
       - review
-  /review/{id}:
+  /api/review/{id}:
     delete:
       consumes:
       - application/json
@@ -1250,7 +1251,7 @@ paths:
       summary: Получить рецензию
       tags:
       - review
-  /review/{id}/vote:
+  /api/review/{id}/vote:
     delete:
       consumes:
       - application/json
@@ -1324,7 +1325,7 @@ paths:
       summary: Поставить оценку на рецензию
       tags:
       - review
-  /review/content/{id}/{page}:
+  /api/review/content/{id}/{page}:
     get:
       description: Получить рецензии контента
       parameters:
@@ -1356,7 +1357,7 @@ paths:
       summary: Получить рецензии контента
       tags:
       - review
-  /review/myReview:
+  /api/review/myReview:
     get:
       description: Получить рецензию пользователя к контенту
       parameters:
@@ -1391,7 +1392,7 @@ paths:
       summary: Получить рецензию пользователя к контенту
       tags:
       - review
-  /review/recent:
+  /api/review/recent:
     get:
       description: Получить последние рецензии
       produces:
@@ -1408,7 +1409,7 @@ paths:
       summary: Получить последние рецензии
       tags:
       - review
-  /review/user/{id}/{page}:
+  /api/review/user/{id}/{page}:
     get:
       description: Получить рецензии пользователя
       parameters:
@@ -1440,7 +1441,7 @@ paths:
       summary: Получить рецензии пользователя
       tags:
       - review
-  /review/user/{id}/recent:
+  /api/review/user/{id}/recent:
     get:
       description: Получить последние рецензии пользователя
       parameters:
@@ -1467,7 +1468,7 @@ paths:
       summary: Получить последние рецензии пользователя
       tags:
       - review
-  /search:
+  /api/search:
     get:
       consumes:
       - application/json
@@ -1493,7 +1494,7 @@ paths:
             $ref: '#/definitions/echo.HTTPError'
       tags:
       - Search
-  /static/{id}:
+  /api/static/{id}:
     get:
       consumes:
       - application/json
@@ -1522,7 +1523,7 @@ paths:
             $ref: '#/definitions/echo.HTTPError'
       tags:
       - Static
-  /user/avatar:
+  /api/user/avatar:
     put:
       consumes:
       - application/json
@@ -1558,7 +1559,7 @@ paths:
       - _csrf: []
       tags:
       - User
-  /user/login:
+  /api/user/login:
     post:
       consumes:
       - application/json
@@ -1594,7 +1595,7 @@ paths:
       - _csrf: []
       tags:
       - User
-  /user/me:
+  /api/user/me:
     get:
       consumes:
       - application/json
@@ -1619,7 +1620,7 @@ paths:
             $ref: '#/definitions/echo.HTTPError'
       tags:
       - User
-  /user/password:
+  /api/user/password:
     put:
       consumes:
       - application/json
@@ -1657,7 +1658,7 @@ paths:
       - _csrf: []
       tags:
       - User
-  /user/profile:
+  /api/user/profile:
     get:
       consumes:
       - application/json
@@ -1726,7 +1727,7 @@ paths:
       - _csrf: []
       tags:
       - User
-  /user/register:
+  /api/user/register:
     post:
       consumes:
       - application/json
@@ -1757,6 +1758,35 @@ paths:
       - _csrf: []
       tags:
       - User
+  /static/{path}:
+    get:
+      consumes:
+      - application/json
+      description: Получение статического файла по относительному пути. Возвращает
+        файл в виде байтов.
+      parameters:
+      - description: Путь до статики
+        in: path
+        name: path
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: невалидный путь до статики
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: файл не найден
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: ошибка сервера
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      tags:
+      - Static
 securityDefinitions:
   _csrf:
     in: header

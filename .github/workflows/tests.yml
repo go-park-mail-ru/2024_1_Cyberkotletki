@@ -44,7 +44,7 @@ jobs:
     - name: Test
       run: |
           go test -coverprofile=test.coverage.tmp ./internal/...
-          cat test.coverage.tmp | grep -v 'mocks' > test.coverage
+          cat test.coverage.tmp | grep -v 'mocks' | grep -v 'proto' > test.coverage
     # выводим покрытие
     - name: Print coverage
       run: |

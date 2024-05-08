@@ -32,7 +32,7 @@ func (h *ContentEndpoints) Configure(server *echo.Group) {
 // @Failure 400 {object} echo.HTTPError
 // @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
-// @Router /content/{id} [get]
+// @Router /api/content/{id} [get]
 func (h *ContentEndpoints) GetContent(ctx echo.Context) error {
 	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
@@ -59,7 +59,7 @@ func (h *ContentEndpoints) GetContent(ctx echo.Context) error {
 // @Failure 400 {object} echo.HTTPError
 // @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
-// @Router /content/person/{id} [get]
+// @Router /api/content/person/{id} [get]
 func (h *ContentEndpoints) GetPerson(ctx echo.Context) error {
 	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {

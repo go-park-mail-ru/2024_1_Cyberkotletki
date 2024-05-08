@@ -27,7 +27,7 @@ func (h *SearchEndpoints) Configure(server *echo.Group) {
 // @Success     200 {object}    dto.SearchResult
 // @Failure		400	{object}	echo.HTTPError
 // @Failure		500	{object}	echo.HTTPError
-// @Router /search [get]
+// @Router /api/search [get]
 func (h *SearchEndpoints) Search(ctx echo.Context) error {
 	searchQuery := ctx.QueryParam("query")
 	if searchQuery == "" {

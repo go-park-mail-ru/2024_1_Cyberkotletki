@@ -38,8 +38,8 @@ type PreviewContentCardVertical struct {
 }
 
 type MovieContent struct {
-	Premiere time.Time `json:"premiere" example:"2020-01-01"`
-	Duration int       `json:"duration" example:"134"`
+	Premiere *time.Time `json:"premiere,omitempty" example:"2020-01-01"`
+	Duration int        `json:"duration"           example:"134"`
 }
 
 type SeriesContent struct {

@@ -1,12 +1,60 @@
 version: "3.6"
 services:
-  goservice:
-    build: "."
+  # ----------------------------------------------
+  # БД: Postgres, Redis
+  # ----------------------------------------------
+  postgres:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: kinoskop_admin
+      POSTGRES_PASSWORD: admin_secret_password
+      POSTGRES_DB: kinoskop
     ports:
-      - "8080"
-  nginx:
-    build: "./nginx"
+      - "5432:5432"
+  redis:
+    image: redis:latest
+    restart: always
     ports:
-      - "80:80"
+      - "6379:6379"
+  # ----------------------------------------------
+  # Микросервисы: Auth, Core, Static
+  # ----------------------------------------------
+  auth:
+    restart: always
+    build:
+      context: .
+      dockerfile: ./docker/auth.dockerfile
+    volumes:
+      - ./config_auth.yaml:/app/config_auth.yaml
+    ports:
+      - "8081:8081"
     depends_on:
-      - "goservice"
+      - redis
+  static:
+    restart: always
+    build:
+      context: .
+      dockerfile: ./docker/static.dockerfile
+    volumes:
+      - ./config_static.yaml:/app/config_static.yaml
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres
+  core:
+    restart: always
+    build:
+      context: .
+      dockerfile: ./docker/core.dockerfile
+    volumes:
+      - ./config.yaml:/app/config.yaml
+    environment:
+      - DATABASE_URL=postgres://kinoskop_admin:admin_secret_password@postgres:5432/kinoskop?sslmode=disable
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth
+      - static
+      - postgres
+      - redis

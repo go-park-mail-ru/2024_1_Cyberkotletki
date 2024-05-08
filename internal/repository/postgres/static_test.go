@@ -48,7 +48,7 @@ func TestStaticDB_GetStatic(t *testing.T) {
 			name:           "Неизвестная ошибка",
 			requestId:      1,
 			expectedOutput: "",
-			expectedErr:    entity.PSQLQueryErr("GetStatic", sql.ErrConnDone),
+			expectedErr:    entity.PSQLQueryErr("GetStaticURL", sql.ErrConnDone),
 			setupMock: func(mock sqlmock.Sqlmock, query string) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs(1).
@@ -64,17 +64,17 @@ func TestStaticDB_GetStatic(t *testing.T) {
 			db, mock, err := sqlmock.New()
 			dbx := sqlx.NewDb(db, "sqlmock")
 			require.NoError(t, err)
-			repo := NewStaticRepository(dbx, "", 1)
+			repo := NewStaticRepository(dbx, nil, "", 1)
 			query, _, err := sq.
 				Select("path", "Name").
 				From("static").
 				Where(sq.Eq{"id": tc.requestId}).
 				PlaceholderFormat(sq.Dollar).ToSql()
 			if err != nil {
-				t.Fatalf("ошибка при формировании sql-запроса GetStatic: %s", err)
+				t.Fatalf("ошибка при формировании sql-запроса GetStaticURL: %s", err)
 			}
 			tc.setupMock(mock, query)
-			result, err := repo.GetStatic(tc.requestId)
+			result, err := repo.GetStaticURL(tc.requestId)
 			require.Equal(t, tc.expectedErr, err)
 			require.Equal(t, tc.expectedOutput, result)
 		})

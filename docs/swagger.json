@@ -6,9 +6,8 @@
         "contact": {},
         "version": "1.0"
     },
-    "basePath": "/api",
     "paths": {
-        "/auth/isAuth": {
+        "/api/auth/isAuth": {
             "get": {
                 "description": "Проверяет, авторизован ли пользователь",
                 "tags": [
@@ -43,7 +42,7 @@
                 }
             }
         },
-        "/auth/logout": {
+        "/api/auth/logout": {
             "post": {
                 "security": [
                     {
@@ -71,7 +70,7 @@
                 }
             }
         },
-        "/auth/logoutAll": {
+        "/api/auth/logoutAll": {
             "post": {
                 "security": [
                     {
@@ -105,7 +104,7 @@
                 }
             }
         },
-        "/compilation/type/{compilationType}": {
+        "/api/compilation/type/{compilationType}": {
             "get": {
                 "description": "Получение списка подборок по id типа подборки",
                 "consumes": [
@@ -149,7 +148,7 @@
                 }
             }
         },
-        "/compilation/types": {
+        "/api/compilation/types": {
             "get": {
                 "description": "Получение списка подборок по id",
                 "consumes": [
@@ -178,7 +177,7 @@
                 }
             }
         },
-        "/compilation/{id}/{page}": {
+        "/api/compilation/{id}/{page}": {
             "get": {
                 "description": "Получение карточек контента подборки по id",
                 "consumes": [
@@ -235,7 +234,7 @@
                 }
             }
         },
-        "/content/person/{id}": {
+        "/api/content/person/{id}": {
             "get": {
                 "description": "Получение персоны по id",
                 "produces": [
@@ -282,7 +281,7 @@
                 }
             }
         },
-        "/content/{id}": {
+        "/api/content/{id}": {
             "get": {
                 "description": "Получение контента по id",
                 "produces": [
@@ -329,7 +328,7 @@
                 }
             }
         },
-        "/favourite": {
+        "/api/favourite": {
             "put": {
                 "security": [
                     {
@@ -379,7 +378,7 @@
                 }
             }
         },
-        "/favourite/my": {
+        "/api/favourite/my": {
             "get": {
                 "description": "Получение избранного пользователя",
                 "tags": [
@@ -413,7 +412,7 @@
                 }
             }
         },
-        "/favourite/status/{id}": {
+        "/api/favourite/status/{id}": {
             "get": {
                 "description": "Получение статуса контента в избранном",
                 "tags": [
@@ -462,7 +461,7 @@
                 }
             }
         },
-        "/favourite/{id}": {
+        "/api/favourite/{id}": {
             "get": {
                 "description": "Получение избранного пользователя",
                 "tags": [
@@ -554,7 +553,7 @@
                 }
             }
         },
-        "/ongoing/nearest": {
+        "/api/ongoing/nearest": {
             "get": {
                 "produces": [
                     "application/json"
@@ -596,7 +595,7 @@
                 }
             }
         },
-        "/ongoing/years": {
+        "/api/ongoing/years": {
             "get": {
                 "produces": [
                     "application/json"
@@ -630,7 +629,7 @@
                 }
             }
         },
-        "/ongoing/{id}": {
+        "/api/ongoing/{id}": {
             "get": {
                 "produces": [
                     "application/json"
@@ -676,7 +675,7 @@
                 }
             }
         },
-        "/ongoing/{year}/{month}": {
+        "/api/ongoing/{year}/{month}": {
             "get": {
                 "produces": [
                     "application/json"
@@ -732,7 +731,7 @@
                 }
             }
         },
-        "/playground/ping": {
+        "/api/playground/ping": {
             "get": {
                 "description": "Проверка соединения через классический ping pong",
                 "tags": [
@@ -748,7 +747,7 @@
                 }
             }
         },
-        "/review": {
+        "/api/review": {
             "put": {
                 "security": [
                     {
@@ -884,7 +883,7 @@
                 }
             }
         },
-        "/review/content/{id}/{page}": {
+        "/api/review/content/{id}/{page}": {
             "get": {
                 "description": "Получить рецензии контента",
                 "produces": [
@@ -932,7 +931,7 @@
                 }
             }
         },
-        "/review/myReview": {
+        "/api/review/myReview": {
             "get": {
                 "description": "Получить рецензию пользователя к контенту",
                 "produces": [
@@ -985,7 +984,7 @@
                 }
             }
         },
-        "/review/recent": {
+        "/api/review/recent": {
             "get": {
                 "description": "Получить последние рецензии",
                 "produces": [
@@ -1011,7 +1010,7 @@
                 }
             }
         },
-        "/review/user/{id}/recent": {
+        "/api/review/user/{id}/recent": {
             "get": {
                 "description": "Получить последние рецензии пользователя",
                 "produces": [
@@ -1052,7 +1051,7 @@
                 }
             }
         },
-        "/review/user/{id}/{page}": {
+        "/api/review/user/{id}/{page}": {
             "get": {
                 "description": "Получить рецензии пользователя",
                 "produces": [
@@ -1100,7 +1099,7 @@
                 }
             }
         },
-        "/review/{id}": {
+        "/api/review/{id}": {
             "get": {
                 "description": "Получить рецензию по id",
                 "consumes": [
@@ -1209,7 +1208,7 @@
                 }
             }
         },
-        "/review/{id}/vote": {
+        "/api/review/{id}/vote": {
             "put": {
                 "security": [
                     {
@@ -1324,7 +1323,7 @@
                 }
             }
         },
-        "/search": {
+        "/api/search": {
             "get": {
                 "description": "Поиск фильмов, сериалов и персон",
                 "consumes": [
@@ -1364,7 +1363,7 @@
                 }
             }
         },
-        "/static/{id}": {
+        "/api/static/{id}": {
             "get": {
                 "description": "Получение ссылки на статический файл по id. Возвращает ссылку подобного вида:",
                 "consumes": [
@@ -1407,7 +1406,7 @@
                 }
             }
         },
-        "/user/avatar": {
+        "/api/user/avatar": {
             "put": {
                 "security": [
                     {
@@ -1463,7 +1462,7 @@
                 }
             }
         },
-        "/user/login": {
+        "/api/user/login": {
             "post": {
                 "security": [
                     {
@@ -1519,7 +1518,7 @@
                 }
             }
         },
-        "/user/me": {
+        "/api/user/me": {
             "get": {
                 "description": "Возвращает id авторизованного пользователя",
                 "consumes": [
@@ -1557,7 +1556,7 @@
                 }
             }
         },
-        "/user/password": {
+        "/api/user/password": {
             "put": {
                 "security": [
                     {
@@ -1615,7 +1614,7 @@
                 }
             }
         },
-        "/user/profile": {
+        "/api/user/profile": {
             "get": {
                 "description": "Возвращает профиль пользователя по id",
                 "consumes": [
@@ -1720,7 +1719,7 @@
                 }
             }
         },
-        "/user/register": {
+        "/api/user/register": {
             "post": {
                 "security": [
                     {
@@ -1763,6 +1762,49 @@
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/static/{path}": {
+            "get": {
+                "description": "Получение статического файла по относительному пути. Возвращает файл в виде байтов.",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Static"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Путь до статики",
+                        "name": "path",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "невалидный путь до статики",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "файл не найден",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "ошибка сервера",
                         "schema": {
                             "$ref": "#/definitions/echo.HTTPError"
                         }
@@ -2115,7 +2157,10 @@
                 "roles": {
                     "type": "object",
                     "additionalProperties": {
-                        "$ref": "#/definitions/dto.PreviewContentCardVertical"
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/dto.PreviewContentCardVertical"
+                        }
                     }
                 },
                 "sex": {

@@ -11,12 +11,16 @@ type Static interface {
 	// Возможные ошибки:
 	// ErrStaticNotFound - статика с таким id не найдена
 	GetStatic(staticID int) (string, error)
+	// GetStaticFile возвращает статику по ID
+	// Возможные ошибки:
+	// ErrStaticNotFound - статика с таким id не найдена
+	GetStaticFile(staticURI string) (io.ReadSeeker, error)
 	// UploadAvatar загружает аватар на сервер
 	// Возможные ошибки:
 	// ErrStaticTooBigFile - файл слишком большой
 	// ErrStaticNotImage - файл не является валидным изображением
 	// ErrStaticImageDimensions - изображение имеет недопустимые размеры
-	UploadAvatar(reader io.Reader) (int, error)
+	UploadAvatar(reader io.ReadSeeker) (int, error)
 }
 
 var (

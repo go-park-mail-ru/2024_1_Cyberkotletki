@@ -147,7 +147,7 @@ func TestUserEndpoints_Register(t *testing.T) {
 			ctx := e.NewContext(req, rec)
 			ctx.Request().Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 			cfg := config.Config{}
-			cfg.Auth.SessionAliveTime = 1
+			cfg.Microservices.Auth.HTTPSessionAliveTime = 1
 			ctx.Set("params", cfg)
 			err := userEndpoints.Register(ctx)
 			require.Equal(t, tc.ExpectedErr, err)
@@ -274,7 +274,7 @@ func TestUserEndpoints_Login(t *testing.T) {
 			ctx := e.NewContext(req, rec)
 			ctx.Request().Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 			cfg := config.Config{}
-			cfg.Auth.SessionAliveTime = 1
+			cfg.Microservices.Auth.HTTPSessionAliveTime = 1
 			ctx.Set("params", cfg)
 			err := userEndpoints.Login(ctx)
 			require.Equal(t, tc.ExpectedErr, err)
@@ -434,7 +434,7 @@ func TestUserEndpoints_UpdatePassword(t *testing.T) {
 			rec := httptest.NewRecorder()
 			ctx := e.NewContext(req, rec)
 			cfg := config.Config{}
-			cfg.Auth.SessionAliveTime = 1
+			cfg.Microservices.Auth.HTTPSessionAliveTime = 1
 			ctx.Set("params", cfg)
 			ctx.Request().Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 			err := userEndpoints.UpdatePassword(ctx)
@@ -614,7 +614,7 @@ func TestUserEndpoints_UploadAvatar(t *testing.T) {
 			rec := httptest.NewRecorder()
 			ctx := e.NewContext(req, rec)
 			cfg := config.Config{}
-			cfg.Auth.SessionAliveTime = 1
+			cfg.Microservices.Auth.HTTPSessionAliveTime = 1
 			ctx.Set("params", cfg)
 			err := userEndpoints.UploadAvatar(ctx)
 			require.Equal(t, tc.ExpectedErr, err)
@@ -762,7 +762,7 @@ func TestUserEndpoints_UpdateInfo(t *testing.T) {
 			rec := httptest.NewRecorder()
 			ctx := e.NewContext(req, rec)
 			cfg := config.Config{}
-			cfg.Auth.SessionAliveTime = 1
+			cfg.Microservices.Auth.HTTPSessionAliveTime = 1
 			ctx.Set("params", cfg)
 			ctx.Request().Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 			err := userEndpoints.UpdateInfo(ctx)
@@ -838,7 +838,7 @@ func TestUserEndpoints_GetProfile(t *testing.T) {
 			rec := httptest.NewRecorder()
 			ctx := e.NewContext(req, rec)
 			cfg := config.Config{}
-			cfg.Auth.SessionAliveTime = 1
+			cfg.Microservices.Auth.HTTPSessionAliveTime = 1
 			ctx.Set("params", cfg)
 			ctx.QueryParams().Set("id", tc.RequestID)
 			err := userEndpoints.GetProfile(ctx)
@@ -892,7 +892,7 @@ func TestUserEndpoints_GetMyID(t *testing.T) {
 			rec := httptest.NewRecorder()
 			ctx := e.NewContext(req, rec)
 			cfg := config.Config{}
-			cfg.Auth.SessionAliveTime = 1
+			cfg.Microservices.Auth.HTTPSessionAliveTime = 1
 			ctx.Set("params", cfg)
 			tc.SetupAuthUsecaseMock(mockAuthUsecase)
 			err := userEndpoints.GetMyID(ctx)

@@ -37,7 +37,7 @@ func (h *FavouriteEndpoints) Configure(server *echo.Group) {
 // @Failure		400	{object}	echo.HTTPError
 // @Failure		404	{object}	echo.HTTPError
 // @Failure		500	{object}	echo.HTTPError
-// @Router /favourite [put]
+// @Router /api/favourite [put]
 // @Security _csrf
 func (h *FavouriteEndpoints) CreateFavourite(ctx echo.Context) error {
 	userID, err := utils.GetUserIDFromSession(ctx, h.authUC)
@@ -68,7 +68,7 @@ func (h *FavouriteEndpoints) CreateFavourite(ctx echo.Context) error {
 // @Failure		401	{object}	echo.HTTPError
 // @Failure		404	{object}	echo.HTTPError
 // @Failure		500	{object}	echo.HTTPError
-// @Router /favourite/{id} [delete]
+// @Router /api/favourite/{id} [delete]
 // @Security _csrf
 func (h *FavouriteEndpoints) DeleteFavourite(ctx echo.Context) error {
 	userID, err := utils.GetUserIDFromSession(ctx, h.authUC)
@@ -98,7 +98,7 @@ func (h *FavouriteEndpoints) DeleteFavourite(ctx echo.Context) error {
 // @Failure		400	{object}	echo.HTTPError
 // @Failure		404	{object}	echo.HTTPError
 // @Failure		500	{object}	echo.HTTPError
-// @Router /favourite/{id} [get]
+// @Router /api/favourite/{id} [get]
 func (h *FavouriteEndpoints) GetFavouritesByUser(ctx echo.Context) error {
 	userID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
@@ -122,7 +122,7 @@ func (h *FavouriteEndpoints) GetFavouritesByUser(ctx echo.Context) error {
 // @Failure		401	{object}	echo.HTTPError
 // @Failure		404	{object}	echo.HTTPError
 // @Failure		500	{object}	echo.HTTPError
-// @Router /favourite/my [get]
+// @Router /api/favourite/my [get]
 func (h *FavouriteEndpoints) GetMyFavourites(ctx echo.Context) error {
 	userID, err := utils.GetUserIDFromSession(ctx, h.authUC)
 	if err != nil {
@@ -148,7 +148,7 @@ func (h *FavouriteEndpoints) GetMyFavourites(ctx echo.Context) error {
 // @Failure		401	{object}	echo.HTTPError
 // @Failure		404	{object}	echo.HTTPError
 // @Failure		500	{object}	echo.HTTPError
-// @Router /favourite/status/{id} [get]
+// @Router /api/favourite/status/{id} [get]
 func (h *FavouriteEndpoints) GetStatus(ctx echo.Context) error {
 	userID, err := utils.GetUserIDFromSession(ctx, h.authUC)
 	if err != nil {

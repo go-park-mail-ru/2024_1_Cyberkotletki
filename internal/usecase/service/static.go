@@ -30,7 +30,7 @@ func NewStaticService(staticRepo repository.Static) usecase.Static {
 }
 
 func (s *StaticService) GetStatic(staticID int) (string, error) {
-	staticURL, err := s.staticRepo.GetStatic(staticID)
+	staticURL, err := s.staticRepo.GetStaticURL(staticID)
 	switch {
 	case errors.Is(err, repository.ErrStaticNotFound):
 		return "", usecase.ErrStaticNotFound
@@ -41,27 +41,37 @@ func (s *StaticService) GetStatic(staticID int) (string, error) {
 	}
 }
 
-func (s *StaticService) UploadAvatar(reader io.Reader) (int, error) {
-	data := make([]byte, s.staticRepo.GetMaxSize())
-	bytesCount, err := reader.Read(data)
+func (s *StaticService) UploadAvatar(reader io.ReadSeeker) (int, error) {
+	// Проверка размера файла
+	size, err := reader.Seek(0, io.SeekEnd)
 	if err != nil {
-		return -1, errors.New("UploadAvatar: ошибка при чтении файла")
+		return -1, errors.Join(err, errors.New("ошибка при определении размера файла"))
 	}
-	if bytesCount >= s.staticRepo.GetMaxSize() {
+	if size > int64(s.staticRepo.GetMaxSize()) {
 		return -1, usecase.ErrStaticTooBigFile
 	}
-	data = data[:bytesCount]
+	_, err = reader.Seek(0, io.SeekStart) // Возвращаемся в начало файла
+	if err != nil {
+		return -1, errors.Join(err, errors.New("ошибка при возвращении io.ReadSeeker в начало файла"))
+	}
 
 	// Определение типа файла
-	contentType := http.DetectContentType(data)
-
-	// Проверка, является ли файл изображением
+	headerBytes := make([]byte, 512)
+	_, err = reader.Read(headerBytes)
+	if err != nil {
+		return -1, errors.Join(err, errors.New("ошибка при чтении заголовка файла"))
+	}
+	contentType := http.DetectContentType(headerBytes)
 	if contentType != "image/jpeg" && contentType != "image/png" && contentType != "image/gif" {
 		return -1, usecase.ErrStaticNotImage
 	}
+	_, err = reader.Seek(0, io.SeekStart) // Возвращаемся в начало файла
+	if err != nil {
+		return -1, errors.Join(err, errors.New("ошибка при возвращении io.ReadSeeker в начало файла"))
+	}
 
 	// Чтение данных файла в структуру изображения
-	img, _, err := image.Decode(bytes.NewReader(data))
+	img, _, err := image.Decode(reader)
 	if err != nil {
 		return -1, usecase.ErrStaticNotImage
 	}
@@ -103,9 +113,20 @@ func (s *StaticService) UploadAvatar(reader io.Reader) (int, error) {
 	}
 
 	// Загрузка обработанного изображения на сервер
-	id, err := s.staticRepo.UploadStatic("avatars", uuid.New().String()+".webp", out)
+	id, err := s.staticRepo.UploadStatic("avatars", uuid.New().String()+".webp", bytes.NewReader(out.Bytes()))
 	if err != nil {
 		return -1, err
 	}
 	return id, nil
+}
+
+func (s *StaticService) GetStaticFile(staticURI string) (io.ReadSeeker, error) {
+	static, err := s.staticRepo.GetStaticFile(staticURI)
+	switch {
+	case errors.Is(err, repository.ErrStaticNotFound):
+		return nil, usecase.ErrStaticNotFound
+	case err != nil:
+		return nil, entity.UsecaseWrap(err, errors.New("ошибка при получении статики"))
+	}
+	return static, nil
 }

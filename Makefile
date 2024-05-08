@@ -4,7 +4,7 @@ PKG_INTERNAL = ./internal/...
 run-tests:
 	@go generate $(PKG_INTERNAL)
 	@if go test -race $(PKG_INTERNAL) -coverprofile=test.coverage.tmp $(PKG_INTERNAL) ; then \
-    	cat test.coverage.tmp | grep -v 'mocks' > test.coverage ; \
+    	cat test.coverage.tmp | grep -v 'mocks' | grep -v 'proto' > test.coverage ; \
     	go tool cover -func test.coverage | tail -n 1 && rm test.coverage.tmp && rm test.coverage ; \
     	echo "\033[0;32mТесты прошли успешно\033[0m" ; \
     else \
@@ -16,28 +16,21 @@ run-tests:
 gen-swagger:
 	swag init --dir cmd/app,internal/delivery/http --parseDependency
 
-.PHONY: run-full-dev
-run-full-dev:
-	# генерируем пример конфига
-	make gen-example-config
-	# генерируем документацию swagger
-	make gen-swagger
-	# запускаем контейнер с сессиями
-	make run-session-storage-container
-	# запускаем контейнер с базой данных
-	make run-db-container
-	# накатываем миграции
-	make run-migrations
-	# запускаем приложение
-	go run cmd/app/main.go
-
 .PHONY: run-dev
 run-dev:
 	go run cmd/app/main.go
 
+.PHONY: run-docker-deploy
+run-docker-deploy:
+	docker-compose up --build -d
+	sleep 5
+	make run-migrations
+
 .PHONY: gen-example-config
 gen-example-config:
 	go run cmd/app/main.go --generate-example-config=true
+	go run cmd/auth/main.go --generate-example-config=true
+	go run cmd/static/main.go --generate-example-config=true
 
 .PHONY: run-session-storage-container
 run-session-storage-container:
@@ -73,12 +66,6 @@ run-db-container:
 	-docker exec -it db psql -U postgres -c "CREATE DATABASE kinoskop"
 	-docker exec -it db psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE kinoskop TO kinoskop_admin"
 	-docker exec -it db psql -U postgres -c "ALTER DATABASE kinoskop OWNER TO kinoskop_admin;"
-
-.PHONY: create-db-from-state
-create-db-from-state:
-	# Выполняем SQL-скрипт из файла state1.sql
-	docker cp $(PWD)/db/states/state1.sql db:/state.sql
-	docker exec -i db bash -c 'psql -U kinoskop_admin kinoskop < /state.sql'
 
 .PHONY: run-migrations
 run-migrations:

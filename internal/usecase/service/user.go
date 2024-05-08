@@ -58,7 +58,7 @@ func (u *UserService) Login(login *dto.Login) (int, error) {
 	return user.ID, nil
 }
 
-func (u *UserService) UpdateAvatar(userID int, reader io.Reader) error {
+func (u *UserService) UpdateAvatar(userID int, reader io.ReadSeeker) error {
 	user, err := u.userRepo.GetUserByID(userID)
 	switch {
 	case errors.Is(err, repository.ErrUserNotFound):

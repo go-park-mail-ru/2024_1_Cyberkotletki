@@ -86,7 +86,7 @@ func (mr *MockUserMockRecorder) Register(arg0 any) *gomock.Call {
 }
 
 // UpdateAvatar mocks base method.
-func (m *MockUser) UpdateAvatar(userID int, reader io.Reader) error {
+func (m *MockUser) UpdateAvatar(userID int, reader io.ReadSeeker) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateAvatar", userID, reader)
 	ret0, _ := ret[0].(error)
