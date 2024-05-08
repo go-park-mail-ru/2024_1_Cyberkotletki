@@ -22,7 +22,7 @@ type User interface {
 	// Возможные ошибки:
 	// ErrUserNotFound - пользователь не найден
 	// UserIncorrectDataError - некорректные данные
-	UpdateAvatar(userID int, reader io.Reader) error
+	UpdateAvatar(userID int, reader io.ReadSeeker) error
 	// UpdateInfo обновление информации о пользователе.
 	// Возможные ошибки:
 	// ErrUserNotFound - пользователь не найден

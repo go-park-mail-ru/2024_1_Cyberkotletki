@@ -31,7 +31,7 @@ func (h *CompilationEndpoints) Configure(server *echo.Group) {
 // @Produce json
 // @Success 200 {object} dto.CompilationTypeResponseList
 // @Failure 500 {object} echo.HTTPError
-// @Router /compilation/types [get]
+// @Router /api/compilation/types [get]
 func (h *CompilationEndpoints) GetCompilationTypes(ctx echo.Context) error {
 	compType, err := h.compilationUC.GetCompilationTypes()
 	if err != nil {
@@ -50,7 +50,7 @@ func (h *CompilationEndpoints) GetCompilationTypes(ctx echo.Context) error {
 // @Success 200 {object} dto.CompilationResponseList
 // @Failure 400 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
-// @Router /compilation/type/{compilationType} [get]
+// @Router /api/compilation/type/{compilationType} [get]
 func (h *CompilationEndpoints) GetCompilationsByCompilationType(ctx echo.Context) error {
 	compilationType, err := strconv.ParseInt(ctx.Param("compilationType"), 10, 64)
 	if err != nil {
@@ -75,7 +75,7 @@ func (h *CompilationEndpoints) GetCompilationsByCompilationType(ctx echo.Context
 // @Failure 400 {object} echo.HTTPError
 // @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
-// @Router /compilation/{id}/{page} [get]
+// @Router /api/compilation/{id}/{page} [get]
 func (h *CompilationEndpoints) GetCompilationContent(ctx echo.Context) error {
 	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {

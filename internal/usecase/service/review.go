@@ -13,20 +13,20 @@ type ReviewService struct {
 	reviewRepo  repository.Review
 	userRepo    repository.User
 	contentRepo repository.Content
-	staticRepo  repository.Static
+	staticUC    usecase.Static
 }
 
 func NewReviewService(
 	reviewRepo repository.Review,
 	userRepo repository.User,
 	contentRepo repository.Content,
-	staticRepo repository.Static,
+	staticUC usecase.Static,
 ) usecase.Review {
 	return &ReviewService{
 		reviewRepo:  reviewRepo,
 		userRepo:    userRepo,
 		contentRepo: contentRepo,
-		staticRepo:  staticRepo,
+		staticUC:    staticUC,
 	}
 }
 
@@ -46,9 +46,9 @@ func (r *ReviewService) reviewEntityToDTO(reviewEntity *entity.Review) (*dto.Rev
 		authorName = author.Email
 	}
 	var avatar string
-	avatar, err = r.staticRepo.GetStatic(author.AvatarUploadID)
+	avatar, err = r.staticUC.GetStatic(author.AvatarUploadID)
 	switch {
-	case errors.Is(err, repository.ErrStaticNotFound):
+	case errors.Is(err, usecase.ErrStaticNotFound):
 		// аватара может и не быть
 		avatar = ""
 	case err != nil:

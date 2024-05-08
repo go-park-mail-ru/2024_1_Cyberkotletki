@@ -17,6 +17,10 @@ func RedisWrap(errs ...error) error {
 	return errors.Join(ErrRedis, errors.Join(errs...))
 }
 
+func S3Wrap(errs ...error) error {
+	return errors.Join(ErrS3, errors.Join(errs...))
+}
+
 func UsecaseWrap(errs ...error) error {
 	return errors.Join(ErrInternal, errors.Join(errs...))
 }
@@ -24,6 +28,7 @@ func UsecaseWrap(errs ...error) error {
 var (
 	ErrRedis    = errors.New("redis error")
 	ErrPSQL     = errors.New("postgres error")
+	ErrS3       = errors.New("s3 error")
 	ErrInternal = errors.New("internal server error")
 )
 

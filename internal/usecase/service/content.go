@@ -10,13 +10,13 @@ import (
 
 type ContentService struct {
 	contentRepo repository.Content
-	staticRepo  repository.Static
+	staticUC    usecase.Static
 }
 
-func NewContentService(contentRepo repository.Content, staticRepo repository.Static) usecase.Content {
+func NewContentService(contentRepo repository.Content, staticUC usecase.Static) usecase.Content {
 	return &ContentService{
 		contentRepo: contentRepo,
-		staticRepo:  staticRepo,
+		staticUC:    staticUC,
 	}
 }
 
@@ -49,8 +49,14 @@ func personEntityToPreviewDTO(personEntity []entity.Person) []dto.PersonPreview 
 }
 
 func movieEntityToDTO(movieEntity entity.Movie) dto.MovieContent {
+	premiere := movieEntity.Premiere
+	if premiere.IsZero() {
+		return dto.MovieContent{
+			Duration: movieEntity.Duration,
+		}
+	}
 	return dto.MovieContent{
-		Premiere: movieEntity.Premiere,
+		Premiere: &premiere,
 		Duration: movieEntity.Duration,
 	}
 }
@@ -89,17 +95,17 @@ func (c *ContentService) GetContentByID(id int) (*dto.Content, error) {
 	case err != nil:
 		return nil, entity.UsecaseWrap(errors.New("ошибка при получении контента"), err)
 	}
-	posterURL, err := c.staticRepo.GetStatic(contentEntity.PosterStaticID)
+	posterURL, err := c.staticUC.GetStatic(contentEntity.PosterStaticID)
 	switch {
-	case errors.Is(err, repository.ErrStaticNotFound):
+	case errors.Is(err, usecase.ErrStaticNotFound):
 		// Если постер не найден, возвращаем пустую строку
 		posterURL = ""
 	case err != nil:
 		return nil, entity.UsecaseWrap(errors.New("ошибка при получении постера"), err)
 	}
-	backdropURL, err := c.staticRepo.GetStatic(contentEntity.BackdropStaticID)
+	backdropURL, err := c.staticUC.GetStatic(contentEntity.BackdropStaticID)
 	switch {
-	case errors.Is(err, repository.ErrStaticNotFound):
+	case errors.Is(err, usecase.ErrStaticNotFound):
 		// Если фоновое изображение не найдено, возвращаем пустую строку
 		backdropURL = ""
 	case err != nil:
@@ -107,9 +113,9 @@ func (c *ContentService) GetContentByID(id int) (*dto.Content, error) {
 	}
 	pictures := make([]string, len(contentEntity.PicturesStaticID))
 	for index, pictureID := range contentEntity.PicturesStaticID {
-		pictureURL, err := c.staticRepo.GetStatic(pictureID)
+		pictureURL, err := c.staticUC.GetStatic(pictureID)
 		switch {
-		case errors.Is(err, repository.ErrStaticNotFound):
+		case errors.Is(err, usecase.ErrStaticNotFound):
 			// Если изображение не найдено, возвращаем пустую строку
 			pictures[index] = ""
 		case err != nil:
@@ -162,9 +168,9 @@ func (c *ContentService) GetPersonByID(id int) (*dto.Person, error) {
 	case err != nil:
 		return nil, entity.UsecaseWrap(errors.New("ошибка при получении персоны"), err)
 	}
-	photo, err := c.staticRepo.GetStatic(personEntity.GetPhotoStaticID())
+	photo, err := c.staticUC.GetStatic(personEntity.GetPhotoStaticID())
 	switch {
-	case errors.Is(err, repository.ErrStaticNotFound):
+	case errors.Is(err, usecase.ErrStaticNotFound):
 		// Если фото не найдено, возвращаем пустую строку
 		photo = ""
 	case err != nil:
@@ -199,9 +205,9 @@ func (c *ContentService) GetPersonByID(id int) (*dto.Person, error) {
 		case err != nil:
 			return nil, entity.UsecaseWrap(errors.New("ошибка при получении контента"), err)
 		}
-		posterURL, err := c.staticRepo.GetStatic(content.PosterStaticID)
+		posterURL, err := c.staticUC.GetStatic(content.PosterStaticID)
 		switch {
-		case errors.Is(err, repository.ErrStaticNotFound):
+		case errors.Is(err, usecase.ErrStaticNotFound):
 			// Если постер не найден, возвращаем пустую строку
 			posterURL = ""
 		case err != nil:

@@ -44,7 +44,7 @@ func (h *ReviewEndpoints) Configure(server *echo.Group) {
 // @Failure 400 {object} echo.HTTPError
 // @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
-// @Router /review/{id} [get]
+// @Router /api/review/{id} [get]
 func (h *ReviewEndpoints) GetReview(ctx echo.Context) error {
 	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
@@ -72,7 +72,7 @@ func (h *ReviewEndpoints) GetReview(ctx echo.Context) error {
 // @Failure 401 {object} echo.HTTPError
 // @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
-// @Router /review/myReview [get]
+// @Router /api/review/myReview [get]
 func (h *ReviewEndpoints) GetMyContentReview(ctx echo.Context) error {
 	contentID, err := strconv.ParseInt(ctx.QueryParam("content_id"), 10, 64)
 	if err != nil {
@@ -106,7 +106,7 @@ func (h *ReviewEndpoints) GetMyContentReview(ctx echo.Context) error {
 // @Failure 404 {object} echo.HTTPError
 // @Failure 409 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
-// @Router /review [post]
+// @Router /api/review [post]
 // @Security _csrf
 // nolint: dupl
 func (h *ReviewEndpoints) CreateReview(ctx echo.Context) error {
@@ -151,7 +151,7 @@ func (h *ReviewEndpoints) CreateReview(ctx echo.Context) error {
 // @Failure 403 {object} echo.HTTPError
 // @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
-// @Router /review [put]
+// @Router /api/review [put]
 // @Security _csrf
 // nolint: dupl
 func (h *ReviewEndpoints) UpdateReview(ctx echo.Context) error {
@@ -195,7 +195,7 @@ func (h *ReviewEndpoints) UpdateReview(ctx echo.Context) error {
 // @Failure 403 {object} echo.HTTPError
 // @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
-// @Router /review/{id} [delete]
+// @Router /api/review/{id} [delete]
 // @Security _csrf
 func (h *ReviewEndpoints) DeleteReview(ctx echo.Context) error {
 	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
@@ -226,7 +226,7 @@ func (h *ReviewEndpoints) DeleteReview(ctx echo.Context) error {
 // @Produce json
 // @Success 200 {object} dto.ReviewResponseList
 // @Failure 500 {object} echo.HTTPError
-// @Router /review/recent [get]
+// @Router /api/review/recent [get]
 func (h *ReviewEndpoints) GetRecentReviews(ctx echo.Context) error {
 	reviews, err := h.reviewUC.GetLatestReviews(3)
 	if err != nil {
@@ -244,7 +244,7 @@ func (h *ReviewEndpoints) GetRecentReviews(ctx echo.Context) error {
 // @Success 200 {object} dto.ReviewResponseList
 // @Failure 400 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
-// @Router /review/user/{id}/recent [get]
+// @Router /api/review/user/{id}/recent [get]
 func (h *ReviewEndpoints) GetUserLatestReviews(ctx echo.Context) error {
 	userID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
@@ -267,7 +267,7 @@ func (h *ReviewEndpoints) GetUserLatestReviews(ctx echo.Context) error {
 // @Success 200 {object} dto.UserReviewResponseList
 // @Failure 400 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
-// @Router /review/user/{id}/{page} [get]
+// @Router /api/review/user/{id}/{page} [get]
 func (h *ReviewEndpoints) GetUserReviews(ctx echo.Context) error {
 	// если не удалось получить id пользователя из сессии, то это не ошибка, просто неавторизованный пользователь
 	// no-lint
@@ -300,7 +300,7 @@ func (h *ReviewEndpoints) GetUserReviews(ctx echo.Context) error {
 // @Success 200 {object} dto.ReviewResponseList
 // @Failure 400 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
-// @Router /review/content/{id}/{page} [get]
+// @Router /api/review/content/{id}/{page} [get]
 func (h *ReviewEndpoints) GetContentReviews(ctx echo.Context) error {
 	contentID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
@@ -329,7 +329,7 @@ func (h *ReviewEndpoints) GetContentReviews(ctx echo.Context) error {
 // @Failure 401 {object} echo.HTTPError
 // @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
-// @Router /review/{id}/vote [put]
+// @Router /api/review/{id}/vote [put]
 // @Security _csrf
 func (h *ReviewEndpoints) VoteReview(ctx echo.Context) error {
 	reviewID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
@@ -368,7 +368,7 @@ func (h *ReviewEndpoints) VoteReview(ctx echo.Context) error {
 // @Failure 401 {object} echo.HTTPError
 // @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
-// @Router /review/{id}/vote [delete]
+// @Router /api/review/{id}/vote [delete]
 // @Security _csrf
 func (h *ReviewEndpoints) UnVoteReview(ctx echo.Context) error {
 	reviewID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)

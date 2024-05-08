@@ -54,8 +54,23 @@ func (mr *MockStaticMockRecorder) GetStatic(staticID any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatic", reflect.TypeOf((*MockStatic)(nil).GetStatic), staticID)
 }
 
+// GetStaticFile mocks base method.
+func (m *MockStatic) GetStaticFile(staticURI string) (io.ReadSeeker, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetStaticFile", staticURI)
+	ret0, _ := ret[0].(io.ReadSeeker)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetStaticFile indicates an expected call of GetStaticFile.
+func (mr *MockStaticMockRecorder) GetStaticFile(staticURI any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStaticFile", reflect.TypeOf((*MockStatic)(nil).GetStaticFile), staticURI)
+}
+
 // UploadAvatar mocks base method.
-func (m *MockStatic) UploadAvatar(reader io.Reader) (int, error) {
+func (m *MockStatic) UploadAvatar(reader io.ReadSeeker) (int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UploadAvatar", reader)
 	ret0, _ := ret[0].(int)

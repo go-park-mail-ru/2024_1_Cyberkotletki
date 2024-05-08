@@ -1,22 +1,24 @@
 package repository
 
 import (
-	"bytes"
 	"errors"
+	"io"
 )
 
 //go:generate mockgen -source=$GOFILE -destination=mocks/mock_static.go
 type Static interface {
-	// GetStatic возвращает путь к статике по его ID
+	// GetStaticURL возвращает путь к статике по его ID
 	// Возможные ошибки:
 	// ErrStaticNotFound - статика с таким id не найдена
-	GetStatic(staticID int) (string, error)
+	GetStaticURL(staticID int) (string, error)
 	// UploadStatic загружает статику на сервер
 	// Возможные ошибки:
 	// ErrStaticTooBigFile - файл слишком большой
-	UploadStatic(path, filename string, buf bytes.Buffer) (int, error)
-	// GetBasicPath возвращает базовый путь для статики
-	GetBasicPath() string
+	UploadStatic(path, filename string, reader io.ReadSeeker) (int, error)
+	// GetStaticFile возвращает статику по ID
+	// Возможные ошибки:
+	// ErrStaticNotFound - статика с таким id не найдена
+	GetStaticFile(staticURI string) (io.ReadSeeker, error)
 	// GetMaxSize возвращает максимальный размер файла
 	GetMaxSize() int
 }

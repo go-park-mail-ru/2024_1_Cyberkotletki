@@ -164,7 +164,7 @@ func TestUserService_UpdateAvatar(t *testing.T) {
 	testCases := []struct {
 		Name              string
 		UserID            int
-		Upload            io.Reader
+		Upload            io.ReadSeeker
 		ExpectedErr       error
 		SetupUserRepoMock func(repo *mockrepo.MockUser)
 		SetupStaticUCMock func(staticUC *mock_usecase.MockStatic)

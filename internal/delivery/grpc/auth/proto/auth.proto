@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+option go_package = "./;auth";
+
+package auth;
+// protoc --go_out=. *.proto --go-grpc_out=.
+
+message Session{
+  string token = 1;
+}
+
+message User{
+  uint64 id = 1;
+}
+
+message Nothing {
+  bool dummy = 1;
+}
+
+service AuthService {
+  rpc Logout(Session) returns (Nothing) {}
+  rpc LogoutAll(User) returns (Nothing) {}
+  rpc GetUserIDBySession(Session) returns (User) {}
+  rpc CreateSession(User) returns (Session) {}
+  rpc Ping(Nothing) returns (Nothing) {}
+}

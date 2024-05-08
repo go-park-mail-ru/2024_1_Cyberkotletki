@@ -46,7 +46,7 @@ func (h *UserEndpoints) Configure(server *echo.Group) {
 // @Failure		400	{object}	echo.HTTPError
 // @Failure		409	{object}	echo.HTTPError
 // @Failure		500	{object}	echo.HTTPError
-// @Router /user/register [post]
+// @Router /api/user/register [post]
 // @Security _csrf
 func (h *UserEndpoints) Register(ctx echo.Context) error {
 	registerData := new(dto.Register)
@@ -83,7 +83,7 @@ func (h *UserEndpoints) Register(ctx echo.Context) error {
 // @Failure		403	{object}	echo.HTTPError
 // @Failure		404	{object}	echo.HTTPError
 // @Failure		500	{object}	echo.HTTPError
-// @Router /user/login [post]
+// @Router /api/user/login [post]
 // @Security _csrf
 func (h *UserEndpoints) Login(ctx echo.Context) error {
 	loginData := new(dto.Login)
@@ -119,7 +119,7 @@ func (h *UserEndpoints) Login(ctx echo.Context) error {
 // @Failure		400	{object}	echo.HTTPError	"Неверный пароль или невалидный payload"
 // @Failure		401	{object}	echo.HTTPError	"Не авторизован"
 // @Failure		500	{object}	echo.HTTPError	"Внутренняя ошибка сервера"
-// @Router /user/password [put]
+// @Router /api/user/password [put]
 // @Security _csrf
 func (h *UserEndpoints) UpdatePassword(ctx echo.Context) error {
 	userID, err := utils.GetUserIDFromSession(ctx, h.authUC)
@@ -156,7 +156,7 @@ func (h *UserEndpoints) UpdatePassword(ctx echo.Context) error {
 // @Failure		400	{object}	echo.HTTPError	"Невалидное изображение"
 // @Failure		401	{object}	echo.HTTPError	"Не авторизован"
 // @Failure		500	{object}	echo.HTTPError	"Внутренняя ошибка сервера"
-// @Router /user/avatar [put]
+// @Router /api/user/avatar [put]
 // @Security _csrf
 func (h *UserEndpoints) UploadAvatar(ctx echo.Context) error {
 	userID, err := utils.GetUserIDFromSession(ctx, h.authUC)
@@ -197,7 +197,7 @@ func (h *UserEndpoints) UploadAvatar(ctx echo.Context) error {
 // @Failure		400	{object}	echo.HTTPError	"Невалидные данные для обновления профиля"
 // @Failure		401	{object}	echo.HTTPError	"Не авторизован"
 // @Failure		500	{object}	echo.HTTPError	"Внутренняя ошибка сервера"
-// @Router /user/profile [put]
+// @Router /api/user/profile [put]
 // @Security _csrf
 func (h *UserEndpoints) UpdateInfo(ctx echo.Context) error {
 	userID, err := utils.GetUserIDFromSession(ctx, h.authUC)
@@ -232,7 +232,7 @@ func (h *UserEndpoints) UpdateInfo(ctx echo.Context) error {
 // @Failure		400	{object}	echo.HTTPError	"Неверный id"
 // @Failure		404	{object}	echo.HTTPError	"Пользователь не найден"
 // @Failure		500	{object}	echo.HTTPError	"Внутренняя ошибка сервера"
-// @Router /user/profile [get]
+// @Router /api/user/profile [get]
 func (h *UserEndpoints) GetProfile(ctx echo.Context) error {
 	userID, err := strconv.ParseInt(ctx.QueryParam("id"), 10, 64)
 	if err != nil {
@@ -257,7 +257,7 @@ func (h *UserEndpoints) GetProfile(ctx echo.Context) error {
 // @Success     200
 // @Failure		401	{object}	echo.HTTPError	"Не авторизован"
 // @Failure		500	{object}	echo.HTTPError	"Внутренняя ошибка сервера"
-// @Router /user/me [get]
+// @Router /api/user/me [get]
 func (h *UserEndpoints) GetMyID(ctx echo.Context) error {
 	userID, err := utils.GetUserIDFromSession(ctx, h.authUC)
 	if err != nil {

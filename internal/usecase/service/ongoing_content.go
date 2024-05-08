@@ -11,16 +11,16 @@ import (
 
 type OngoingContentService struct {
 	ongoingContentRepo repository.OngoingContent
-	staticRepo         repository.Static
+	staticUC           usecase.Static
 }
 
 func NewOngoingContentService(
 	ongoingContentRepo repository.OngoingContent,
-	staticRepo repository.Static,
+	staticUC usecase.Static,
 ) usecase.OngoingContent {
 	return &OngoingContentService{
 		ongoingContentRepo: ongoingContentRepo,
-		staticRepo:         staticRepo,
+		staticUC:           staticUC,
 	}
 }
 
@@ -39,9 +39,9 @@ func (o *OngoingContentService) ongoingContentEntityToDTO(
 	case err != nil:
 		return nil, entity.UsecaseWrap(errors.New("ошибка при получении контента календаря релизов"), err)
 	}
-	posterURL, err := o.staticRepo.GetStatic(ongoingContent.PosterStaticID)
+	posterURL, err := o.staticUC.GetStatic(ongoingContent.PosterStaticID)
 	switch {
-	case errors.Is(err, repository.ErrStaticNotFound):
+	case errors.Is(err, usecase.ErrStaticNotFound):
 		posterURL = ""
 	case err != nil:
 		return nil, entity.UsecaseWrap(errors.New("ошибка при получении постера"), err)
@@ -86,9 +86,9 @@ func (o *OngoingContentService) GetOngoingContentByContentID(
 	case err != nil:
 		return nil, entity.UsecaseWrap(errors.New("ошибка при получении контента календаря релизов"), err)
 	}
-	posterURL, err := o.staticRepo.GetStatic(ongoingContent.PosterStaticID)
+	posterURL, err := o.staticUC.GetStatic(ongoingContent.PosterStaticID)
 	switch {
-	case errors.Is(err, repository.ErrStaticNotFound):
+	case errors.Is(err, usecase.ErrStaticNotFound):
 		posterURL = ""
 	case err != nil:
 		return nil, entity.UsecaseWrap(errors.New("ошибка при получении постера"), err)

@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/auth/isAuth": {
+        "/api/auth/isAuth": {
             "get": {
                 "description": "Проверяет, авторизован ли пользователь",
                 "tags": [
@@ -50,7 +50,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/auth/logout": {
+        "/api/auth/logout": {
             "post": {
                 "security": [
                     {
@@ -78,7 +78,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/auth/logoutAll": {
+        "/api/auth/logoutAll": {
             "post": {
                 "security": [
                     {
@@ -112,7 +112,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/compilation/type/{compilationType}": {
+        "/api/compilation/type/{compilationType}": {
             "get": {
                 "description": "Получение списка подборок по id типа подборки",
                 "consumes": [
@@ -156,7 +156,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/compilation/types": {
+        "/api/compilation/types": {
             "get": {
                 "description": "Получение списка подборок по id",
                 "consumes": [
@@ -185,7 +185,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/compilation/{id}/{page}": {
+        "/api/compilation/{id}/{page}": {
             "get": {
                 "description": "Получение карточек контента подборки по id",
                 "consumes": [
@@ -242,7 +242,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/content/person/{id}": {
+        "/api/content/person/{id}": {
             "get": {
                 "description": "Получение персоны по id",
                 "produces": [
@@ -289,7 +289,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/content/{id}": {
+        "/api/content/{id}": {
             "get": {
                 "description": "Получение контента по id",
                 "produces": [
@@ -336,7 +336,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/favourite": {
+        "/api/favourite": {
             "put": {
                 "security": [
                     {
@@ -386,7 +386,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/favourite/my": {
+        "/api/favourite/my": {
             "get": {
                 "description": "Получение избранного пользователя",
                 "tags": [
@@ -420,7 +420,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/favourite/status/{id}": {
+        "/api/favourite/status/{id}": {
             "get": {
                 "description": "Получение статуса контента в избранном",
                 "tags": [
@@ -469,7 +469,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/favourite/{id}": {
+        "/api/favourite/{id}": {
             "get": {
                 "description": "Получение избранного пользователя",
                 "tags": [
@@ -561,7 +561,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/ongoing/nearest": {
+        "/api/ongoing/nearest": {
             "get": {
                 "produces": [
                     "application/json"
@@ -603,7 +603,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/ongoing/years": {
+        "/api/ongoing/years": {
             "get": {
                 "produces": [
                     "application/json"
@@ -637,7 +637,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/ongoing/{id}": {
+        "/api/ongoing/{id}": {
             "get": {
                 "produces": [
                     "application/json"
@@ -683,7 +683,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/ongoing/{year}/{month}": {
+        "/api/ongoing/{year}/{month}": {
             "get": {
                 "produces": [
                     "application/json"
@@ -739,7 +739,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/playground/ping": {
+        "/api/playground/ping": {
             "get": {
                 "description": "Проверка соединения через классический ping pong",
                 "tags": [
@@ -755,7 +755,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/review": {
+        "/api/review": {
             "put": {
                 "security": [
                     {
@@ -891,7 +891,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/review/content/{id}/{page}": {
+        "/api/review/content/{id}/{page}": {
             "get": {
                 "description": "Получить рецензии контента",
                 "produces": [
@@ -939,7 +939,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/review/myReview": {
+        "/api/review/myReview": {
             "get": {
                 "description": "Получить рецензию пользователя к контенту",
                 "produces": [
@@ -992,7 +992,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/review/recent": {
+        "/api/review/recent": {
             "get": {
                 "description": "Получить последние рецензии",
                 "produces": [
@@ -1018,7 +1018,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/review/user/{id}/recent": {
+        "/api/review/user/{id}/recent": {
             "get": {
                 "description": "Получить последние рецензии пользователя",
                 "produces": [
@@ -1059,7 +1059,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/review/user/{id}/{page}": {
+        "/api/review/user/{id}/{page}": {
             "get": {
                 "description": "Получить рецензии пользователя",
                 "produces": [
@@ -1107,7 +1107,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/review/{id}": {
+        "/api/review/{id}": {
             "get": {
                 "description": "Получить рецензию по id",
                 "consumes": [
@@ -1216,7 +1216,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/review/{id}/vote": {
+        "/api/review/{id}/vote": {
             "put": {
                 "security": [
                     {
@@ -1331,7 +1331,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/search": {
+        "/api/search": {
             "get": {
                 "description": "Поиск фильмов, сериалов и персон",
                 "consumes": [
@@ -1371,7 +1371,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/static/{id}": {
+        "/api/static/{id}": {
             "get": {
                 "description": "Получение ссылки на статический файл по id. Возвращает ссылку подобного вида:",
                 "consumes": [
@@ -1414,7 +1414,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/avatar": {
+        "/api/user/avatar": {
             "put": {
                 "security": [
                     {
@@ -1470,7 +1470,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/login": {
+        "/api/user/login": {
             "post": {
                 "security": [
                     {
@@ -1526,7 +1526,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/me": {
+        "/api/user/me": {
             "get": {
                 "description": "Возвращает id авторизованного пользователя",
                 "consumes": [
@@ -1564,7 +1564,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/password": {
+        "/api/user/password": {
             "put": {
                 "security": [
                     {
@@ -1622,7 +1622,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/profile": {
+        "/api/user/profile": {
             "get": {
                 "description": "Возвращает профиль пользователя по id",
                 "consumes": [
@@ -1727,7 +1727,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/register": {
+        "/api/user/register": {
             "post": {
                 "security": [
                     {
@@ -1770,6 +1770,49 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/static/{path}": {
+            "get": {
+                "description": "Получение статического файла по относительному пути. Возвращает файл в виде байтов.",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Static"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Путь до статики",
+                        "name": "path",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "невалидный путь до статики",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "файл не найден",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "ошибка сервера",
                         "schema": {
                             "$ref": "#/definitions/echo.HTTPError"
                         }
@@ -2122,7 +2165,10 @@ const docTemplate = `{
                 "roles": {
                     "type": "object",
                     "additionalProperties": {
-                        "$ref": "#/definitions/dto.PreviewContentCardVertical"
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/dto.PreviewContentCardVertical"
+                        }
                     }
                 },
                 "sex": {
@@ -2634,7 +2680,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "",
-	BasePath:         "/api",
+	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "API Киноскопа",
 	Description:      "сервис Киноскоп (аналог кинопоиска)",

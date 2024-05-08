@@ -31,7 +31,7 @@ func (h *AuthEndpoints) Configure(e *echo.Group) {
 // @Success     200
 // @Failure		401	{object}	echo.HTTPError	"Не авторизован"
 // @Failure		500	{object}	echo.HTTPError	"Внутренняя ошибка сервера"
-// @Router /auth/isAuth [get]
+// @Router /api/auth/isAuth [get]
 func (h *AuthEndpoints) IsAuth(ctx echo.Context) error {
 	_, err := utils.GetUserIDFromSession(ctx, h.authUC)
 	if errors.Is(err, utils.ErrUnauthorized) {
@@ -46,7 +46,7 @@ func (h *AuthEndpoints) IsAuth(ctx echo.Context) error {
 // @Description Удаляет сессию
 // @Param 	Cookie header string  true "session"     default(session=xxx)
 // @Success     200
-// @Router /auth/logout [post]
+// @Router /api/auth/logout [post]
 // @Security _csrf
 func (h *AuthEndpoints) Logout(ctx echo.Context) error {
 	cookie, err := ctx.Cookie("session")
@@ -69,7 +69,7 @@ func (h *AuthEndpoints) Logout(ctx echo.Context) error {
 // @Param 	Cookie header string  true "session"     default(session=xxx)
 // @Success     200
 // @Failure		500	{object}	echo.HTTPError	"Внутренняя ошибка сервера"
-// @Router /auth/logoutAll [post]
+// @Router /api/auth/logoutAll [post]
 // @Security _csrf
 func (h *AuthEndpoints) LogoutAll(ctx echo.Context) error {
 	cookie, err := ctx.Cookie("session")

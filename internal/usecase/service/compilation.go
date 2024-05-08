@@ -14,27 +14,27 @@ const (
 
 type CompilationService struct {
 	compilationRepo repository.Compilation
-	staticRepo      repository.Static
+	staticUC        usecase.Static
 	contentRepo     repository.Content
 }
 
 func NewCompilationService(
 	compilationRepo repository.Compilation,
-	staticRepo repository.Static,
+	staticUC usecase.Static,
 	contentRepo repository.Content,
 ) usecase.Compilation {
 	return &CompilationService{
 		compilationRepo: compilationRepo,
-		staticRepo:      staticRepo,
+		staticUC:        staticUC,
 		contentRepo:     contentRepo,
 	}
 }
 
 // compilationEntityToDTO конвертирует entity.Compilation в dto.Compilation добавляя поле длины контента в подборке
 func (c *CompilationService) compilationEntityToDTO(compEntity entity.Compilation) (*dto.Compilation, error) {
-	posterURL, err := c.staticRepo.GetStatic(compEntity.PosterUploadID)
+	posterURL, err := c.staticUC.GetStatic(compEntity.PosterUploadID)
 	switch {
-	case errors.Is(err, repository.ErrStaticNotFound):
+	case errors.Is(err, usecase.ErrStaticNotFound):
 		posterURL = ""
 	case err != nil:
 		return nil, entity.UsecaseWrap(errors.New("ошибка при получении статики"), err)
