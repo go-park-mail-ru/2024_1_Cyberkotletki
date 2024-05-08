@@ -4,6 +4,10 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
+	"regexp"
+	"testing"
+	"time"
+
 	"github.com/DATA-DOG/go-sqlmock"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
@@ -11,9 +15,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/require"
-	"regexp"
-	"testing"
-	"time"
 )
 
 func TestReviewDB_AddReview(t *testing.T) {
@@ -348,6 +349,67 @@ func TestReviewDB_GetReviewsCountByContentID(t *testing.T) {
 			}
 			tc.SetupMock(mock, query, driverValues)
 			output, err := repo.GetReviewsCountByContentID(tc.RequestContentID)
+			require.Equal(t, tc.ExpectedOutput, output)
+			require.Equal(t, tc.ExpectedErr, err)
+		})
+	}
+}
+
+func TestReviewDB_GetReviewsCountByAuthorID(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		Name            string
+		RequestAuthorID int
+		ExpectedOutput  int
+		ExpectedErr     error
+		SetupMock       func(mock sqlmock.Sqlmock, query string, args []driver.Value)
+	}{
+		{
+			Name:            "Успешное получение",
+			RequestAuthorID: 1,
+			ExpectedOutput:  1,
+			ExpectedErr:     nil,
+			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
+				mock.ExpectQuery(regexp.QuoteMeta(query)).
+					WithArgs(args...).
+					WillReturnRows(sqlmock.NewRows([]string{"count"}).
+						AddRow(1))
+			},
+		},
+		{
+			Name:            "Неизвестная ошибка",
+			RequestAuthorID: 1,
+			ExpectedOutput:  0,
+			ExpectedErr:     entity.PSQLQueryErr("GetReviewsCountByAuthorID", fmt.Errorf("ошибка")),
+			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
+				mock.ExpectQuery(regexp.QuoteMeta(query)).
+					WithArgs(args...).
+					WillReturnError(fmt.Errorf("ошибка")) // или любой другой непредусмотренный код ошибки
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+			db, mock, err := sqlmock.New()
+			dbx := sqlx.NewDb(db, "sqlmock")
+			require.NoError(t, err)
+			repo := NewReviewRepository(dbx)
+			query, args, err := sq.Select("COUNT(*)").
+				From("review").
+				Where(sq.Eq{"user_id": tc.RequestAuthorID}).
+				PlaceholderFormat(sq.Dollar).
+				ToSql()
+			require.NoError(t, err)
+			driverValues := make([]driver.Value, len(args))
+			for i, v := range args {
+				driverValues[i] = v
+			}
+			tc.SetupMock(mock, query, driverValues)
+			output, err := repo.GetReviewsCountByAuthorID(tc.RequestAuthorID)
 			require.Equal(t, tc.ExpectedOutput, output)
 			require.Equal(t, tc.ExpectedErr, err)
 		})
