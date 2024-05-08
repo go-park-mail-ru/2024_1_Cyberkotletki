@@ -8,6 +8,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	mockrepo "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/mocks"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
+	mock_usecase "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/mocks"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
@@ -23,7 +24,7 @@ func TestGetOngoingContentByContentID(t *testing.T) {
 		ContentID                   int
 		ExpectedErr                 error
 		SetupOngoingContentRepoMock func(repo *mockrepo.MockOngoingContent)
-		SetupStaticRepoMock         func(repo *mockrepo.MockStatic)
+		SetupStaticRepoMock         func(repo *mock_usecase.MockStatic)
 	}{
 		{
 			Name:        "Успех",
@@ -38,7 +39,7 @@ func TestGetOngoingContentByContentID(t *testing.T) {
 					Type:           "movie",
 				}, nil)
 			},
-			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {
+			SetupStaticRepoMock: func(repo *mock_usecase.MockStatic) {
 				repo.EXPECT().GetStatic(gomock.Any()).Return("posterURL", nil)
 			},
 		},
@@ -49,7 +50,7 @@ func TestGetOngoingContentByContentID(t *testing.T) {
 			SetupOngoingContentRepoMock: func(repo *mockrepo.MockOngoingContent) {
 				repo.EXPECT().GetOngoingContentByID(1).Return(nil, errors.New("database error"))
 			},
-			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {},
+			SetupStaticRepoMock: func(repo *mock_usecase.MockStatic) {},
 		},
 		{
 			Name:        "Не найден",
@@ -58,7 +59,7 @@ func TestGetOngoingContentByContentID(t *testing.T) {
 			SetupOngoingContentRepoMock: func(repo *mockrepo.MockOngoingContent) {
 				repo.EXPECT().GetOngoingContentByID(1).Return(nil, repository.ErrOngoingContentNotFound)
 			},
-			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {},
+			SetupStaticRepoMock: func(repo *mock_usecase.MockStatic) {},
 		},
 		{
 			Name:        "Статика пустая",
@@ -73,8 +74,8 @@ func TestGetOngoingContentByContentID(t *testing.T) {
 					Type:           "movie",
 				}, nil)
 			},
-			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {
-				repo.EXPECT().GetStatic(gomock.Any()).Return("", repository.ErrStaticNotFound)
+			SetupStaticRepoMock: func(repo *mock_usecase.MockStatic) {
+				repo.EXPECT().GetStatic(gomock.Any()).Return("", usecase.ErrStaticNotFound)
 			},
 		},
 		{
@@ -90,7 +91,7 @@ func TestGetOngoingContentByContentID(t *testing.T) {
 					Type:           "movie",
 				}, nil)
 			},
-			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {
+			SetupStaticRepoMock: func(repo *mock_usecase.MockStatic) {
 				repo.EXPECT().GetStatic(gomock.Any()).Return("", errors.New("database error"))
 			},
 		},
@@ -103,7 +104,7 @@ func TestGetOngoingContentByContentID(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockOngoingContentRepo := mockrepo.NewMockOngoingContent(ctrl)
-			mockStaticRepo := mockrepo.NewMockStatic(ctrl)
+			mockStaticRepo := mock_usecase.NewMockStatic(ctrl)
 			service := NewOngoingContentService(mockOngoingContentRepo, mockStaticRepo)
 			tc.SetupOngoingContentRepoMock(mockOngoingContentRepo)
 			tc.SetupStaticRepoMock(mockStaticRepo)
@@ -122,7 +123,7 @@ func TestGetNearestOngoings(t *testing.T) {
 		Limit                       int
 		ExpectedErr                 error
 		SetupOngoingContentRepoMock func(repo *mockrepo.MockOngoingContent)
-		SetupStaticRepoMock         func(repo *mockrepo.MockStatic)
+		SetupStaticRepoMock         func(repo *mock_usecase.MockStatic)
 	}{
 		{
 			Name:        "Успешно",
@@ -146,7 +147,7 @@ func TestGetNearestOngoings(t *testing.T) {
 					Type:           "movie",
 				}, nil).AnyTimes()
 			},
-			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {
+			SetupStaticRepoMock: func(repo *mock_usecase.MockStatic) {
 				repo.EXPECT().GetStatic(1).Return("path/to/static", nil).AnyTimes()
 			},
 		},
@@ -157,7 +158,7 @@ func TestGetNearestOngoings(t *testing.T) {
 			SetupOngoingContentRepoMock: func(repo *mockrepo.MockOngoingContent) {
 				repo.EXPECT().GetNearestOngoings(5).Return(nil, errors.New("database error"))
 			},
-			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {},
+			SetupStaticRepoMock: func(repo *mock_usecase.MockStatic) {},
 		},
 		{
 			Name:        "Ошибка в преобразовании в dto",
@@ -175,7 +176,7 @@ func TestGetNearestOngoings(t *testing.T) {
 				}, nil)
 				repo.EXPECT().GetOngoingContentByID(1).Return(nil, errors.New("conversion error")).AnyTimes()
 			},
-			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {},
+			SetupStaticRepoMock: func(repo *mock_usecase.MockStatic) {},
 		},
 	}
 
@@ -186,7 +187,7 @@ func TestGetNearestOngoings(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockOngoingContentRepo := mockrepo.NewMockOngoingContent(ctrl)
-			mockStaticRepo := mockrepo.NewMockStatic(ctrl)
+			mockStaticRepo := mock_usecase.NewMockStatic(ctrl)
 			service := NewOngoingContentService(mockOngoingContentRepo, mockStaticRepo)
 			tc.SetupOngoingContentRepoMock(mockOngoingContentRepo)
 			tc.SetupStaticRepoMock(mockStaticRepo)

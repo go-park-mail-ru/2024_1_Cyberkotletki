@@ -6,8 +6,9 @@ import (
 
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
 	mockrepo "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/mocks"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
+	mock_usecase "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/mocks"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -21,7 +22,7 @@ func TestContentService_GetContent(t *testing.T) {
 		ExpectedOutput       *dto.Content
 		ExpectedErr          error
 		SetupContentRepoMock func(repo *mockrepo.MockContent)
-		SetupStaticRepoMock  func(repo *mockrepo.MockStatic)
+		SetupStaticRepoMock  func(repo *mock_usecase.MockStatic)
 	}{
 		{
 			Name:        "Не существующий контент",
@@ -30,8 +31,8 @@ func TestContentService_GetContent(t *testing.T) {
 			SetupContentRepoMock: func(repo *mockrepo.MockContent) {
 				repo.EXPECT().GetContent(2).Return(nil, fmt.Errorf("ошибка при получении контента")).AnyTimes()
 			},
-			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {
-				repo.EXPECT().GetStatic(1).Return("", repository.ErrStaticNotFound).AnyTimes()
+			SetupStaticRepoMock: func(repo *mock_usecase.MockStatic) {
+				repo.EXPECT().GetStatic(1).Return("", usecase.ErrStaticNotFound).AnyTimes()
 			},
 		},
 		{
@@ -54,7 +55,7 @@ func TestContentService_GetContent(t *testing.T) {
 					Description:      "Описание фильма или сериала",
 				}, nil).AnyTimes()
 			},
-			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {
+			SetupStaticRepoMock: func(repo *mock_usecase.MockStatic) {
 				repo.EXPECT().GetStatic(1).Return("", fmt.Errorf("ошибка при получении постера")).AnyTimes()
 			},
 		},
@@ -66,7 +67,7 @@ func TestContentService_GetContent(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockContentRepo := mockrepo.NewMockContent(ctrl)
-			mockStaticRepo := mockrepo.NewMockStatic(ctrl)
+			mockStaticRepo := mock_usecase.NewMockStatic(ctrl)
 			contentService := NewContentService(mockContentRepo, mockStaticRepo)
 			tc.SetupContentRepoMock(mockContentRepo)
 			tc.SetupStaticRepoMock(mockStaticRepo)

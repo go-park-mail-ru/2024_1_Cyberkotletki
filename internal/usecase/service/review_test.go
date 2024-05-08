@@ -8,6 +8,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 	mockrepo "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/mocks"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
+	mock_usecase "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/mocks"
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -60,7 +61,7 @@ func TestGetLatestReviews(t *testing.T) {
 			mockReviewRepo := mockrepo.NewMockReview(ctrl)
 			mockContentRepo := mockrepo.NewMockContent(ctrl)
 			mockUserRepo := mockrepo.NewMockUser(ctrl)
-			mockStaticRepo := mockrepo.NewMockStatic(ctrl)
+			mockStaticRepo := mock_usecase.NewMockStatic(ctrl)
 			service := NewReviewService(mockReviewRepo, mockUserRepo,
 				mockContentRepo, mockStaticRepo)
 			tc.SetupReviewRepoMock(mockReviewRepo)
@@ -124,7 +125,7 @@ func TestReviewService_GetUserReviews(t *testing.T) {
 			mockReviewRepo := mockrepo.NewMockReview(ctrl)
 			mockContentRepo := mockrepo.NewMockContent(ctrl)
 			mockUserRepo := mockrepo.NewMockUser(ctrl)
-			mockStaticRepo := mockrepo.NewMockStatic(ctrl)
+			mockStaticRepo := mock_usecase.NewMockStatic(ctrl)
 			service := NewReviewService(mockReviewRepo, mockUserRepo,
 				mockContentRepo, mockStaticRepo)
 			tc.SetupReviewRepoMock(mockReviewRepo)
@@ -188,7 +189,7 @@ func TestReviewService_GetContentReviews(t *testing.T) {
 			mockReviewRepo := mockrepo.NewMockReview(ctrl)
 			mockContentRepo := mockrepo.NewMockContent(ctrl)
 			mockUserRepo := mockrepo.NewMockUser(ctrl)
-			mockStaticRepo := mockrepo.NewMockStatic(ctrl)
+			mockStaticRepo := mock_usecase.NewMockStatic(ctrl)
 			service := NewReviewService(mockReviewRepo, mockUserRepo,
 				mockContentRepo, mockStaticRepo)
 			tc.SetupReviewRepoMock(mockReviewRepo)
@@ -226,7 +227,7 @@ func TestReviewService_GetReview(t *testing.T) {
 			mockReviewRepo := mockrepo.NewMockReview(ctrl)
 			mockContentRepo := mockrepo.NewMockContent(ctrl)
 			mockUserRepo := mockrepo.NewMockUser(ctrl)
-			mockStaticRepo := mockrepo.NewMockStatic(ctrl)
+			mockStaticRepo := mock_usecase.NewMockStatic(ctrl)
 			service := NewReviewService(mockReviewRepo, mockUserRepo,
 				mockContentRepo, mockStaticRepo)
 			tc.SetupReviewRepoMock(mockReviewRepo)
@@ -277,7 +278,7 @@ func TestReviewService_GetContentReviewByAuthor(t *testing.T) {
 			mockReviewRepo := mockrepo.NewMockReview(ctrl)
 			mockContentRepo := mockrepo.NewMockContent(ctrl)
 			mockUserRepo := mockrepo.NewMockUser(ctrl)
-			mockStaticRepo := mockrepo.NewMockStatic(ctrl)
+			mockStaticRepo := mock_usecase.NewMockStatic(ctrl)
 			service := NewReviewService(mockReviewRepo, mockUserRepo,
 				mockContentRepo, mockStaticRepo)
 			tc.SetupReviewRepoMock(mockReviewRepo)
@@ -340,7 +341,7 @@ func TestReviewService_CreateReview(t *testing.T) {
 			mockReviewRepo := mockrepo.NewMockReview(ctrl)
 			mockContentRepo := mockrepo.NewMockContent(ctrl)
 			mockUserRepo := mockrepo.NewMockUser(ctrl)
-			mockStaticRepo := mockrepo.NewMockStatic(ctrl)
+			mockStaticRepo := mock_usecase.NewMockStatic(ctrl)
 			service := NewReviewService(mockReviewRepo, mockUserRepo,
 				mockContentRepo, mockStaticRepo)
 			tc.SetupReviewRepoMock(mockReviewRepo)

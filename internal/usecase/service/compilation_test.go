@@ -9,6 +9,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
 	mockrepo "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/mocks"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
+	mock_usecase "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/mocks"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -56,7 +57,7 @@ func TestCompilationService_GetCompilationTypes(t *testing.T) {
 			defer ctrl.Finish()
 			mockCompilationRepo := mockrepo.NewMockCompilation(ctrl)
 			mockContentRepo := mockrepo.NewMockContent(ctrl)
-			mockStaticRepo := mockrepo.NewMockStatic(ctrl)
+			mockStaticRepo := mock_usecase.NewMockStatic(ctrl)
 			tc.SetupCompilationRepoMock(mockCompilationRepo)
 			compService := NewCompilationService(mockCompilationRepo,
 				mockStaticRepo, mockContentRepo)
@@ -98,7 +99,7 @@ func TestCompilationService_GetCompilationsByCompilationType(t *testing.T) {
 			defer ctrl.Finish()
 			mockCompilationRepo := mockrepo.NewMockCompilation(ctrl)
 			mockContentRepo := mockrepo.NewMockContent(ctrl)
-			mockStaticRepo := mockrepo.NewMockStatic(ctrl)
+			mockStaticRepo := mock_usecase.NewMockStatic(ctrl)
 			tc.SetupCompilationRepoMock(mockCompilationRepo)
 			compService := NewCompilationService(mockCompilationRepo,
 				mockStaticRepo, mockContentRepo)
@@ -121,7 +122,7 @@ func TestCompilationService_GetCompilationContent(t *testing.T) {
 		ExpectedErr              error
 		ExpectedOutput           *dto.CompilationResponse
 		SetupCompilationRepoMock func(repo *mockrepo.MockCompilation)
-		SetupStaticRepoMock      func(repo *mockrepo.MockStatic)
+		SetupStaticRepoMock      func(repo *mock_usecase.MockStatic)
 	}{
 
 		{
@@ -177,7 +178,7 @@ func TestCompilationService_GetCompilationContent(t *testing.T) {
 			defer ctrl.Finish()
 			mockCompilationRepo := mockrepo.NewMockCompilation(ctrl)
 			mockContentRepo := mockrepo.NewMockContent(ctrl)
-			mockStaticRepo := mockrepo.NewMockStatic(ctrl)
+			mockStaticRepo := mock_usecase.NewMockStatic(ctrl)
 			tc.SetupCompilationRepoMock(mockCompilationRepo)
 			compService := NewCompilationService(mockCompilationRepo,
 				mockStaticRepo, mockContentRepo)
