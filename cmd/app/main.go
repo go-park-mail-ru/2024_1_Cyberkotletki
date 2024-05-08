@@ -17,10 +17,12 @@ import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/connector"
 	"github.com/google/uuid"
 	_ "github.com/joho/godotenv"
+	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
 	"github.com/mcuadros/go-defaults"
+	_ "github.com/prometheus/client_golang/prometheus"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"gopkg.in/yaml.v3"
 	"net/http"
@@ -166,6 +168,9 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	staticDelivery.Configure(staticAPI)
 
 	// middleware
+	// metrics
+	echoServer.Use(echoprometheus.NewMiddleware("Kinoskop"))
+	echoServer.GET("/metrics", echoprometheus.NewHandler())
 	// config
 	echoServer.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
