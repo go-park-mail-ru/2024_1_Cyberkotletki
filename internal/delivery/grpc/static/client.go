@@ -42,6 +42,9 @@ func NewGateway(connectAddr string) (*Gateway, error) {
 func (gate *Gateway) GetStatic(staticID int) (string, error) {
 	staticFile, err := gate.staticManager.GetStatic(context.Background(), &static.Static{Id: uint64(staticID)})
 	if err != nil {
+		if strings.Contains(err.Error(), repository.ErrStaticNotFound.Error()) {
+			return "", usecase.ErrStaticNotFound
+		}
 		return "", err
 	}
 	switch staticFile.Error {

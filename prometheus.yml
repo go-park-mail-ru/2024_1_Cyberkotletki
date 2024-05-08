@@ -1,0 +1,9 @@
+scrape_configs:
+  - job_name: 'core'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['core:8080']
+  - job_name: 'node'
+    scrape_interval: 5s
+    static_configs:
+      - targets: [ 'node_exporter:9100' ]
