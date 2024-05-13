@@ -40,5 +40,5 @@ func (h *SearchEndpoints) Search(ctx echo.Context) error {
 	if err != nil {
 		return utils.NewError(ctx, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
 	}
-	return ctx.JSON(http.StatusOK, searchResult)
+	return utils.WriteJSON(ctx, searchResult)
 }

@@ -9,9 +9,9 @@ import (
 type Compilation interface {
 	// GetCompilation возвращает подборку по ее ID
 	// Если подборка не найдена, возвращает ErrCompilationNotFound
-	GetCompilation(id int) (entity.Compilation, error)
+	GetCompilation(id int) (*entity.Compilation, error)
 	// GetCompilationsByTypeID возвращает подборку по ее ID
-	GetCompilationsByTypeID(compilationTypeID int) ([]entity.Compilation, error)
+	GetCompilationsByTypeID(compilationTypeID int) ([]*entity.Compilation, error)
 	// GetCompilationContentLength возвращает длину контента подборки по ее ID
 	GetCompilationContentLength(id int) (int, error)
 	// GetCompilationContent возвращает подборку по ее ID

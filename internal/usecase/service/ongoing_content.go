@@ -25,13 +25,17 @@ func NewOngoingContentService(
 }
 
 // GetAllReleaseYears implements usecase.OngoingContent.
-func (o *OngoingContentService) GetAllReleaseYears() ([]int, error) {
-	return o.ongoingContentRepo.GetAllReleaseYears()
+func (o *OngoingContentService) GetAllReleaseYears() (*dto.ReleaseYearsResponse, error) {
+	releaseYears, err := o.ongoingContentRepo.GetAllReleaseYears()
+	if err != nil {
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении годов релизов"), err)
+	}
+	return &dto.ReleaseYearsResponse{Years: releaseYears}, nil
 }
 
 func (o *OngoingContentService) ongoingContentEntityToDTO(
 	ongoingContentEntity *entity.OngoingContent,
-) (*dto.PreviewOngoingContentCardVertical, error) {
+) (*dto.PreviewOngoingContent, error) {
 	ongoingContent, err := o.ongoingContentRepo.GetOngoingContentByID(ongoingContentEntity.ID)
 	switch {
 	case errors.Is(err, repository.ErrOngoingContentNotFound):
@@ -46,7 +50,7 @@ func (o *OngoingContentService) ongoingContentEntityToDTO(
 	case err != nil:
 		return nil, entity.UsecaseWrap(errors.New("ошибка при получении постера"), err)
 	}
-	ongoingContentDTO := &dto.PreviewOngoingContentCardVertical{
+	ongoingContentDTO := &dto.PreviewOngoingContent{
 		ID:          ongoingContent.ID,
 		Title:       ongoingContent.Title,
 		Poster:      posterURL,
@@ -59,26 +63,26 @@ func (o *OngoingContentService) ongoingContentEntityToDTO(
 }
 
 // GetNearestOngoings implements usecase.OngoingContent.
-func (o *OngoingContentService) GetNearestOngoings(limit int) ([]*dto.PreviewOngoingContentCardVertical, error) {
+func (o *OngoingContentService) GetNearestOngoings(limit int) (*dto.PreviewOngoingContentList, error) {
 	ongoingContentEntities, err := o.ongoingContentRepo.GetNearestOngoings(limit)
 	if err != nil {
 		return nil, entity.UsecaseWrap(errors.New("ошибка при получении ближайших релизов"), err)
 	}
-	ongoingContentDTOs := make([]*dto.PreviewOngoingContentCardVertical, 0, len(ongoingContentEntities))
-	for _, ongoingContentEntity := range ongoingContentEntities {
+	ongoingContentDTOs := make([]*dto.PreviewOngoingContent, len(ongoingContentEntities))
+	for index, ongoingContentEntity := range ongoingContentEntities {
 		ongoingContentDTO, err := o.ongoingContentEntityToDTO(ongoingContentEntity)
 		if err != nil {
 			return nil, err
 		}
-		ongoingContentDTOs = append(ongoingContentDTOs, ongoingContentDTO)
+		ongoingContentDTOs[index] = ongoingContentDTO
 	}
-	return ongoingContentDTOs, nil
+	return &dto.PreviewOngoingContentList{OnGoingContentList: ongoingContentDTOs}, nil
 }
 
 // GetOngoingContentByContentID implements usecase.OngoingContent.
 func (o *OngoingContentService) GetOngoingContentByContentID(
 	contentID int,
-) (*dto.PreviewOngoingContentCardVertical, error) {
+) (*dto.PreviewOngoingContent, error) {
 	ongoingContent, err := o.ongoingContentRepo.GetOngoingContentByID(contentID)
 	switch {
 	case errors.Is(err, repository.ErrOngoingContentNotFound):
@@ -93,7 +97,7 @@ func (o *OngoingContentService) GetOngoingContentByContentID(
 	case err != nil:
 		return nil, entity.UsecaseWrap(errors.New("ошибка при получении постера"), err)
 	}
-	ongoingContentDTO := &dto.PreviewOngoingContentCardVertical{
+	ongoingContentDTO := &dto.PreviewOngoingContent{
 		ID:          ongoingContent.ID,
 		Title:       ongoingContent.Title,
 		Poster:      posterURL,
@@ -109,23 +113,27 @@ func (o *OngoingContentService) GetOngoingContentByContentID(
 func (o *OngoingContentService) GetOngoingContentByMonthAndYear(
 	month int,
 	year int,
-) ([]*dto.PreviewOngoingContentCardVertical, error) {
+) (*dto.PreviewOngoingContentList, error) {
 	ongoingContentEntities, err := o.ongoingContentRepo.GetOngoingContentByMonthAndYear(month, year)
 	if err != nil {
 		return nil, entity.UsecaseWrap(errors.New("ошибка при получении релизов по месяцу и году"), err)
 	}
-	ongoingContentDTOs := make([]*dto.PreviewOngoingContentCardVertical, 0, len(ongoingContentEntities))
-	for _, ongoingContentEntity := range ongoingContentEntities {
+	ongoingContentDTOs := make([]*dto.PreviewOngoingContent, len(ongoingContentEntities))
+	for index, ongoingContentEntity := range ongoingContentEntities {
 		ongoingContentDTO, err := o.ongoingContentEntityToDTO(ongoingContentEntity)
 		if err != nil {
 			return nil, err
 		}
-		ongoingContentDTOs = append(ongoingContentDTOs, ongoingContentDTO)
+		ongoingContentDTOs[index] = ongoingContentDTO
 	}
-	return ongoingContentDTOs, nil
+	return &dto.PreviewOngoingContentList{OnGoingContentList: ongoingContentDTOs}, nil
 }
 
 // IsOngoingContentFinished implements usecase.OngoingContent.
-func (o *OngoingContentService) IsOngoingContentFinished(contentID int) (bool, error) {
-	return o.ongoingContentRepo.IsOngoingContentFinished(contentID)
+func (o *OngoingContentService) IsOngoingContentFinished(contentID int) (*dto.IsOngoingContentFinishedResponse, error) {
+	isFinished, err := o.ongoingContentRepo.IsOngoingContentFinished(contentID)
+	if err != nil {
+		return nil, entity.UsecaseWrap(errors.New("ошибка при проверке завершения контента"), err)
+	}
+	return &dto.IsOngoingContentFinishedResponse{IsFinished: isFinished}, nil
 }

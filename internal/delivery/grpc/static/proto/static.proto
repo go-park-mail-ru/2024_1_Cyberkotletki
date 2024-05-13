@@ -8,7 +8,6 @@ package static;
 message Static{
   uint64 id = 1;
   string uri = 2;
-  string error = 3;
 }
 
 message StaticUpload {

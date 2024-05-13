@@ -21,14 +21,14 @@ func NewCompilationRepository(db *sqlx.DB) repository.Compilation {
 }
 
 // GetCompilation получает подборку по ID
-func (c *CompilationDB) GetCompilation(id int) (entity.Compilation, error) {
+func (c *CompilationDB) GetCompilation(id int) (*entity.Compilation, error) {
 	query, args, err := sq.Select("id", "title", "compilation_type_id", "poster_upload_id").
 		From("compilation").
 		Where(sq.Eq{"id": id}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
-		return entity.Compilation{}, errors.Join(errors.New("ошибка при составлении запроса GetCompilation"), err)
+		return nil, errors.Join(errors.New("ошибка при составлении запроса GetCompilation"), err)
 	}
 	row := c.DB.QueryRow(query, args...)
 	compilation := entity.Compilation{}
@@ -41,18 +41,18 @@ func (c *CompilationDB) GetCompilation(id int) (entity.Compilation, error) {
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return entity.Compilation{}, repository.ErrCompilationNotFound
+			return nil, repository.ErrCompilationNotFound
 		}
-		return entity.Compilation{}, entity.PSQLQueryErr("GetCompilation при сканировании", err)
+		return nil, entity.PSQLQueryErr("GetCompilation при сканировании", err)
 	}
 	if posterUploadID.Valid {
 		compilation.PosterUploadID = int(posterUploadID.Int64)
 	}
-	return compilation, nil
+	return &compilation, nil
 }
 
 // GetCompilationsByTypeID получает все подборки по ID категории
-func (c *CompilationDB) GetCompilationsByTypeID(compilationTypeID int) ([]entity.Compilation, error) {
+func (c *CompilationDB) GetCompilationsByTypeID(compilationTypeID int) ([]*entity.Compilation, error) {
 	query, args, err := sq.Select("id", "title", "compilation_type_id", "poster_upload_id").
 		From("compilation").
 		Where(sq.Eq{"compilation_type_id": compilationTypeID}).
@@ -67,7 +67,7 @@ func (c *CompilationDB) GetCompilationsByTypeID(compilationTypeID int) ([]entity
 		return nil, entity.PSQLQueryErr("GetCompilationsByTypeID", err)
 	}
 	defer rows.Close()
-	compilations := make([]entity.Compilation, 0)
+	compilations := make([]*entity.Compilation, 0)
 	for rows.Next() {
 		var posterUploadID sql.NullInt64
 		compilation := entity.Compilation{}
@@ -83,7 +83,7 @@ func (c *CompilationDB) GetCompilationsByTypeID(compilationTypeID int) ([]entity
 		if posterUploadID.Valid {
 			compilation.PosterUploadID = int(posterUploadID.Int64)
 		}
-		compilations = append(compilations, compilation)
+		compilations = append(compilations, &compilation)
 	}
 	return compilations, nil
 }

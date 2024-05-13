@@ -2,7 +2,7 @@ package dto
 
 import "time"
 
-type PreviewContentCard struct {
+type PreviewContent struct {
 	ID            int      `json:"id"                      example:"1"`
 	Title         string   `json:"title"                   example:"Бэтмен"`
 	OriginalTitle string   `json:"originalTitle,omitempty" example:"Batman"`
@@ -15,7 +15,8 @@ type PreviewContentCard struct {
 
 	Type string `json:"type" example:"movie"`
 	// Поля, которые есть только у фильмов
-	Duration int `json:"duration,omitempty" example:"134"`
+	Duration    int `json:"duration,omitempty" example:"134"`
+	ReleaseYear int `json:"release,omitempty"  example:"2020"`
 	// Поля, которые есть только у сериалов
 	SeasonsNumber int `json:"seasonsNumber,omitempty" example:"1"`
 	YearStart     int `json:"yearStart,omitempty"     example:"2020"`

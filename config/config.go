@@ -5,7 +5,7 @@ import (
 )
 
 type Server struct {
-	IP                      string `yaml:"ip"                        default:"localhost"`
+	IP                      string `yaml:"ip"                        default:"0.0.0.0"`
 	Port                    int    `yaml:"port"                      default:"8080"`
 	WriteTimeout            int    `yaml:"write_timeout"             default:"15"`
 	ReadTimeout             int    `yaml:"read_timeout"              default:"15"`
@@ -14,15 +14,16 @@ type Server struct {
 }
 
 type RedisDatabase struct {
-	Addr     string `yaml:"addr"     default:"host.docker.internal:6379"`
-	Password string `yaml:"password" default:""`
-	DB       int    `yaml:"db"       default:"0"`
+	Addr     string `yaml:"addr" default:"redis:6379"`
+	Password string `yaml:"-"`
+	DB       int    `yaml:"db"   default:"0"`
 }
 
 type PostgresDatabase struct {
-	// default исключительно для примера
-	// nolint
-	ConnectURL string `yaml:"connect_url" default:"postgres://kinoskop_admin:admin_secret_password@localhost:5432/kinoskop?sslmode=disable"`
+	IP   string `yaml:"ip"   default:"postgres"`
+	Port int    `yaml:"port" default:"5432"`
+	User string `yaml:"-"`
+	Pass string `yaml:"-"`
 }
 
 type Config struct {
@@ -33,11 +34,11 @@ type Config struct {
 	} `yaml:"http"`
 	Microservices struct {
 		Auth struct {
-			Addr                 string `yaml:"auth_addr"          default:"localhost:8081"`
+			Addr                 string `yaml:"auth_addr"          default:"auth:8081"`
 			HTTPSessionAliveTime int    `yaml:"session_alive_time" default:"86400"`
 		} `yaml:"auth_service"`
 		Static struct {
-			Addr        string `yaml:"static_addr"   default:"localhost:8082"`
+			Addr        string `yaml:"static_addr"   default:"static:8082"`
 			MaxFileSize int    `yaml:"max_file_size" default:"10485760"`
 		} `yaml:"static_service"`
 	} `yaml:"microservices"`
@@ -56,15 +57,21 @@ type StaticConfig struct {
 	Port        int    `yaml:"port"          default:"8082"`
 	MaxFileSize int    `yaml:"max_file_size" default:"10485760"`
 	S3          struct {
-		AccessKeyID     string `yaml:"access_key_id"`
-		SecretAccessKey string `yaml:"secret_access_key"`
-		Region          string `yaml:"region"            default:"ru-msk"`
-		Endpoint        string `yaml:"endpoint"          default:"https://hb.vkcs.cloud"`
-		BucketName      string `yaml:"bucket_name"       default:"kinoskop_dev"`
+		AccessKeyID     string `yaml:"-"`
+		SecretAccessKey string `yaml:"-"`
+		Region          string `yaml:"region"      default:"ru-msk"`
+		Endpoint        string `yaml:"endpoint"    default:"https://hb.vkcs.cloud"`
+		BucketName      string `yaml:"bucket_name" default:"kinoskop_dev"`
 	} `yaml:"s3"`
 	Postgres PostgresDatabase `yaml:"postgres"`
 }
 
 func (cfg *Config) GetServerAddr() string {
 	return fmt.Sprintf("%s:%d", cfg.HTTP.Server.IP, cfg.HTTP.Server.Port)
+}
+
+func (cfg *PostgresDatabase) GetConnectURL() string {
+	return fmt.Sprintf(
+		"postgres://%s:%s@%s:%d/kinoskop?sslmode=disable",
+		cfg.User, cfg.Pass, cfg.IP, cfg.Port)
 }

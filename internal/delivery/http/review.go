@@ -110,9 +110,8 @@ func (h *ReviewEndpoints) GetMyContentReview(ctx echo.Context) error {
 // @Security _csrf
 // nolint: dupl
 func (h *ReviewEndpoints) CreateReview(ctx echo.Context) error {
-	var reviewCreate dto.ReviewCreateRequest
-	err := ctx.Bind(&reviewCreate)
-	if err != nil {
+	reviewCreate := new(dto.ReviewCreateRequest)
+	if err := utils.ReadJSON(ctx, reviewCreate); err != nil {
 		return utils.NewError(ctx, http.StatusBadRequest, "Невалидный запрос", nil)
 	}
 	userID, err := utils.GetUserIDFromSession(ctx, h.authUC)
@@ -120,7 +119,7 @@ func (h *ReviewEndpoints) CreateReview(ctx echo.Context) error {
 		return utils.NewError(ctx, http.StatusUnauthorized, "Для этой операции нужно авторизоваться", err)
 	}
 	review, err := h.reviewUC.CreateReview(dto.ReviewCreate{
-		ReviewCreateRequest: reviewCreate,
+		ReviewCreateRequest: *reviewCreate,
 		UserID:              userID,
 	})
 	var reviewErr usecase.ReviewErrorIncorrectData
@@ -155,9 +154,8 @@ func (h *ReviewEndpoints) CreateReview(ctx echo.Context) error {
 // @Security _csrf
 // nolint: dupl
 func (h *ReviewEndpoints) UpdateReview(ctx echo.Context) error {
-	var reviewUpdate dto.ReviewUpdateRequest
-	err := ctx.Bind(&reviewUpdate)
-	if err != nil {
+	reviewUpdate := new(dto.ReviewUpdateRequest)
+	if err := ctx.Bind(&reviewUpdate); err != nil {
 		return utils.NewError(ctx, http.StatusBadRequest, "Невалидный запрос", err)
 	}
 	userID, err := utils.GetUserIDFromSession(ctx, h.authUC)
@@ -165,7 +163,7 @@ func (h *ReviewEndpoints) UpdateReview(ctx echo.Context) error {
 		return utils.NewError(ctx, http.StatusUnauthorized, "Для этой операции нужно авторизоваться", err)
 	}
 	review, err := h.reviewUC.EditReview(dto.ReviewUpdate{
-		ReviewUpdateRequest: reviewUpdate,
+		ReviewUpdateRequest: *reviewUpdate,
 		UserID:              userID,
 	})
 	var reviewErr usecase.ReviewErrorIncorrectData
@@ -321,7 +319,6 @@ func (h *ReviewEndpoints) GetContentReviews(ctx echo.Context) error {
 // @Summary Поставить оценку на рецензию
 // @Tags review
 // @Description Поставить оценку на рецензию
-// @Accept json
 // @Param id path int true "ID рецензии"
 // @Param vote query bool true "Лайк или дизлайк"
 // @Success 200

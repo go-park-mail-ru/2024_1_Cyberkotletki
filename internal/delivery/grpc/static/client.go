@@ -47,12 +47,7 @@ func (gate *Gateway) GetStatic(staticID int) (string, error) {
 		}
 		return "", err
 	}
-	switch staticFile.Error {
-	case "ErrStaticNotFound":
-		return "", usecase.ErrStaticNotFound
-	default:
-		return staticFile.Uri, nil
-	}
+	return staticFile.Uri, nil
 }
 
 func (gate *Gateway) GetStaticFile(staticURI string) (io.ReadSeeker, error) {
@@ -115,17 +110,17 @@ func (gate *Gateway) UploadAvatar(reader io.ReadSeeker) (int, error) {
 	}
 
 	response, err := stream.CloseAndRecv()
+
 	if err != nil {
+		switch {
+		case strings.Contains(err.Error(), usecase.ErrStaticTooBigFile.Error()):
+			return -1, usecase.ErrStaticTooBigFile
+		case strings.Contains(err.Error(), usecase.ErrStaticNotImage.Error()):
+			return -1, usecase.ErrStaticNotImage
+		case strings.Contains(err.Error(), usecase.ErrStaticImageDimensions.Error()):
+			return -1, usecase.ErrStaticImageDimensions
+		}
 		return -1, err
 	}
-	switch response.Error {
-	case "ErrStaticTooBigFile":
-		return -1, usecase.ErrStaticTooBigFile
-	case "ErrStaticNotImage":
-		return -1, usecase.ErrStaticNotImage
-	case "ErrStaticImageDimensions":
-		return -1, usecase.ErrStaticImageDimensions
-	default:
-		return int(response.Id), nil
-	}
+	return int(response.Id), nil
 }

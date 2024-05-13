@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/chai2010/webp"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
@@ -13,7 +14,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/chai2010/webp"
 	_ "image/gif"  // для поддержки формата gif
 	_ "image/jpeg" // для поддержки формата jpeg
 	_ "image/png"  // для поддержки формата png
@@ -45,21 +45,21 @@ func (s *StaticService) UploadAvatar(reader io.ReadSeeker) (int, error) {
 	// Проверка размера файла
 	size, err := reader.Seek(0, io.SeekEnd)
 	if err != nil {
-		return -1, errors.Join(err, errors.New("ошибка при определении размера файла"))
+		return -1, entity.UsecaseWrap(err, errors.New("ошибка при определении размера файла"))
 	}
 	if size > int64(s.staticRepo.GetMaxSize()) {
 		return -1, usecase.ErrStaticTooBigFile
 	}
 	_, err = reader.Seek(0, io.SeekStart) // Возвращаемся в начало файла
 	if err != nil {
-		return -1, errors.Join(err, errors.New("ошибка при возвращении io.ReadSeeker в начало файла"))
+		return -1, entity.UsecaseWrap(err, errors.New("ошибка при возвращении io.ReadSeeker в начало файла"))
 	}
 
 	// Определение типа файла
 	headerBytes := make([]byte, 512)
 	_, err = reader.Read(headerBytes)
 	if err != nil {
-		return -1, errors.Join(err, errors.New("ошибка при чтении заголовка файла"))
+		return -1, entity.UsecaseWrap(err, errors.New("ошибка при чтении заголовка файла"))
 	}
 	contentType := http.DetectContentType(headerBytes)
 	if contentType != "image/jpeg" && contentType != "image/png" && contentType != "image/gif" {
@@ -67,7 +67,7 @@ func (s *StaticService) UploadAvatar(reader io.ReadSeeker) (int, error) {
 	}
 	_, err = reader.Seek(0, io.SeekStart) // Возвращаемся в начало файла
 	if err != nil {
-		return -1, errors.Join(err, errors.New("ошибка при возвращении io.ReadSeeker в начало файла"))
+		return -1, entity.UsecaseWrap(err, errors.New("ошибка при возвращении io.ReadSeeker в начало файла"))
 	}
 
 	// Чтение данных файла в структуру изображения
@@ -79,7 +79,7 @@ func (s *StaticService) UploadAvatar(reader io.ReadSeeker) (int, error) {
 	// Проверка размеров изображения
 	const minImageWidth, minImageHeight = 100, 100
 	if img.Bounds().Dx() < minImageWidth || img.Bounds().Dy() < minImageHeight {
-		return -1, errors.Join(
+		return -1, entity.UsecaseWrap(
 			usecase.ErrStaticImageDimensions,
 			fmt.Errorf(
 				"изображение имеет размеры %dx%d, а должно быть как минимум %dx%d",

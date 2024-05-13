@@ -31,7 +31,7 @@ func (s SearchService) Search(query string) (*dto.SearchResult, error) {
 	}
 
 	result := dto.SearchResult{
-		Content: make([]dto.PreviewContentCard, len(contents)),
+		Content: make([]dto.PreviewContent, len(contents)),
 		Persons: make([]dto.PersonPreviewWithPhoto, len(persons)),
 	}
 	for index, content := range contents {
@@ -68,7 +68,7 @@ func (s SearchService) Search(query string) (*dto.SearchResult, error) {
 		for _, actor := range actors {
 			actorsList = append(actorsList, actor.Name)
 		}
-		contentDTO := dto.PreviewContentCard{
+		contentDTO := dto.PreviewContent{
 			ID:            content.ID,
 			Title:         content.Title,
 			OriginalTitle: content.OriginalTitle,

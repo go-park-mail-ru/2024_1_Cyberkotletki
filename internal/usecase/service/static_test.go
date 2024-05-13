@@ -2,7 +2,6 @@ package service
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	mockrepo "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/mocks"
@@ -115,7 +114,7 @@ func TestStaticService_UploadAvatar(t *testing.T) {
 				// преобразуем data в io.Reader
 				return bytes.NewReader(data)
 			},
-			ExpectedErr: errors.Join(
+			ExpectedErr: entity.UsecaseWrap(
 				usecase.ErrStaticImageDimensions,
 				fmt.Errorf("изображение имеет размеры 62x55, а должно быть как минимум 100x100"),
 			),

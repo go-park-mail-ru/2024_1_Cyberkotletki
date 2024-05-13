@@ -15,23 +15,23 @@ const (
 type CompilationService struct {
 	compilationRepo repository.Compilation
 	staticUC        usecase.Static
-	contentRepo     repository.Content
+	contentUC       usecase.Content
 }
 
 func NewCompilationService(
 	compilationRepo repository.Compilation,
 	staticUC usecase.Static,
-	contentRepo repository.Content,
+	contentUC usecase.Content,
 ) usecase.Compilation {
 	return &CompilationService{
 		compilationRepo: compilationRepo,
 		staticUC:        staticUC,
-		contentRepo:     contentRepo,
+		contentUC:       contentUC,
 	}
 }
 
 // compilationEntityToDTO конвертирует entity.Compilation в dto.Compilation добавляя поле длины контента в подборке
-func (c *CompilationService) compilationEntityToDTO(compEntity entity.Compilation) (*dto.Compilation, error) {
+func (c *CompilationService) compilationEntityToDTO(compEntity *entity.Compilation) (*dto.Compilation, error) {
 	posterURL, err := c.staticUC.GetStatic(compEntity.PosterUploadID)
 	switch {
 	case errors.Is(err, usecase.ErrStaticNotFound):
@@ -59,7 +59,7 @@ func (c *CompilationService) compilationTypeDTOToEntity(
 }
 
 // compilationEntitiesToDTO конвертирует массив entity.Compilation в массив dto.Compilation
-func (c *CompilationService) compilationEntitiesToDTO(compEntities []entity.Compilation) (
+func (c *CompilationService) compilationEntitiesToDTO(compEntities []*entity.Compilation) (
 	*dto.CompilationResponseList,
 	error,
 ) {
@@ -119,6 +119,17 @@ func (c *CompilationService) GetCompilationContent(compID, page int) (*dto.Compi
 	case err != nil:
 		return nil, entity.UsecaseWrap(errors.New("ошибка при получении контента подборки"), err)
 	}
+	content := make([]*dto.PreviewContent, len(contentIDs))
+	for index, contentID := range contentIDs {
+		contentEntity, err := c.contentUC.GetPreviewContentByID(contentID)
+		switch {
+		case errors.Is(err, usecase.ErrContentNotFound):
+			return nil, usecase.ErrContentNotFound
+		case err != nil:
+			return nil, entity.UsecaseWrap(errors.New("ошибка при получении контента"), err)
+		}
+		content[index] = contentEntity
+	}
 	contentTotal, err := c.compilationRepo.GetCompilationContentLength(compID)
 	if err != nil {
 		return nil, entity.UsecaseWrap(errors.New("ошибка при получении количества контента подборки"), err)
@@ -129,7 +140,7 @@ func (c *CompilationService) GetCompilationContent(compID, page int) (*dto.Compi
 	}
 	return &dto.CompilationResponse{
 		Compilation:   *compilationDTO,
-		ContentIDs:    contentIDs,
+		Content:       content,
 		ContentLength: contentTotal,
 		Page:          page,
 		PerPage:       compilationContentLimit,

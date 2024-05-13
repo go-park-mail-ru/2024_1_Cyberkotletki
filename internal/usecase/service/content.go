@@ -235,3 +235,70 @@ func (c *ContentService) GetPersonByID(id int) (*dto.Person, error) {
 	}
 	return &personDTO, nil
 }
+
+// GetPreviewContentByID возвращает dto.PreviewContent по его ID
+func (c *ContentService) GetPreviewContentByID(id int) (*dto.PreviewContent, error) {
+	contentEntity, err := c.contentRepo.GetPreviewContent(id)
+	switch {
+	case errors.Is(err, repository.ErrContentNotFound):
+		return nil, usecase.ErrContentNotFound
+	case err != nil:
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении контента"), err)
+	}
+	posterURL, err := c.staticUC.GetStatic(contentEntity.PosterStaticID)
+	switch {
+	case errors.Is(err, usecase.ErrStaticNotFound):
+		// Если постер не найден, возвращаем пустую строку
+		posterURL = ""
+	case err != nil:
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении постера"), err)
+	}
+	genres := genreEntityToDTO(contentEntity.Genres)
+	genre := ""
+	if len(genres) > 0 {
+		genre = genres[0]
+	}
+	countries := countryEntityToDTO(contentEntity.Country)
+	country := ""
+	if len(countries) > 0 {
+		country = countries[0]
+	}
+	directors := personEntityToPreviewDTO(contentEntity.Directors)
+	director := ""
+	if len(directors) > 0 {
+		director = directors[0].Name
+	}
+	actorEntities := personEntityToPreviewDTO(contentEntity.Actors)
+	actors := make([]string, len(actorEntities))
+	for index, actor := range actorEntities {
+		actors[index] = actor.Name
+	}
+	duration := 0
+	releaseYear := 0
+	yearStart := 0
+	yearEnd := 0
+	if contentEntity.Type == entity.ContentTypeMovie && contentEntity.Movie != nil {
+		duration = contentEntity.Movie.Duration
+		releaseYear = contentEntity.Movie.Premiere.Year()
+	} else if contentEntity.Type == entity.ContentTypeSeries && contentEntity.Series != nil {
+		yearStart = contentEntity.Series.YearStart
+		yearEnd = contentEntity.Series.YearEnd
+	}
+	previewContentDTO := dto.PreviewContent{
+		ID:            contentEntity.ID,
+		Title:         contentEntity.Title,
+		OriginalTitle: contentEntity.OriginalTitle,
+		Country:       country,
+		Genre:         genre,
+		Director:      director,
+		Actors:        actors,
+		Poster:        posterURL,
+		Rating:        contentEntity.Rating,
+		Type:          contentEntity.Type,
+		Duration:      duration,
+		ReleaseYear:   releaseYear,
+		YearEnd:       yearEnd,
+		YearStart:     yearStart,
+	}
+	return &previewContentDTO, nil
+}

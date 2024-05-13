@@ -13,6 +13,9 @@ type Content interface {
 	// GetPersonByID возвращает персону по ее ID
 	// Если персона не найдена, возвращает ErrPersonNotFound
 	GetPersonByID(id int) (*dto.Person, error)
+	// GetPreviewContentByID возвращает контент по его ID, но только с минимальным набором полей
+	// Если контент не найден, возвращает ErrContentNotFound
+	GetPreviewContentByID(id int) (*dto.PreviewContent, error)
 }
 
 var (

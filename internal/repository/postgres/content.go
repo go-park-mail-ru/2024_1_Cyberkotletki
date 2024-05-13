@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -8,7 +9,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
 	"github.com/jmoiron/sqlx"
-	"sync"
+	"golang.org/x/sync/errgroup"
 )
 
 type ContentDB struct {
@@ -463,146 +464,136 @@ func (c *ContentDB) getContentInfo(id int) (*entity.Content, error) {
 }
 
 func (c *ContentDB) GetContent(id int) (*entity.Content, error) {
+	group, _ := errgroup.WithContext(context.Background())
+
+	// получаем основную информацию о контенте
 	content, err := c.getContentInfo(id)
 	if err != nil {
 		return nil, err
 	}
-	var wg sync.WaitGroup
-	var occurredErrorsChan = make(chan error, 12)
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+
+	// запрашиваем дополнительные данные
+	group.Go(func() error {
 		pictures, err := c.getContentPictures(id)
 		if err != nil {
-			occurredErrorsChan <- err
-			return
+			return err
 		}
 		content.PicturesStaticID = pictures
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+		return nil
+	})
+
+	group.Go(func() error {
 		facts, err := c.getContentFacts(id)
 		if err != nil {
-			occurredErrorsChan <- err
-			return
+			return err
 		}
 		content.Facts = facts
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+		return nil
+	})
+
+	group.Go(func() error {
 		countries, err := c.getContentProductionCountries(id)
 		if err != nil {
-			occurredErrorsChan <- err
-			return
+			return err
 		}
 		content.Country = countries
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+		return nil
+	})
+
+	group.Go(func() error {
 		genres, err := c.getContentGenres(id)
 		if err != nil {
-			occurredErrorsChan <- err
-			return
+			return err
 		}
 		content.Genres = genres
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+		return nil
+	})
+
+	group.Go(func() error {
 		actors, err := c.getPersonsByRoleAndContentID(entity.RoleActor, id)
 		if err != nil {
-			occurredErrorsChan <- err
-			return
+			return err
 		}
 		content.Actors = actors
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+		return nil
+	})
+
+	group.Go(func() error {
 		directors, err := c.getPersonsByRoleAndContentID(entity.RoleDirector, id)
 		if err != nil {
-			occurredErrorsChan <- err
-			return
+			return err
 		}
 		content.Directors = directors
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+		return nil
+	})
+
+	group.Go(func() error {
 		producers, err := c.getPersonsByRoleAndContentID(entity.RoleProducer, id)
 		if err != nil {
-			occurredErrorsChan <- err
-			return
+			return err
 		}
 		content.Producers = producers
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+		return nil
+	})
+
+	group.Go(func() error {
 		writers, err := c.getPersonsByRoleAndContentID(entity.RoleWriter, id)
 		if err != nil {
-			occurredErrorsChan <- err
-			return
+			return err
 		}
 		content.Writers = writers
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+		return nil
+	})
+
+	group.Go(func() error {
 		operators, err := c.getPersonsByRoleAndContentID(entity.RoleOperator, id)
 		if err != nil {
-			occurredErrorsChan <- err
-			return
+			return err
 		}
 		content.Operators = operators
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+		return nil
+	})
+
+	group.Go(func() error {
 		composers, err := c.getPersonsByRoleAndContentID(entity.RoleComposer, id)
 		if err != nil {
-			occurredErrorsChan <- err
-			return
+			return err
 		}
 		content.Composers = composers
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+		return nil
+	})
+
+	group.Go(func() error {
 		editors, err := c.getPersonsByRoleAndContentID(entity.RoleEditor, id)
 		if err != nil {
-			occurredErrorsChan <- err
-			return
+			return err
 		}
 		content.Editors = editors
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+		return nil
+	})
+
+	group.Go(func() error {
 		switch content.Type {
 		case entity.ContentTypeMovie:
 			movie, err := c.getMovieData(id)
 			if err != nil {
-				occurredErrorsChan <- err
-				return
+				return err
 			}
 			content.Movie = movie
 		case entity.ContentTypeSeries:
 			series, err := c.getSeriesData(id)
 			if err != nil {
-				occurredErrorsChan <- err
-				return
+				return err
 			}
 			content.Series = series
 		}
-	}()
-	wg.Wait()
-	if len(occurredErrorsChan) > 0 {
-		return nil, <-occurredErrorsChan
+		return nil
+	})
+
+	if err := group.Wait(); err != nil {
+		return nil, err
 	}
+
 	return content, nil
 }
 
@@ -652,8 +643,7 @@ func (c *ContentDB) getPreviewContentInfo(id int) (*entity.Content, error) {
 // Для фильма заполняет поля premiere, duration.
 // Для сериала заполняет поля year_start, year_end, seasons.
 func (c *ContentDB) GetPreviewContent(id int) (*entity.Content, error) {
-	var wg sync.WaitGroup
-	var occurredErrorsChan = make(chan error, 5)
+	group, _ := errgroup.WithContext(context.Background())
 
 	// запрашиваем краткую информацию о контенте
 	content, err := c.getPreviewContentInfo(id)
@@ -662,70 +652,64 @@ func (c *ContentDB) GetPreviewContent(id int) (*entity.Content, error) {
 	}
 
 	// запрашиваем дополнительные данные
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	group.Go(func() error {
 		countries, err := c.getContentProductionCountries(id)
 		if err != nil {
-			occurredErrorsChan <- err
-			return
+			return err
 		}
 		content.Country = countries
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+		return nil
+	})
+
+	group.Go(func() error {
 		genres, err := c.getContentGenres(id)
 		if err != nil {
-			occurredErrorsChan <- err
-			return
+			return err
 		}
 		content.Genres = genres
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+		return nil
+	})
+
+	group.Go(func() error {
 		actors, err := c.getPersonsByRoleAndContentID(entity.RoleActor, id)
 		if err != nil {
-			occurredErrorsChan <- err
-			return
+			return err
 		}
 		content.Actors = actors
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+		return nil
+	})
+
+	group.Go(func() error {
 		directors, err := c.getPersonsByRoleAndContentID(entity.RoleDirector, id)
 		if err != nil {
-			occurredErrorsChan <- err
-			return
+			return err
 		}
 		content.Directors = directors
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+		return nil
+	})
+
+	group.Go(func() error {
 		switch content.Type {
 		case entity.ContentTypeMovie:
 			movie, err := c.getMovieData(id)
 			if err != nil {
-				occurredErrorsChan <- err
-				return
+				return err
 			}
 			content.Movie = movie
 		case entity.ContentTypeSeries:
 			series, err := c.getSeriesData(id)
 			if err != nil {
-				occurredErrorsChan <- err
-				return
+				return err
 			}
 			content.Series = series
 		}
-	}()
-	wg.Wait()
-	if len(occurredErrorsChan) > 0 {
-		return nil, <-occurredErrorsChan
+		return nil
+	})
+
+	if err := group.Wait(); err != nil {
+		return nil, err
 	}
+
 	return content, nil
 }
 

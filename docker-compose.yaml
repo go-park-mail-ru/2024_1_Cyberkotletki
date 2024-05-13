@@ -1,14 +1,14 @@
 version: "3.6"
 services:
   # ----------------------------------------------
-  # БД: Postgres, Redis
+  # БД: Postgres, Redis, миграции
   # ----------------------------------------------
   postgres:
     image: postgres:latest
     restart: always
     environment:
-      POSTGRES_USER: kinoskop_admin
-      POSTGRES_PASSWORD: admin_secret_password
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: kinoskop
     ports:
       - "5432:5432"
@@ -17,11 +17,23 @@ services:
     restart: always
     ports:
       - "6379:6379"
+  migrations:
+    restart: on-failure
+    build:
+      context: .
+      dockerfile: ./docker/migrations.dockerfile
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      - postgres
   # ----------------------------------------------
   # Микросервисы: Auth, Core, Static
   # ----------------------------------------------
   auth:
     restart: always
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     build:
       context: .
       dockerfile: ./docker/auth.dockerfile
@@ -33,6 +45,11 @@ services:
       - redis
   static:
     restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
     build:
       context: .
       dockerfile: ./docker/static.dockerfile
@@ -50,7 +67,8 @@ services:
     volumes:
       - ./config.yaml:/app/config.yaml
     environment:
-      - DATABASE_URL=postgres://kinoskop_admin:admin_secret_password@postgres:5432/kinoskop?sslmode=disable
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "8080:8080"
     depends_on:

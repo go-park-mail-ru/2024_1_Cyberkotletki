@@ -40,10 +40,10 @@ func (m *MockOngoingContent) EXPECT() *MockOngoingContentMockRecorder {
 }
 
 // GetAllReleaseYears mocks base method.
-func (m *MockOngoingContent) GetAllReleaseYears() ([]int, error) {
+func (m *MockOngoingContent) GetAllReleaseYears() (*dto.ReleaseYearsResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllReleaseYears")
-	ret0, _ := ret[0].([]int)
+	ret0, _ := ret[0].(*dto.ReleaseYearsResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -55,10 +55,10 @@ func (mr *MockOngoingContentMockRecorder) GetAllReleaseYears() *gomock.Call {
 }
 
 // GetNearestOngoings mocks base method.
-func (m *MockOngoingContent) GetNearestOngoings(limit int) ([]*dto.PreviewOngoingContentCardVertical, error) {
+func (m *MockOngoingContent) GetNearestOngoings(limit int) (*dto.PreviewOngoingContentList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNearestOngoings", limit)
-	ret0, _ := ret[0].([]*dto.PreviewOngoingContentCardVertical)
+	ret0, _ := ret[0].(*dto.PreviewOngoingContentList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -70,10 +70,10 @@ func (mr *MockOngoingContentMockRecorder) GetNearestOngoings(limit any) *gomock.
 }
 
 // GetOngoingContentByContentID mocks base method.
-func (m *MockOngoingContent) GetOngoingContentByContentID(contentID int) (*dto.PreviewOngoingContentCardVertical, error) {
+func (m *MockOngoingContent) GetOngoingContentByContentID(contentID int) (*dto.PreviewOngoingContent, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetOngoingContentByContentID", contentID)
-	ret0, _ := ret[0].(*dto.PreviewOngoingContentCardVertical)
+	ret0, _ := ret[0].(*dto.PreviewOngoingContent)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -85,10 +85,10 @@ func (mr *MockOngoingContentMockRecorder) GetOngoingContentByContentID(contentID
 }
 
 // GetOngoingContentByMonthAndYear mocks base method.
-func (m *MockOngoingContent) GetOngoingContentByMonthAndYear(month, year int) ([]*dto.PreviewOngoingContentCardVertical, error) {
+func (m *MockOngoingContent) GetOngoingContentByMonthAndYear(month, year int) (*dto.PreviewOngoingContentList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetOngoingContentByMonthAndYear", month, year)
-	ret0, _ := ret[0].([]*dto.PreviewOngoingContentCardVertical)
+	ret0, _ := ret[0].(*dto.PreviewOngoingContentList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -100,10 +100,10 @@ func (mr *MockOngoingContentMockRecorder) GetOngoingContentByMonthAndYear(month,
 }
 
 // IsOngoingContentFinished mocks base method.
-func (m *MockOngoingContent) IsOngoingContentFinished(contentID int) (bool, error) {
+func (m *MockOngoingContent) IsOngoingContentFinished(contentID int) (*dto.IsOngoingContentFinishedResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsOngoingContentFinished", contentID)
-	ret0, _ := ret[0].(bool)
+	ret0, _ := ret[0].(*dto.IsOngoingContentFinishedResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

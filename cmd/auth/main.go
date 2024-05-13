@@ -10,6 +10,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/redis"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/service"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/connector"
+	"github.com/joho/godotenv"
 	"github.com/labstack/gommon/log"
 	"github.com/mcuadros/go-defaults"
 	"google.golang.org/grpc"
@@ -50,16 +51,22 @@ func GenerateExampleConfig() {
 }
 
 func ParseParams() config.AuthConfig {
+	var cfg config.AuthConfig
+	// читаем конфиг
 	yamlFile, err := os.ReadFile("config_auth.yaml")
 	if err != nil {
 		log.Fatalf("Ошибка при чтении конфига сервера: %v", err)
 	}
-	var cfg config.AuthConfig
 	err = yaml.Unmarshal(yamlFile, &cfg)
 	if err != nil {
 		log.Fatalf("Ошибка при парсинге конфига сервера: %v", err)
 	}
-
+	// читаем переменные окружения
+	err = godotenv.Load()
+	if err != nil {
+		fmt.Println("Ошибка загрузки .env файла")
+	}
+	cfg.Redis.Password = os.Getenv("REDIS_PASSWORD")
 	return cfg
 }
 

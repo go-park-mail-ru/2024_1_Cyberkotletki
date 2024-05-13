@@ -50,7 +50,7 @@ func (h *UserEndpoints) Configure(server *echo.Group) {
 // @Security _csrf
 func (h *UserEndpoints) Register(ctx echo.Context) error {
 	registerData := new(dto.Register)
-	if err := ctx.Bind(registerData); err != nil {
+	if err := utils.ReadJSON(ctx, registerData); err != nil {
 		return utils.NewError(ctx, http.StatusBadRequest, "Невалидный JSON", nil)
 	}
 	userID, err := h.userUC.Register(registerData)
@@ -87,7 +87,7 @@ func (h *UserEndpoints) Register(ctx echo.Context) error {
 // @Security _csrf
 func (h *UserEndpoints) Login(ctx echo.Context) error {
 	loginData := new(dto.Login)
-	if err := ctx.Bind(loginData); err != nil {
+	if err := utils.ReadJSON(ctx, loginData); err != nil {
 		return utils.NewError(ctx, http.StatusBadRequest, "Невалидный JSON", nil)
 	}
 	userID, err := h.userUC.Login(loginData)
@@ -127,7 +127,7 @@ func (h *UserEndpoints) UpdatePassword(ctx echo.Context) error {
 		return utils.NewError(ctx, http.StatusUnauthorized, "Не авторизован", err)
 	}
 	updateData := new(dto.UpdatePassword)
-	if err = ctx.Bind(updateData); err != nil {
+	if err = utils.ReadJSON(ctx, updateData); err != nil {
 		return utils.NewError(ctx, http.StatusBadRequest, "Невалидный JSON", nil)
 	}
 	err = h.userUC.UpdatePassword(userID, updateData)
@@ -143,13 +143,12 @@ func (h *UserEndpoints) UpdatePassword(ctx echo.Context) error {
 	if err != nil {
 		return utils.NewError(ctx, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
 	}
-	return ctx.NoContent(200)
+	return ctx.NoContent(http.StatusOK)
 }
 
 // UploadAvatar
 // @Tags User
 // @Description Позволяет загрузить аватарку пользователя. Необходимо быть авторизованным
-// @Accept json
 // @Param 	Cookie header string  true "session"     default(session=xxx)
 // @Param 	avatar formData file  true "файл с аватаркой"
 // @Success     200
@@ -184,7 +183,7 @@ func (h *UserEndpoints) UploadAvatar(ctx echo.Context) error {
 	// ну не закрылся и не закрылся, чего бубнить-то
 	// no-lint
 	_ = file.Close()
-	return ctx.NoContent(200)
+	return ctx.NoContent(http.StatusOK)
 }
 
 // UpdateInfo
@@ -205,7 +204,7 @@ func (h *UserEndpoints) UpdateInfo(ctx echo.Context) error {
 		return utils.NewError(ctx, http.StatusUnauthorized, "Не авторизован", err)
 	}
 	updateData := new(dto.UserUpdate)
-	if err = ctx.Bind(updateData); err != nil {
+	if err = utils.ReadJSON(ctx, updateData); err != nil {
 		return utils.NewError(ctx, http.StatusBadRequest, "Невалидный JSON", nil)
 	}
 	err = h.userUC.UpdateInfo(userID, updateData)
@@ -218,7 +217,7 @@ func (h *UserEndpoints) UpdateInfo(ctx echo.Context) error {
 	case err != nil:
 		return utils.NewError(ctx, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
 	default:
-		return ctx.NoContent(200)
+		return ctx.NoContent(http.StatusOK)
 	}
 }
 
@@ -245,7 +244,7 @@ func (h *UserEndpoints) GetProfile(ctx echo.Context) error {
 	case err != nil:
 		return utils.NewError(ctx, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
 	default:
-		return ctx.JSON(http.StatusOK, user)
+		return utils.WriteJSON(ctx, user)
 	}
 }
 
@@ -263,5 +262,6 @@ func (h *UserEndpoints) GetMyID(ctx echo.Context) error {
 	if err != nil {
 		return utils.NewError(ctx, http.StatusUnauthorized, "Не авторизован", err)
 	}
-	return ctx.JSON(http.StatusOK, map[string]int{"id": userID})
+	response := dto.MyID{ID: userID}
+	return utils.WriteJSON(ctx, response)
 }

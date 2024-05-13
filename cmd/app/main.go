@@ -16,7 +16,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/service"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/connector"
 	"github.com/google/uuid"
-	_ "github.com/joho/godotenv"
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -63,16 +63,23 @@ func GenerateExampleConfig() {
 }
 
 func ParseParams() config.Config {
+	var cfg config.Config
+	// читаем конфиг
 	yamlFile, err := os.ReadFile("config.yaml")
 	if err != nil {
 		log.Fatalf("Ошибка при чтении конфига сервера: %v", err)
 	}
-	var cfg config.Config
 	err = yaml.Unmarshal(yamlFile, &cfg)
 	if err != nil {
 		log.Fatalf("Ошибка при парсинге конфига сервера: %v", err)
 	}
-
+	// читаем переменные окружения
+	err = godotenv.Load()
+	if err != nil {
+		fmt.Println("Ошибка загрузки .env файла")
+	}
+	cfg.Postgres.User = os.Getenv("POSTGRES_USER")
+	cfg.Postgres.Pass = os.Getenv("POSTGRES_PASSWORD")
 	return cfg
 }
 
@@ -110,7 +117,7 @@ func main() {
 
 func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	// DBConn
-	psqlConn, err := connector.GetPostgresConnector(params.Postgres.ConnectURL)
+	psqlConn, err := connector.GetPostgresConnector(params.Postgres.GetConnectURL())
 	if err != nil {
 		logger.Fatalf("Ошибка при подключении к базе данных: %v", err)
 	}
@@ -136,7 +143,7 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	userUseCase := service.NewUserService(userRepo, staticUseCase)
 	contentUseCase := service.NewContentService(contentRepo, staticUseCase)
 	reviewUseCase := service.NewReviewService(reviewRepo, userRepo, contentRepo, staticUseCase)
-	compilationUseCase := service.NewCompilationService(compilationRepo, staticUseCase, contentRepo)
+	compilationUseCase := service.NewCompilationService(compilationRepo, staticUseCase, contentUseCase)
 	searchUseCase := service.NewSearchService(searchRepo, staticUseCase)
 	ongoingUseCase := service.NewOngoingContentService(ongoingRepo, staticUseCase)
 	favouriteUseCase := service.NewFavouriteService(favouriteRepo)

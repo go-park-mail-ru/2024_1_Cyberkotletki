@@ -21,8 +21,6 @@ CREATE TABLE IF NOT EXISTS genre_ongoing_content
     CONSTRAINT genre_ongoing_content_unique UNIQUE (genre_id, ongoing_content_id)
 );
 
-BEGIN;
-
 WITH new_static AS (
 INSERT INTO static (name, path)
 VALUES ('1.webp', 'ongoing')
@@ -113,8 +111,6 @@ VALUES ('10.webp', 'ongoing')
 INSERT INTO ongoing_content (type, title, poster_upload_id, release_date)
 SELECT 'movie', 'Сказка о царе Салтане', new_static.id, '2026-02-19 00:00:00'
 FROM new_static;
-
-COMMIT;
 
 -- Вставка данных в таблицу genre_ongoing_content
 INSERT INTO genre_ongoing_content (genre_id, ongoing_content_id)

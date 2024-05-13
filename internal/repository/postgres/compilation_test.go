@@ -20,14 +20,14 @@ func TestCompilationDB_GetCompilationsByTypeID(t *testing.T) {
 	testCases := []struct {
 		Name           string
 		RequestID      int
-		ExpectedOutput []entity.Compilation
+		ExpectedOutput []*entity.Compilation
 		ExpectedErr    error
 		SetupMock      func(mock sqlmock.Sqlmock, query string, args []driver.Value)
 	}{
 		{
 			Name:           "Успешное получение",
 			RequestID:      1,
-			ExpectedOutput: []entity.Compilation{{ID: 1, Title: "Test", CompilationTypeID: 1, PosterUploadID: 1}},
+			ExpectedOutput: []*entity.Compilation{{ID: 1, Title: "Test", CompilationTypeID: 1, PosterUploadID: 1}},
 			ExpectedErr:    nil,
 			SetupMock: func(mock sqlmock.Sqlmock, query string, args []driver.Value) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).

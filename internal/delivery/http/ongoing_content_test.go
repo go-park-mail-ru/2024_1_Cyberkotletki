@@ -86,7 +86,7 @@ func TestOngoingContentEndpoints_GetNearestOngoings(t *testing.T) {
 		Name                           string
 		Limit                          string
 		ExpectedErr                    error
-		ExpectedOutput                 []*dto.PreviewOngoingContentCardVertical
+		ExpectedOutput                 *dto.PreviewOngoingContentList
 		SetupOngoingContentUsecaseMock func(mock *mockusecase.MockOngoingContent)
 	}{
 		{
@@ -94,26 +94,8 @@ func TestOngoingContentEndpoints_GetNearestOngoings(t *testing.T) {
 			Limit:       "1",
 			ExpectedErr: nil,
 			// несколько примеров, из которых будет 1 ближайший
-			ExpectedOutput: []*dto.PreviewOngoingContentCardVertical{
-				{
-					ID:          1,
-					Title:       "Бэтмен",
-					Genres:      []string{"Боевик"},
-					Poster:      "/static/poster.jpg",
-					ReleaseDate: releaseTime,
-					Type:        "movie",
-				},
-				{
-					ID:          2,
-					Title:       "Супермен",
-					Genres:      []string{"Боевик"},
-					Poster:      "/static/poster.jpg",
-					ReleaseDate: releaseTime.Add(time.Hour),
-					Type:        "movie",
-				},
-			},
-			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockOngoingContent) {
-				mock.EXPECT().GetNearestOngoings(1).Return([]*dto.PreviewOngoingContentCardVertical{
+			ExpectedOutput: &dto.PreviewOngoingContentList{
+				OnGoingContentList: []*dto.PreviewOngoingContent{
 					{
 						ID:          1,
 						Title:       "Бэтмен",
@@ -121,6 +103,28 @@ func TestOngoingContentEndpoints_GetNearestOngoings(t *testing.T) {
 						Poster:      "/static/poster.jpg",
 						ReleaseDate: releaseTime,
 						Type:        "movie",
+					},
+					{
+						ID:          2,
+						Title:       "Супермен",
+						Genres:      []string{"Боевик"},
+						Poster:      "/static/poster.jpg",
+						ReleaseDate: releaseTime.Add(time.Hour),
+						Type:        "movie",
+					},
+				},
+			},
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockOngoingContent) {
+				mock.EXPECT().GetNearestOngoings(1).Return(&dto.PreviewOngoingContentList{
+					OnGoingContentList: []*dto.PreviewOngoingContent{
+						{
+							ID:          1,
+							Title:       "Бэтмен",
+							Genres:      []string{"Боевик"},
+							Poster:      "/static/poster.jpg",
+							ReleaseDate: releaseTime,
+							Type:        "movie",
+						},
 					},
 				}, nil)
 			},
@@ -174,16 +178,16 @@ func TestOngoingContentEndpoints_GetNearestOngoings(t *testing.T) {
 
 func TestOngoingContentEndpoints_GetOngoingContentByMonthAndYear(t *testing.T) {
 	t.Parallel()
-	releaseMounth := 5
+	releaseMonth := 5
 	releaseYear := 2025
-	releaseTime := time.Date(releaseYear, time.Month(releaseMounth), 1, 0, 0, 0, 0, time.UTC)
+	releaseTime := time.Date(releaseYear, time.Month(releaseMonth), 1, 0, 0, 0, 0, time.UTC)
 
 	testCases := []struct {
 		Name                           string
 		Month                          string
 		Year                           string
 		ExpectedErr                    error
-		ExpectedOutput                 []*dto.PreviewOngoingContentCardVertical
+		ExpectedOutput                 *dto.PreviewOngoingContentList
 		SetupOngoingContentUsecaseMock func(mock *mockusecase.MockOngoingContent)
 	}{
 		{
@@ -192,18 +196,8 @@ func TestOngoingContentEndpoints_GetOngoingContentByMonthAndYear(t *testing.T) {
 			Year:        "2025",
 			ExpectedErr: nil,
 			// несколько примеров, из которых будет 1 ближайший
-			ExpectedOutput: []*dto.PreviewOngoingContentCardVertical{
-				{
-					ID:          1,
-					Title:       "Бэтмен",
-					Genres:      []string{"Боевик"},
-					Poster:      "/static/poster.jpg",
-					ReleaseDate: releaseTime,
-					Type:        "movie",
-				},
-			},
-			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockOngoingContent) {
-				mock.EXPECT().GetOngoingContentByMonthAndYear(releaseMounth, releaseYear).Return([]*dto.PreviewOngoingContentCardVertical{
+			ExpectedOutput: &dto.PreviewOngoingContentList{
+				OnGoingContentList: []*dto.PreviewOngoingContent{
 					{
 						ID:          1,
 						Title:       "Бэтмен",
@@ -211,6 +205,20 @@ func TestOngoingContentEndpoints_GetOngoingContentByMonthAndYear(t *testing.T) {
 						Poster:      "/static/poster.jpg",
 						ReleaseDate: releaseTime,
 						Type:        "movie",
+					},
+				},
+			},
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockOngoingContent) {
+				mock.EXPECT().GetOngoingContentByMonthAndYear(releaseMonth, releaseYear).Return(&dto.PreviewOngoingContentList{
+					OnGoingContentList: []*dto.PreviewOngoingContent{
+						{
+							ID:          1,
+							Title:       "Бэтмен",
+							Genres:      []string{"Боевик"},
+							Poster:      "/static/poster.jpg",
+							ReleaseDate: releaseTime,
+							Type:        "movie",
+						},
 					},
 				}, nil)
 			},
@@ -289,19 +297,19 @@ func TestOngoingContentEndpoints_GetAllReleaseYears(t *testing.T) {
 	testCases := []struct {
 		Name                           string
 		ExpectedErr                    error
-		ExpectedOutput                 []int
+		ExpectedOutput                 *dto.ReleaseYearsResponse
 		SetupOngoingContentUsecaseMock func(mock *mockusecase.MockOngoingContent)
 	}{
 		{
 			Name:        "Успех",
 			ExpectedErr: nil,
-			ExpectedOutput: []int{
-				2022,
-				2023,
-				2024,
+			ExpectedOutput: &dto.ReleaseYearsResponse{
+				Years: []int{2022, 2023, 2024},
 			},
 			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockOngoingContent) {
-				mock.EXPECT().GetAllReleaseYears().Return([]int{2022, 2023, 2024}, nil)
+				mock.EXPECT().GetAllReleaseYears().Return(&dto.ReleaseYearsResponse{
+					Years: []int{2022, 2023, 2024},
+				}, nil)
 			},
 		},
 		{

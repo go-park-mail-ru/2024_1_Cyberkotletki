@@ -68,3 +68,18 @@ func (mr *MockContentMockRecorder) GetPersonByID(id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPersonByID", reflect.TypeOf((*MockContent)(nil).GetPersonByID), id)
 }
+
+// GetPreviewContentByID mocks base method.
+func (m *MockContent) GetPreviewContentByID(id int) (*dto.PreviewContent, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPreviewContentByID", id)
+	ret0, _ := ret[0].(*dto.PreviewContent)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPreviewContentByID indicates an expected call of GetPreviewContentByID.
+func (mr *MockContentMockRecorder) GetPreviewContentByID(id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPreviewContentByID", reflect.TypeOf((*MockContent)(nil).GetPreviewContentByID), id)
+}

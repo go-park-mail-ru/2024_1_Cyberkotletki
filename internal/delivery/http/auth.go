@@ -37,8 +37,7 @@ func (h *AuthEndpoints) IsAuth(ctx echo.Context) error {
 	if errors.Is(err, utils.ErrUnauthorized) {
 		return utils.NewError(ctx, http.StatusUnauthorized, "Не авторизован", nil)
 	}
-	ctx.Response().WriteHeader(http.StatusOK)
-	return nil
+	return ctx.NoContent(http.StatusOK)
 }
 
 // Logout
@@ -52,15 +51,14 @@ func (h *AuthEndpoints) Logout(ctx echo.Context) error {
 	cookie, err := ctx.Cookie("session")
 	if err != nil {
 		// сессия в куках не найдена, значит пользователь уже вышел
-		ctx.Response().WriteHeader(http.StatusOK)
-		return nil
+		return ctx.NoContent(http.StatusOK)
 	}
 	// если сессии не было в базе сессий, то это не имеет значения - пользователь в любом случае вышел, поэтому
 	// ошибку игнорируем
 	// no-lint
 	_ = h.authUC.Logout(cookie.Value)
 	h.sessionManager.SessionSet(ctx, "session", time.Unix(0, 0))
-	return nil
+	return ctx.NoContent(http.StatusOK)
 }
 
 // LogoutAll
@@ -75,14 +73,12 @@ func (h *AuthEndpoints) LogoutAll(ctx echo.Context) error {
 	cookie, err := ctx.Cookie("session")
 	if err != nil {
 		// сессия в куках не найдена, значит считаем, что пользователь уже вышел
-		ctx.Response().WriteHeader(http.StatusOK)
-		return nil
+		return ctx.NoContent(http.StatusOK)
 	}
 	userID, err := h.authUC.GetUserIDBySession(cookie.Value)
 	if errors.Is(err, usecase.ErrSessionNotFound) {
 		// сессия в базе не найдена, значит пользователь уже вышел
-		ctx.Response().WriteHeader(http.StatusOK)
-		return nil
+		return ctx.NoContent(http.StatusOK)
 	}
 	if err != nil {
 		return utils.NewError(ctx, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
@@ -91,5 +87,5 @@ func (h *AuthEndpoints) LogoutAll(ctx echo.Context) error {
 		return utils.NewError(ctx, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
 	}
 	h.sessionManager.SessionSet(ctx, "session", time.Unix(0, 0))
-	return nil
+	return ctx.NoContent(http.StatusOK)
 }

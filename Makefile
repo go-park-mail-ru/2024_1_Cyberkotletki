@@ -4,7 +4,7 @@ PKG_INTERNAL = ./internal/...
 run-tests:
 	@go generate $(PKG_INTERNAL)
 	@if go test -race $(PKG_INTERNAL) -coverprofile=test.coverage.tmp $(PKG_INTERNAL) ; then \
-    	cat test.coverage.tmp | grep -v 'mocks' | grep -v 'proto' > test.coverage ; \
+    	cat test.coverage.tmp | grep -v 'mocks' | grep -v 'proto' | grep -v 'easyjson' > test.coverage ; \
     	go tool cover -func test.coverage | tail -n 1 && rm test.coverage.tmp && rm test.coverage ; \
     	echo "\033[0;32mТесты прошли успешно\033[0m" ; \
     else \
@@ -81,6 +81,14 @@ gen-migration:
 		exit 1; \
 	fi
 	goose -dir=db/migrations create $(name) sql
+
+
+.PHONY: easyjson
+easyjson:
+	@echo "Generating easyjson..."
+	@for file in $$(find ./internal/entity/dto -name '*.go' | grep -v "_easyjson.go"); do \
+		easyjson -all $$file; \
+	done
 
 .PHONY: run-linter
 run-linter:

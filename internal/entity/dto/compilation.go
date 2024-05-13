@@ -21,10 +21,10 @@ type CompilationResponseList struct {
 }
 
 type CompilationResponse struct {
-	Compilation   Compilation `json:"compilation"`
-	ContentIDs    []int       `json:"content_ids"`
-	ContentLength int         `json:"content_length"`
-	Page          int         `json:"page"`
-	PerPage       int         `json:"per_page"`
-	TotalPages    int         `json:"total_pages"`
+	Compilation   Compilation       `json:"compilation"`
+	Content       []*PreviewContent `json:"content"`
+	ContentLength int               `json:"content_length"`
+	Page          int               `json:"page"`
+	PerPage       int               `json:"per_page"`
+	TotalPages    int               `json:"total_pages"`
 }

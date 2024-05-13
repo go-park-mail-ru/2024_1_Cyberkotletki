@@ -45,7 +45,7 @@ func (h *FavouriteEndpoints) CreateFavourite(ctx echo.Context) error {
 		return utils.NewError(ctx, http.StatusUnauthorized, "Не авторизован", err)
 	}
 	favouriteData := new(dto.CreateFavouriteRequest)
-	if err := ctx.Bind(favouriteData); err != nil {
+	if err = utils.ReadJSON(ctx, favouriteData); err != nil {
 		return utils.NewError(ctx, http.StatusBadRequest, "Невалидный JSON", nil)
 	}
 	err = h.favouriteUC.CreateFavourite(userID, favouriteData.ContentID, favouriteData.Category)

@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 	"testing"
 	"time"
 
@@ -249,20 +250,20 @@ func TestGetAllReleaseYears(t *testing.T) {
 	testCases := []struct {
 		Name                        string
 		ExpectedErr                 error
-		ExpectedResult              []int
+		ExpectedResult              *dto.ReleaseYearsResponse
 		SetupOngoingContentRepoMock func(repo *mockrepo.MockOngoingContent)
 	}{
 		{
 			Name:           "Success",
 			ExpectedErr:    nil,
-			ExpectedResult: []int{2020, 2021, 2022},
+			ExpectedResult: &dto.ReleaseYearsResponse{Years: []int{2020, 2021, 2022}},
 			SetupOngoingContentRepoMock: func(repo *mockrepo.MockOngoingContent) {
 				repo.EXPECT().GetAllReleaseYears().Return([]int{2020, 2021, 2022}, nil)
 			},
 		},
 		{
 			Name:           "Error retrieving release years",
-			ExpectedErr:    errors.New("database error"),
+			ExpectedErr:    entity.UsecaseWrap(errors.New("ошибка при получении годов релизов"), errors.New("database error")),
 			ExpectedResult: nil,
 			SetupOngoingContentRepoMock: func(repo *mockrepo.MockOngoingContent) {
 				repo.EXPECT().GetAllReleaseYears().Return(nil, errors.New("database error"))
@@ -293,14 +294,14 @@ func TestIsOngoingContentFinished(t *testing.T) {
 		Name                        string
 		ContentID                   int
 		ExpectedErr                 error
-		ExpectedResult              bool
+		ExpectedResult              *dto.IsOngoingContentFinishedResponse
 		SetupOngoingContentRepoMock func(repo *mockrepo.MockOngoingContent)
 	}{
 		{
 			Name:           "Success",
 			ContentID:      1,
 			ExpectedErr:    nil,
-			ExpectedResult: true,
+			ExpectedResult: &dto.IsOngoingContentFinishedResponse{IsFinished: true},
 			SetupOngoingContentRepoMock: func(repo *mockrepo.MockOngoingContent) {
 				repo.EXPECT().IsOngoingContentFinished(1).Return(true, nil)
 			},
@@ -308,8 +309,8 @@ func TestIsOngoingContentFinished(t *testing.T) {
 		{
 			Name:           "Error retrieving content status",
 			ContentID:      1,
-			ExpectedErr:    errors.New("database error"),
-			ExpectedResult: false,
+			ExpectedErr:    entity.UsecaseWrap(errors.New("ошибка при проверке завершения контента"), errors.New("database error")),
+			ExpectedResult: nil,
 			SetupOngoingContentRepoMock: func(repo *mockrepo.MockOngoingContent) {
 				repo.EXPECT().IsOngoingContentFinished(1).Return(false, errors.New("database error"))
 			},

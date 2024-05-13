@@ -10,6 +10,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/postgres"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/service"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/connector"
+	"github.com/joho/godotenv"
 	"github.com/labstack/gommon/log"
 	"github.com/mcuadros/go-defaults"
 	"google.golang.org/grpc"
@@ -50,16 +51,25 @@ func GenerateExampleConfig() {
 }
 
 func ParseParams() config.StaticConfig {
+	var cfg config.StaticConfig
+	// читаем конфиг
 	yamlFile, err := os.ReadFile("config_static.yaml")
 	if err != nil {
 		log.Fatalf("Ошибка при чтении конфига сервера: %v", err)
 	}
-	var cfg config.StaticConfig
 	err = yaml.Unmarshal(yamlFile, &cfg)
 	if err != nil {
 		log.Fatalf("Ошибка при парсинге конфига сервера: %v", err)
 	}
-
+	// читаем переменные окружения
+	err = godotenv.Load()
+	if err != nil {
+		fmt.Println("Ошибка загрузки .env файла")
+	}
+	cfg.Postgres.User = os.Getenv("POSTGRES_USER")
+	cfg.Postgres.Pass = os.Getenv("POSTGRES_PASSWORD")
+	cfg.S3.AccessKeyID = os.Getenv("S3_ACCESS_KEY_ID")
+	cfg.S3.SecretAccessKey = os.Getenv("S3_SECRET_ACCESS_KEY")
 	return cfg
 }
 
@@ -80,7 +90,7 @@ func main() {
 	if err != nil {
 		logger.Fatal("Ошибка при подключении к S3: ", err)
 	}
-	db, err := connector.GetPostgresConnector(params.Postgres.ConnectURL)
+	db, err := connector.GetPostgresConnector(params.Postgres.GetConnectURL())
 	if err != nil {
 		logger.Fatal("Ошибка при подключении к Postgres: ", err)
 	}
