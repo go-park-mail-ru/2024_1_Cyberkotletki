@@ -32,7 +32,7 @@ func (h *OngoingContentEndpoints) Configure(server *echo.Group) {
 // @Tags ongoing_content
 // @Produce json
 // @Param id path int true "ID контента календаря релизов"
-// @Success 200 {object} dto.PreviewOngoingContentCardVertical
+// @Success 200 {object} dto.PreviewOngoingContent
 // @Failure 400 {object} echo.HTTPError
 // @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
@@ -59,7 +59,7 @@ func (h *OngoingContentEndpoints) GetOngoingContentByContentID(ctx echo.Context)
 // @Tags ongoing_content
 // @Produce json
 // @Param limit query int false "Количество релизов"
-// @Success 200 {array} dto.PreviewOngoingContentCardVertical
+// @Success 200 {array} dto.PreviewOngoingContent
 // @Failure 400 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
 // @Router /api/ongoing/nearest [get]
@@ -86,7 +86,7 @@ func (h *OngoingContentEndpoints) GetNearestOngoings(ctx echo.Context) error {
 // @Produce json
 // @Param month path int true "Месяц"
 // @Param year path int true "Год"
-// @Success 200 {array} dto.PreviewOngoingContentCardVertical
+// @Success 200 {array} dto.PreviewOngoingContent
 // @Failure 400 {object} echo.HTTPError
 // @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError

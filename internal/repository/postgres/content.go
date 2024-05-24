@@ -796,3 +796,77 @@ func (c *ContentDB) GetPersonRoles(personID int) ([]entity.PersonRole, error) {
 	}
 	return personRoles, nil
 }
+
+func (c *ContentDB) GetSimilarContent(id int) ([]entity.Content, error) {
+	// Получаем жанры, режиссеров и актеров для данного контента
+	genres, err := c.getContentGenres(id)
+	if err != nil {
+		return nil, err
+	}
+	directors, err := c.getPersonsByRoleAndContentID(entity.RoleDirector, id)
+	if err != nil {
+		return nil, err
+	}
+	actors, err := c.getPersonsByRoleAndContentID(entity.RoleActor, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Создаем списки ID жанров, режиссеров и актеров
+	genreIDs := make([]int, len(genres))
+	for i, genre := range genres {
+		genreIDs[i] = genre.ID
+	}
+	directorIDs := make([]int, len(directors))
+	for i, director := range directors {
+		directorIDs[i] = director.ID
+	}
+	actorIDs := make([]int, len(actors))
+	for i, actor := range actors {
+		actorIDs[i] = actor.ID
+	}
+
+	// Составляем запрос
+	query := sq.Select("c.id").
+		From("content AS c").
+		LeftJoin("genre_content AS gc ON c.id = gc.content_id").
+		LeftJoin("person_role AS pr ON c.id = pr.content_id").
+		Where(sq.Or{
+			sq.Eq{"gc.genre_id": genreIDs},
+			sq.Eq{"pr.person_id": append(directorIDs, actorIDs...)},
+		}).
+		Where(sq.NotEq{"c.id": id}).
+		GroupBy("c.id").
+		OrderBy("MAX(c.rating) DESC").
+		Limit(10).
+		PlaceholderFormat(sq.Dollar)
+
+	// Выполняем запрос
+	sql, args, err := query.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := c.DB.Query(sql, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Собираем результаты
+	var contents []entity.Content
+	for rows.Next() {
+		var contentID int
+		err := rows.Scan(&contentID)
+		if err != nil {
+			return nil, err
+		}
+		content, err := c.GetPreviewContent(contentID)
+		if err != nil {
+			return nil, err
+		}
+		contents = append(contents, *content)
+	}
+
+	return contents, nil
+}

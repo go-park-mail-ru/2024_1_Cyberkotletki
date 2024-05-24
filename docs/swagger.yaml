@@ -127,6 +127,10 @@ definitions:
         type: number
       series:
         $ref: '#/definitions/dto.SeriesContent'
+      similarContent:
+        items:
+          $ref: '#/definitions/dto.PreviewContentCardVertical'
+        type: array
       slogan:
         example: I'm Batman
         type: string
@@ -278,7 +282,7 @@ definitions:
         example: /static/photo.jpg
         type: string
     type: object
-  dto.PreviewContentCard:
+  dto.PreviewContent:
     properties:
       actors:
         example:
@@ -312,6 +316,9 @@ definitions:
       rating:
         example: 9.1
         type: number
+      release:
+        example: 2020
+        type: integer
       seasonsNumber:
         description: Поля, которые есть только у сериалов
         example: 1
@@ -364,7 +371,7 @@ definitions:
         example: 2020
         type: integer
     type: object
-  dto.PreviewOngoingContentCardVertical:
+  dto.PreviewOngoingContent:
     properties:
       genre:
         example:
@@ -515,7 +522,7 @@ definitions:
     properties:
       content:
         items:
-          $ref: '#/definitions/dto.PreviewContentCard'
+          $ref: '#/definitions/dto.PreviewContent'
         type: array
       persons:
         items:
@@ -981,7 +988,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.PreviewOngoingContentCardVertical'
+            $ref: '#/definitions/dto.PreviewOngoingContent'
         "400":
           description: Bad Request
           schema:
@@ -1017,7 +1024,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.PreviewOngoingContentCardVertical'
+              $ref: '#/definitions/dto.PreviewOngoingContent'
             type: array
         "400":
           description: Bad Request
@@ -1048,7 +1055,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.PreviewOngoingContentCardVertical'
+              $ref: '#/definitions/dto.PreviewOngoingContent'
             type: array
         "400":
           description: Bad Request
@@ -1287,8 +1294,6 @@ paths:
       tags:
       - review
     put:
-      consumes:
-      - application/json
       description: Поставить оценку на рецензию
       parameters:
       - description: ID рецензии
@@ -1525,8 +1530,6 @@ paths:
       - Static
   /api/user/avatar:
     put:
-      consumes:
-      - application/json
       description: Позволяет загрузить аватарку пользователя. Необходимо быть авторизованным
       parameters:
       - default: session=xxx

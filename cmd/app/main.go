@@ -8,6 +8,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/config"
 	_ "github.com/go-park-mail-ru/2024_1_Cyberkotletki/docs"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/grpc/auth"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/grpc/profanity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/grpc/static"
 	delivery "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http/utils"
@@ -140,13 +141,17 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	if err != nil {
 		logger.Fatalf("Ошибка при подключении к сервису авторизации: %v", err)
 	}
+	profanityUseCase, err := profanity.NewGateway(params.Microservices.ProfanityFilter.Addr)
+	if err != nil {
+		logger.Fatalf("Ошибка при подключении к сервису фильтрации сообщений: %v", err)
+	}
 	userUseCase := service.NewUserService(userRepo, staticUseCase)
 	contentUseCase := service.NewContentService(contentRepo, staticUseCase)
-	reviewUseCase := service.NewReviewService(reviewRepo, userRepo, contentRepo, staticUseCase)
+	reviewUseCase := service.NewReviewService(reviewRepo, userRepo, contentRepo, staticUseCase, profanityUseCase)
 	compilationUseCase := service.NewCompilationService(compilationRepo, staticUseCase, contentUseCase)
 	searchUseCase := service.NewSearchService(searchRepo, staticUseCase)
 	ongoingUseCase := service.NewOngoingContentService(ongoingRepo, staticUseCase)
-	favouriteUseCase := service.NewFavouriteService(favouriteRepo)
+	favouriteUseCase := service.NewFavouriteService(favouriteRepo, contentUseCase)
 
 	sessionManager := utils.NewSessionManager(authUseCase,
 		params.Microservices.Auth.HTTPSessionAliveTime, params.HTTP.SecureCookies)

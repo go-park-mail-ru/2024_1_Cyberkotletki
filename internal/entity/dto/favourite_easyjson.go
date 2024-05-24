@@ -44,7 +44,7 @@ func easyjsonA4d0e38bDecodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 				in.Delim('[')
 				if out.Favourites == nil {
 					if !in.IsDelim(']') {
-						out.Favourites = make([]Favourite, 0, 2)
+						out.Favourites = make([]Favourite, 0, 0)
 					} else {
 						out.Favourites = []Favourite{}
 					}
@@ -200,8 +200,8 @@ func easyjsonA4d0e38bDecodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 			continue
 		}
 		switch key {
-		case "contentID":
-			out.ContentID = int(in.Int())
+		case "content":
+			(out.Content).UnmarshalEasyJSON(in)
 		case "category":
 			out.Category = string(in.String())
 		default:
@@ -219,9 +219,9 @@ func easyjsonA4d0e38bEncodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"contentID\":"
+		const prefix string = ",\"content\":"
 		out.RawString(prefix[1:])
-		out.Int(int(in.ContentID))
+		(in.Content).MarshalEasyJSON(out)
 	}
 	{
 		const prefix string = ",\"category\":"

@@ -62,8 +62,7 @@ func TestGetLatestReviews(t *testing.T) {
 			mockContentRepo := mockrepo.NewMockContent(ctrl)
 			mockUserRepo := mockrepo.NewMockUser(ctrl)
 			mockStaticRepo := mock_usecase.NewMockStatic(ctrl)
-			service := NewReviewService(mockReviewRepo, mockUserRepo,
-				mockContentRepo, mockStaticRepo)
+			service := NewReviewService(mockReviewRepo, mockUserRepo, mockContentRepo, mockStaticRepo, nil)
 			tc.SetupReviewRepoMock(mockReviewRepo)
 			_, err := service.GetLatestReviews(tc.Limit)
 			require.Equal(t, tc.ExpectedErr, err)
@@ -126,8 +125,7 @@ func TestReviewService_GetUserReviews(t *testing.T) {
 			mockContentRepo := mockrepo.NewMockContent(ctrl)
 			mockUserRepo := mockrepo.NewMockUser(ctrl)
 			mockStaticRepo := mock_usecase.NewMockStatic(ctrl)
-			service := NewReviewService(mockReviewRepo, mockUserRepo,
-				mockContentRepo, mockStaticRepo)
+			service := NewReviewService(mockReviewRepo, mockUserRepo, mockContentRepo, mockStaticRepo, nil)
 			tc.SetupReviewRepoMock(mockReviewRepo)
 			_, err := service.GetUserReviews(tc.UserID, tc.Count, tc.Page)
 			require.Equal(t, tc.ExpectedErr, err)
@@ -190,8 +188,7 @@ func TestReviewService_GetContentReviews(t *testing.T) {
 			mockContentRepo := mockrepo.NewMockContent(ctrl)
 			mockUserRepo := mockrepo.NewMockUser(ctrl)
 			mockStaticRepo := mock_usecase.NewMockStatic(ctrl)
-			service := NewReviewService(mockReviewRepo, mockUserRepo,
-				mockContentRepo, mockStaticRepo)
+			service := NewReviewService(mockReviewRepo, mockUserRepo, mockContentRepo, mockStaticRepo, nil)
 			tc.SetupReviewRepoMock(mockReviewRepo)
 			_, err := service.GetContentReviews(tc.ContentID, tc.Count, tc.Page)
 			require.Equal(t, tc.ExpectedErr, err)
@@ -228,8 +225,7 @@ func TestReviewService_GetReview(t *testing.T) {
 			mockContentRepo := mockrepo.NewMockContent(ctrl)
 			mockUserRepo := mockrepo.NewMockUser(ctrl)
 			mockStaticRepo := mock_usecase.NewMockStatic(ctrl)
-			service := NewReviewService(mockReviewRepo, mockUserRepo,
-				mockContentRepo, mockStaticRepo)
+			service := NewReviewService(mockReviewRepo, mockUserRepo, mockContentRepo, mockStaticRepo, nil)
 			tc.SetupReviewRepoMock(mockReviewRepo)
 			_, err := service.GetReview(tc.ReviewID)
 			require.Equal(t, tc.ExpectedErr, err)
@@ -279,8 +275,7 @@ func TestReviewService_GetContentReviewByAuthor(t *testing.T) {
 			mockContentRepo := mockrepo.NewMockContent(ctrl)
 			mockUserRepo := mockrepo.NewMockUser(ctrl)
 			mockStaticRepo := mock_usecase.NewMockStatic(ctrl)
-			service := NewReviewService(mockReviewRepo, mockUserRepo,
-				mockContentRepo, mockStaticRepo)
+			service := NewReviewService(mockReviewRepo, mockUserRepo, mockContentRepo, mockStaticRepo, nil)
 			tc.SetupReviewRepoMock(mockReviewRepo)
 			_, err := service.GetContentReviewByAuthor(tc.AuthorID, tc.ContentID)
 			require.Equal(t, tc.ExpectedErr, err)
@@ -292,14 +287,17 @@ func TestReviewService_CreateReview(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		Name                string
-		Review              dto.ReviewCreate
-		ExpectedErr         error
-		SetupReviewRepoMock func(repo *mockrepo.MockReview)
-		SetupUserRepoMock   func(repo *mockrepo.MockUser)
+		Name                 string
+		Review               dto.ReviewCreate
+		ExpectedErr          error
+		SetupReviewRepoMock  func(repo *mockrepo.MockReview)
+		SetupProfanityUCMock func(uc *mock_usecase.MockProfanity)
+		SetupUserRepoMock    func(repo *mockrepo.MockUser)
+		SetupStaticUCMock    func(uc *mock_usecase.MockStatic)
+		SetupContentRepoMock func(repo *mockrepo.MockContent)
 	}{
 		{
-			Name: "Error when adding review",
+			Name: "Неизвестная ошибка при добавлении рецензии",
 			Review: dto.ReviewCreate{
 				ReviewCreateRequest: dto.ReviewCreateRequest{
 					ContentID: 1,
@@ -313,9 +311,16 @@ func TestReviewService_CreateReview(t *testing.T) {
 			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
 				repo.EXPECT().AddReview(gomock.Any()).Return(nil, errors.New("database error"))
 			},
+			SetupProfanityUCMock: func(uc *mock_usecase.MockProfanity) {
+				uc.EXPECT().FilterMessage("Test Text").Return("Test ****", nil)
+				uc.EXPECT().FilterMessage("Test Title").Return("**** Title", nil)
+			},
+			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
+			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
+			SetupStaticUCMock:    func(uc *mock_usecase.MockStatic) {},
 		},
 		{
-			Name: "Review already exists",
+			Name: "Рецензия уже существует",
 			Review: dto.ReviewCreate{
 				ReviewCreateRequest: dto.ReviewCreateRequest{
 					ContentID: 1,
@@ -329,6 +334,137 @@ func TestReviewService_CreateReview(t *testing.T) {
 			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
 				repo.EXPECT().AddReview(gomock.Any()).Return(nil, repository.ErrReviewAlreadyExists)
 			},
+			SetupProfanityUCMock: func(uc *mock_usecase.MockProfanity) {
+				uc.EXPECT().FilterMessage("Test Text").Return("Test ****", nil)
+				uc.EXPECT().FilterMessage("Test Title").Return("**** Title", nil)
+			},
+			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
+			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
+			SetupStaticUCMock:    func(uc *mock_usecase.MockStatic) {},
+		},
+		{
+			Name: "Ошибка при фильтрации текста",
+			Review: dto.ReviewCreate{
+				ReviewCreateRequest: dto.ReviewCreateRequest{
+					ContentID: 1,
+					Rating:    5,
+					Title:     "Test Title",
+					Text:      "Test Text",
+				},
+				UserID: 1,
+			},
+			ExpectedErr:         entity.UsecaseWrap(errors.New("ошибка при фильтрации содержания рецензии"), errors.New("profanity error")),
+			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {},
+			SetupProfanityUCMock: func(uc *mock_usecase.MockProfanity) {
+				uc.EXPECT().FilterMessage("Test Text").Return("", errors.New("profanity error"))
+			},
+			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
+			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
+			SetupStaticUCMock:    func(uc *mock_usecase.MockStatic) {},
+		},
+		{
+			Name: "Ошибка при фильтрации заголовка",
+			Review: dto.ReviewCreate{
+				ReviewCreateRequest: dto.ReviewCreateRequest{
+					ContentID: 1,
+					Rating:    5,
+					Title:     "Test Title",
+					Text:      "Test Text",
+				},
+				UserID: 1,
+			},
+			ExpectedErr:         entity.UsecaseWrap(errors.New("ошибка при фильтрации заголовка рецензии"), errors.New("profanity error")),
+			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {},
+			SetupProfanityUCMock: func(uc *mock_usecase.MockProfanity) {
+				uc.EXPECT().FilterMessage("Test Text").Return("Test ****", nil)
+				uc.EXPECT().FilterMessage("Test Title").Return("", errors.New("profanity error"))
+			},
+			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
+			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
+			SetupStaticUCMock:    func(uc *mock_usecase.MockStatic) {},
+		},
+		{
+			Name: "Успешно",
+			Review: dto.ReviewCreate{
+				ReviewCreateRequest: dto.ReviewCreateRequest{
+					ContentID: 1,
+					Rating:    5,
+					Title:     "Test Title",
+					Text:      "Test Text",
+				},
+				UserID: 1,
+			},
+			ExpectedErr: nil,
+			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
+				repo.EXPECT().AddReview(&entity.Review{
+					AuthorID:      1,
+					ContentID:     1,
+					ContentRating: 5,
+					Title:         "**** Title",
+					Text:          "Test ****",
+				}).Return(&entity.Review{
+					ID:            1,
+					AuthorID:      1,
+					ContentID:     1,
+					ContentRating: 5,
+					Title:         "**** Title",
+					Text:          "Test ****",
+				}, nil)
+			},
+			SetupProfanityUCMock: func(uc *mock_usecase.MockProfanity) {
+				uc.EXPECT().FilterMessage("Test Text").Return("Test ****", nil)
+				uc.EXPECT().FilterMessage("Test Title").Return("**** Title", nil)
+			},
+			SetupUserRepoMock: func(repo *mockrepo.MockUser) {
+				repo.EXPECT().GetUserByID(1).Return(&entity.User{}, nil)
+			},
+			SetupContentRepoMock: func(repo *mockrepo.MockContent) {
+				repo.EXPECT().GetContent(1).Return(&entity.Content{}, nil)
+			},
+			SetupStaticUCMock: func(uc *mock_usecase.MockStatic) {
+				uc.EXPECT().GetStatic(gomock.Any()).Return("", nil)
+			},
+		},
+		{
+			Name: "Невалидное содержание",
+			Review: dto.ReviewCreate{
+				ReviewCreateRequest: dto.ReviewCreateRequest{
+					ContentID: 1,
+					Rating:    5,
+					Title:     "",
+					Text:      "Test Text",
+				},
+				UserID: 1,
+			},
+			ExpectedErr:          usecase.ReviewErrorIncorrectData{Err: errors.New("количество символов в заголовке рецензии должно быть от 1 до 50")},
+			SetupReviewRepoMock:  func(repo *mockrepo.MockReview) {},
+			SetupProfanityUCMock: func(uc *mock_usecase.MockProfanity) {},
+			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
+			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
+			SetupStaticUCMock:    func(uc *mock_usecase.MockStatic) {},
+		},
+		{
+			Name: "Контент с таким айди не существует",
+			Review: dto.ReviewCreate{
+				ReviewCreateRequest: dto.ReviewCreateRequest{
+					ContentID: 1,
+					Rating:    5,
+					Title:     "Test Title",
+					Text:      "Test Text",
+				},
+				UserID: 1,
+			},
+			ExpectedErr: usecase.ErrReviewContentNotFound,
+			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
+				repo.EXPECT().AddReview(gomock.Any()).Return(nil, repository.ErrReviewViolation)
+			},
+			SetupProfanityUCMock: func(uc *mock_usecase.MockProfanity) {
+				uc.EXPECT().FilterMessage("Test Text").Return("Test ****", nil)
+				uc.EXPECT().FilterMessage("Test Title").Return("**** Title", nil)
+			},
+			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
+			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
+			SetupStaticUCMock:    func(uc *mock_usecase.MockStatic) {},
 		},
 	}
 
@@ -341,10 +477,14 @@ func TestReviewService_CreateReview(t *testing.T) {
 			mockReviewRepo := mockrepo.NewMockReview(ctrl)
 			mockContentRepo := mockrepo.NewMockContent(ctrl)
 			mockUserRepo := mockrepo.NewMockUser(ctrl)
-			mockStaticRepo := mock_usecase.NewMockStatic(ctrl)
-			service := NewReviewService(mockReviewRepo, mockUserRepo,
-				mockContentRepo, mockStaticRepo)
+			mockStaticUC := mock_usecase.NewMockStatic(ctrl)
+			mockProfanityUC := mock_usecase.NewMockProfanity(ctrl)
+			service := NewReviewService(mockReviewRepo, mockUserRepo, mockContentRepo, mockStaticUC, mockProfanityUC)
+			tc.SetupProfanityUCMock(mockProfanityUC)
 			tc.SetupReviewRepoMock(mockReviewRepo)
+			tc.SetupUserRepoMock(mockUserRepo)
+			tc.SetupContentRepoMock(mockContentRepo)
+			tc.SetupStaticUCMock(mockStaticUC)
 			_, err := service.CreateReview(tc.Review)
 			require.Equal(t, tc.ExpectedErr, err)
 		})

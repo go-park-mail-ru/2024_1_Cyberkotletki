@@ -18,6 +18,8 @@ type Content interface {
 	GetPerson(id int) (*entity.Person, error)
 	// GetPersonRoles возвращает роли персоны
 	GetPersonRoles(personID int) ([]entity.PersonRole, error)
+	// GetSimilarContent возвращает похожий контент
+	GetSimilarContent(id int) ([]entity.Content, error)
 }
 
 var (

@@ -576,7 +576,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.PreviewOngoingContentCardVertical"
+                                "$ref": "#/definitions/dto.PreviewOngoingContent"
                             }
                         }
                     },
@@ -651,7 +651,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PreviewOngoingContentCardVertical"
+                            "$ref": "#/definitions/dto.PreviewOngoingContent"
                         }
                     },
                     "400": {
@@ -706,7 +706,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.PreviewOngoingContentCardVertical"
+                                "$ref": "#/definitions/dto.PreviewOngoingContent"
                             }
                         }
                     },
@@ -1216,9 +1216,6 @@
                     }
                 ],
                 "description": "Поставить оценку на рецензию",
-                "consumes": [
-                    "application/json"
-                ],
                 "tags": [
                     "review"
                 ],
@@ -1414,9 +1411,6 @@
                     }
                 ],
                 "description": "Позволяет загрузить аватарку пользователя. Необходимо быть авторизованным",
-                "consumes": [
-                    "application/json"
-                ],
                 "tags": [
                     "User"
                 ],
@@ -1996,6 +1990,12 @@
                 "series": {
                     "$ref": "#/definitions/dto.SeriesContent"
                 },
+                "similarContent": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PreviewContentCardVertical"
+                    }
+                },
                 "slogan": {
                     "type": "string",
                     "example": "I'm Batman"
@@ -2207,7 +2207,7 @@
                 }
             }
         },
-        "dto.PreviewContentCard": {
+        "dto.PreviewContent": {
             "type": "object",
             "properties": {
                 "actors": {
@@ -2252,6 +2252,10 @@
                 "rating": {
                     "type": "number",
                     "example": 9.1
+                },
+                "release": {
+                    "type": "integer",
+                    "example": 2020
                 },
                 "seasonsNumber": {
                     "description": "Поля, которые есть только у сериалов",
@@ -2324,7 +2328,7 @@
                 }
             }
         },
-        "dto.PreviewOngoingContentCardVertical": {
+        "dto.PreviewOngoingContent": {
             "type": "object",
             "properties": {
                 "genre": {
@@ -2525,7 +2529,7 @@
                 "content": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/dto.PreviewContentCard"
+                        "$ref": "#/definitions/dto.PreviewContent"
                     }
                 },
                 "persons": {

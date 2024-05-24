@@ -221,8 +221,10 @@ func TestReviewEndpoints_GetFavourites(t *testing.T) {
 			ExpectedOutput: &dto.FavouritesResponse{
 				Favourites: []dto.Favourite{
 					{
-						ContentID: 1,
-						Category:  "favourite",
+						Content: dto.PreviewContent{
+							ID: 1,
+						},
+						Category: "favourite",
 					},
 				},
 			},
@@ -231,8 +233,10 @@ func TestReviewEndpoints_GetFavourites(t *testing.T) {
 				usecase.EXPECT().GetFavourites(1).Return(&dto.FavouritesResponse{
 					Favourites: []dto.Favourite{
 						{
-							ContentID: 1,
-							Category:  "favourite",
+							Content: dto.PreviewContent{
+								ID: 1,
+							},
+							Category: "favourite",
 						},
 					},
 				}, nil)

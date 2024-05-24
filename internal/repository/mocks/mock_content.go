@@ -98,3 +98,18 @@ func (mr *MockContentMockRecorder) GetPreviewContent(id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPreviewContent", reflect.TypeOf((*MockContent)(nil).GetPreviewContent), id)
 }
+
+// GetSimilarContent mocks base method.
+func (m *MockContent) GetSimilarContent(id int) ([]entity.Content, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSimilarContent", id)
+	ret0, _ := ret[0].([]entity.Content)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSimilarContent indicates an expected call of GetSimilarContent.
+func (mr *MockContentMockRecorder) GetSimilarContent(id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSimilarContent", reflect.TypeOf((*MockContent)(nil).GetSimilarContent), id)
+}

@@ -14,6 +14,7 @@ type ReviewService struct {
 	userRepo    repository.User
 	contentRepo repository.Content
 	staticUC    usecase.Static
+	profanityUC usecase.Profanity
 }
 
 func NewReviewService(
@@ -21,12 +22,14 @@ func NewReviewService(
 	userRepo repository.User,
 	contentRepo repository.Content,
 	staticUC usecase.Static,
+	profanityUC usecase.Profanity,
 ) usecase.Review {
 	return &ReviewService{
 		reviewRepo:  reviewRepo,
 		userRepo:    userRepo,
 		contentRepo: contentRepo,
 		staticUC:    staticUC,
+		profanityUC: profanityUC,
 	}
 }
 
@@ -174,12 +177,20 @@ func (r *ReviewService) CreateReview(review dto.ReviewCreate) (*dto.ReviewRespon
 	if err := entity.ValidateReview(review.Rating, review.Title, review.Text); err != nil {
 		return nil, usecase.ReviewErrorIncorrectData{Err: err}
 	}
+	filtratedText, err := r.profanityUC.FilterMessage(strings.TrimSpace(review.Text))
+	if err != nil {
+		return nil, entity.UsecaseWrap(errors.New("ошибка при фильтрации содержания рецензии"), err)
+	}
+	filtratedTitle, err := r.profanityUC.FilterMessage(strings.TrimSpace(review.Title))
+	if err != nil {
+		return nil, entity.UsecaseWrap(errors.New("ошибка при фильтрации заголовка рецензии"), err)
+	}
 	reviewEntity, err := r.reviewRepo.AddReview(&entity.Review{
 		AuthorID:      review.UserID,
 		ContentID:     review.ContentID,
 		ContentRating: review.Rating,
-		Title:         strings.TrimSpace(review.Title),
-		Text:          strings.TrimSpace(review.Text),
+		Title:         filtratedTitle,
+		Text:          filtratedText,
 	})
 	switch {
 	case errors.Is(err, repository.ErrReviewViolation):
@@ -208,12 +219,20 @@ func (r *ReviewService) EditReview(review dto.ReviewUpdate) (*dto.ReviewResponse
 	if err = entity.ValidateReview(review.Rating, review.Title, review.Title); err != nil {
 		return nil, usecase.ReviewErrorIncorrectData{Err: err}
 	}
+	filtratedText, err := r.profanityUC.FilterMessage(strings.TrimSpace(review.Text))
+	if err != nil {
+		return nil, entity.UsecaseWrap(errors.New("ошибка при фильтрации содержания рецензии"), err)
+	}
+	filtratedTitle, err := r.profanityUC.FilterMessage(strings.TrimSpace(review.Title))
+	if err != nil {
+		return nil, entity.UsecaseWrap(errors.New("ошибка при фильтрации заголовка рецензии"), err)
+	}
 	err = r.reviewRepo.UpdateReview(&entity.Review{
 		ID:            review.ReviewID,
 		AuthorID:      review.UserID,
 		ContentRating: review.Rating,
-		Title:         strings.TrimSpace(review.Title),
-		Text:          strings.TrimSpace(review.Text),
+		Title:         filtratedTitle,
+		Text:          filtratedText,
 	})
 	switch {
 	case errors.Is(err, repository.ErrReviewNotFound):

@@ -114,4 +114,6 @@ type Content struct {
 	Type           string          `json:"type"             example:"movie"`
 	Movie          MovieContent    `json:"movie,omitempty"`
 	Series         SeriesContent   `json:"series,omitempty"`
+
+	SimilarContent []PreviewContentCardVertical `json:"similarContent,omitempty"`
 }

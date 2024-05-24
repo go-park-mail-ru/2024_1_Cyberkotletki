@@ -123,6 +123,29 @@ func (c *ContentService) GetContentByID(id int) (*dto.Content, error) {
 		}
 		pictures[index] = pictureURL
 	}
+	similarContentEntities, err := c.contentRepo.GetSimilarContent(contentEntity.ID)
+	if err != nil {
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении похожего контента"), err)
+	}
+	similarContent := make([]dto.PreviewContentCardVertical, len(similarContentEntities))
+	for index, similarContentEntity := range similarContentEntities {
+		posterURL, err := c.staticUC.GetStatic(similarContentEntity.PosterStaticID)
+		switch {
+		case errors.Is(err, usecase.ErrStaticNotFound):
+			// Если постер не найден, возвращаем пустую строку
+			posterURL = ""
+		case err != nil:
+			return nil, entity.UsecaseWrap(errors.New("ошибка при получении постера похожего контента"), err)
+		}
+		similarContent[index] = dto.PreviewContentCardVertical{
+			ID:     similarContentEntity.ID,
+			Title:  similarContentEntity.Title,
+			Genres: genreEntityToDTO(similarContentEntity.Genres),
+			Poster: posterURL,
+			Rating: similarContentEntity.Rating,
+			Type:   similarContentEntity.Type,
+		}
+	}
 	contentDTO := dto.Content{
 		ID:             contentEntity.ID,
 		Title:          contentEntity.Title,
@@ -148,6 +171,7 @@ func (c *ContentService) GetContentByID(id int) (*dto.Content, error) {
 		Composers:      personEntityToPreviewDTO(contentEntity.Composers),
 		Editors:        personEntityToPreviewDTO(contentEntity.Editors),
 		Type:           contentEntity.Type,
+		SimilarContent: similarContent,
 	}
 	switch contentEntity.Type {
 	case entity.ContentTypeMovie:

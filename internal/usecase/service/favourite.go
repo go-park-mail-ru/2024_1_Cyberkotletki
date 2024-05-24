@@ -9,12 +9,14 @@ import (
 )
 
 type FavouriteService struct {
+	contentUC     usecase.Content
 	favouriteRepo repository.Favourite
 }
 
-func NewFavouriteService(favouriteRepo repository.Favourite) usecase.Favourite {
+func NewFavouriteService(favouriteRepo repository.Favourite, contentUC usecase.Content) usecase.Favourite {
 	return &FavouriteService{
 		favouriteRepo: favouriteRepo,
+		contentUC:     contentUC,
 	}
 }
 
@@ -72,9 +74,13 @@ func (f FavouriteService) GetFavourites(userID int) (*dto.FavouritesResponse, er
 		Favourites: make([]dto.Favourite, len(favourites)),
 	}
 	for index, favourite := range favourites {
+		content, err := f.contentUC.GetPreviewContentByID(favourite.ContentID)
+		if err != nil {
+			return nil, entity.UsecaseWrap(err, errors.New("ошибка при получении контента из избранного в FavouriteService"))
+		}
 		response.Favourites[index] = dto.Favourite{
-			ContentID: favourite.ContentID,
-			Category:  favourite.Category,
+			Content:  *content,
+			Category: favourite.Category,
 		}
 	}
 	return &response, nil
