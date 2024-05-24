@@ -827,7 +827,7 @@ func (c *ContentDB) GetSimilarContent(id int) ([]entity.Content, error) {
 	}
 
 	// Составляем запрос
-	query := sq.Select("c.id").
+	query, args, err := sq.Select("c.id, COUNT(*)").
 		From("content AS c").
 		LeftJoin("genre_content AS gc ON c.id = gc.content_id").
 		LeftJoin("person_role AS pr ON c.id = pr.content_id").
@@ -837,17 +837,15 @@ func (c *ContentDB) GetSimilarContent(id int) ([]entity.Content, error) {
 		}).
 		Where(sq.NotEq{"c.id": id}).
 		GroupBy("c.id").
-		OrderBy("MAX(c.rating) DESC").
+		OrderBy("COUNT(*) DESC").
 		Limit(10).
-		PlaceholderFormat(sq.Dollar)
-
-	// Выполняем запрос
-	sql, args, err := query.ToSql()
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
 	if err != nil {
 		return nil, err
 	}
 
-	rows, err := c.DB.Query(sql, args...)
+	rows, err := c.DB.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -857,7 +855,8 @@ func (c *ContentDB) GetSimilarContent(id int) ([]entity.Content, error) {
 	var contents []entity.Content
 	for rows.Next() {
 		var contentID int
-		err := rows.Scan(&contentID)
+		var count sql.NullInt64
+		err := rows.Scan(&contentID, &count)
 		if err != nil {
 			return nil, err
 		}

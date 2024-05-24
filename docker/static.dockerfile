@@ -11,9 +11,9 @@ COPY docs docs
 COPY go.mod go.mod
 COPY config config
 COPY pkg pkg
-RUN apk add --no-cache gcc libc-dev libwebp-dev && \
-    go mod tidy && \
-    go build -o static cmd/static/main.go
+RUN apk add --no-cache gcc libc-dev libwebp-dev
+RUN go mod tidy
+RUN go build -o static cmd/static/main.go
 
 # --------------------------------------------
 
