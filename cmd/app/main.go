@@ -81,6 +81,7 @@ func ParseParams() config.Config {
 	}
 	cfg.Postgres.User = os.Getenv("POSTGRES_USER")
 	cfg.Postgres.Pass = os.Getenv("POSTGRES_PASSWORD")
+	cfg.ContentSecretKey = os.Getenv("CONTENT_SECRET_KEY")
 	return cfg
 }
 
@@ -129,7 +130,6 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	reviewRepo := postgres.NewReviewRepository(psqlConn)
 	compilationRepo := postgres.NewCompilationRepository(psqlConn)
 	searchRepo := postgres.NewSearchRepository(psqlConn, contentRepo)
-	ongoingRepo := postgres.NewOngoingContentRepository(psqlConn)
 	favouriteRepo := postgres.NewFavouriteRepository(psqlConn)
 
 	// Use Cases
@@ -146,11 +146,10 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 		logger.Fatalf("Ошибка при подключении к сервису фильтрации сообщений: %v", err)
 	}
 	userUseCase := service.NewUserService(userRepo, staticUseCase)
-	contentUseCase := service.NewContentService(contentRepo, staticUseCase)
+	contentUseCase := service.NewContentService(contentRepo, staticUseCase, params.ContentSecretKey)
 	reviewUseCase := service.NewReviewService(reviewRepo, userRepo, contentRepo, staticUseCase, profanityUseCase)
 	compilationUseCase := service.NewCompilationService(compilationRepo, staticUseCase, contentUseCase)
-	searchUseCase := service.NewSearchService(searchRepo, staticUseCase)
-	ongoingUseCase := service.NewOngoingContentService(ongoingRepo, staticUseCase)
+	searchUseCase := service.NewSearchService(searchRepo, contentUseCase)
 	favouriteUseCase := service.NewFavouriteService(favouriteRepo, contentUseCase)
 
 	sessionManager := utils.NewSessionManager(authUseCase,
@@ -165,7 +164,7 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	reviewDelivery := delivery.NewReviewEndpoints(reviewUseCase, authUseCase)
 	compilationDelivery := delivery.NewCompilationEndpoints(compilationUseCase)
 	searchDelivery := delivery.NewSearchEndpoints(searchUseCase)
-	ongoingDelivery := delivery.NewOngoingContentEndpoints(ongoingUseCase)
+	ongoingDelivery := delivery.NewOngoingContentEndpoints(contentUseCase)
 	favouriteDelivery := delivery.NewFavouriteEndpoints(favouriteUseCase, authUseCase)
 
 	// REST API

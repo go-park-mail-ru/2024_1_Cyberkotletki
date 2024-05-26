@@ -570,14 +570,6 @@ const docTemplate = `{
                     "ongoing_content"
                 ],
                 "summary": "Получить ближайшие релизы",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Количество релизов",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -637,21 +629,84 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/ongoing/{id}": {
+        "/api/ongoing/{id}/is_released": {
             "get": {
+                "tags": [
+                    "ongoing_content"
+                ],
+                "summary": "Проверить, вышел ли контент. Использует WebSocket",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID контента",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "101": {
+                        "description": "WebSocket connection is established",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "ongoing_content"
                 ],
-                "summary": "Получить контент календаря релизов по id контента",
+                "summary": "Установить состояние релиза",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID контента календаря релизов",
+                        "description": "ID контента",
                         "name": "id",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Секретный ключ",
+                        "name": "secret_key",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Вышел ли контент",
+                        "name": "is_released",
+                        "in": "query",
                         "required": true
                     }
                 ],
@@ -659,11 +714,17 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PreviewOngoingContent"
+                            "type": "string"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/echo.HTTPError"
                         }
@@ -2074,10 +2135,8 @@ const docTemplate = `{
                     "format": "string",
                     "example": "favourite"
                 },
-                "contentID": {
-                    "type": "integer",
-                    "format": "int",
-                    "example": 1
+                "content": {
+                    "$ref": "#/definitions/dto.PreviewContent"
                 }
             }
         },

@@ -174,6 +174,14 @@ func (r *ReviewService) GetContentReviewByAuthor(authorID, contentID int) (*dto.
 }
 
 func (r *ReviewService) CreateReview(review dto.ReviewCreate) (*dto.ReviewResponse, error) {
+	// на невышедший контент ставить рецензии нельзя!
+	content, err := r.contentRepo.GetContent(review.ContentID)
+	if err != nil && errors.Is(err, repository.ErrContentNotFound) || content.Ongoing {
+		return nil, usecase.ErrReviewContentNotFound
+	}
+	if err != nil {
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении контента"), err)
+	}
 	if err := entity.ValidateReview(review.Rating, review.Title, review.Text); err != nil {
 		return nil, usecase.ReviewErrorIncorrectData{Err: err}
 	}

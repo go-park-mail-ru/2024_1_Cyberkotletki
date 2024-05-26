@@ -44,16 +44,24 @@ func easyjsonD4176298DecodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 				in.Delim('[')
 				if out.Content == nil {
 					if !in.IsDelim(']') {
-						out.Content = make([]PreviewContent, 0, 0)
+						out.Content = make([]*PreviewContent, 0, 8)
 					} else {
-						out.Content = []PreviewContent{}
+						out.Content = []*PreviewContent{}
 					}
 				} else {
 					out.Content = (out.Content)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v1 PreviewContent
-					(v1).UnmarshalEasyJSON(in)
+					var v1 *PreviewContent
+					if in.IsNull() {
+						in.Skip()
+						v1 = nil
+					} else {
+						if v1 == nil {
+							v1 = new(PreviewContent)
+						}
+						(*v1).UnmarshalEasyJSON(in)
+					}
 					out.Content = append(out.Content, v1)
 					in.WantComma()
 				}
@@ -67,16 +75,24 @@ func easyjsonD4176298DecodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 				in.Delim('[')
 				if out.Persons == nil {
 					if !in.IsDelim(']') {
-						out.Persons = make([]PersonPreviewWithPhoto, 0, 1)
+						out.Persons = make([]*PersonPreviewWithPhoto, 0, 8)
 					} else {
-						out.Persons = []PersonPreviewWithPhoto{}
+						out.Persons = []*PersonPreviewWithPhoto{}
 					}
 				} else {
 					out.Persons = (out.Persons)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v2 PersonPreviewWithPhoto
-					(v2).UnmarshalEasyJSON(in)
+					var v2 *PersonPreviewWithPhoto
+					if in.IsNull() {
+						in.Skip()
+						v2 = nil
+					} else {
+						if v2 == nil {
+							v2 = new(PersonPreviewWithPhoto)
+						}
+						(*v2).UnmarshalEasyJSON(in)
+					}
 					out.Persons = append(out.Persons, v2)
 					in.WantComma()
 				}
@@ -107,7 +123,11 @@ func easyjsonD4176298EncodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 				if v3 > 0 {
 					out.RawByte(',')
 				}
-				(v4).MarshalEasyJSON(out)
+				if v4 == nil {
+					out.RawString("null")
+				} else {
+					(*v4).MarshalEasyJSON(out)
+				}
 			}
 			out.RawByte(']')
 		}
@@ -123,7 +143,11 @@ func easyjsonD4176298EncodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 				if v5 > 0 {
 					out.RawByte(',')
 				}
-				(v6).MarshalEasyJSON(out)
+				if v6 == nil {
+					out.RawString("null")
+				} else {
+					(*v6).MarshalEasyJSON(out)
+				}
 			}
 			out.RawByte(']')
 		}

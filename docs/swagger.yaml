@@ -182,10 +182,8 @@ definitions:
         example: favourite
         format: string
         type: string
-      contentID:
-        example: 1
-        format: int
-        type: integer
+      content:
+        $ref: '#/definitions/dto.PreviewContent'
     type: object
   dto.FavouriteStatusResponse:
     properties:
@@ -974,21 +972,19 @@ paths:
             $ref: '#/definitions/echo.HTTPError'
       tags:
       - Favourite
-  /api/ongoing/{id}:
+  /api/ongoing/{id}/is_released:
     get:
       parameters:
-      - description: ID контента календаря релизов
+      - description: ID контента
         in: path
         name: id
         required: true
         type: integer
-      produces:
-      - application/json
       responses:
-        "200":
-          description: OK
+        "101":
+          description: WebSocket connection is established
           schema:
-            $ref: '#/definitions/dto.PreviewOngoingContent'
+            type: string
         "400":
           description: Bad Request
           schema:
@@ -1001,7 +997,54 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
-      summary: Получить контент календаря релизов по id контента
+      summary: Проверить, вышел ли контент. Использует WebSocket
+      tags:
+      - ongoing_content
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID контента
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Секретный ключ
+        in: query
+        name: secret_key
+        required: true
+        type: string
+      - description: Вышел ли контент
+        in: query
+        name: is_released
+        required: true
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      security:
+      - _csrf: []
+      summary: Установить состояние релиза
       tags:
       - ongoing_content
   /api/ongoing/{year}/{month}:
@@ -1043,11 +1086,6 @@ paths:
       - ongoing_content
   /api/ongoing/nearest:
     get:
-      parameters:
-      - description: Количество релизов
-        in: query
-        name: limit
-        type: integer
       produces:
       - application/json
       responses:

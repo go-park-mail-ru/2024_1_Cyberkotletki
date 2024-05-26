@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	sq "github.com/Masterminds/squirrel"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
 	"regexp"
 	"testing"
-	"time"
 )
 
 func TestSearchDB_SearchContent(t *testing.T) {
@@ -19,71 +17,18 @@ func TestSearchDB_SearchContent(t *testing.T) {
 		Name        string
 		Query       string
 		ExpectedErr error
-		ExpectedOut []entity.Content
+		ExpectedOut []int
 		SetupMock   func(mock sqlmock.Sqlmock, query string)
 	}{
 		{
-			Name:  "Успешный поиск",
-			Query: "Query",
-			ExpectedOut: []entity.Content{
-				{
-					ID:             1,
-					Title:          "title",
-					OriginalTitle:  "original_title",
-					Rating:         5.0,
-					PosterStaticID: 1,
-					Genres:         []entity.Genre{{ID: 1, Name: "genre"}},
-					Country:        []entity.Country{{ID: 1, Name: "country"}},
-					Actors:         []entity.Person{entity.GetExamplePerson()},
-					Directors:      []entity.Person{entity.GetExamplePerson()},
-					Type:           "movie",
-					Movie:          &entity.Movie{Premiere: time.Time{}, Duration: 100},
-				},
-			},
+			Name:        "Успешный поиск",
+			Query:       "Query",
+			ExpectedOut: []int{1},
 			ExpectedErr: nil,
 			SetupMock: func(mock sqlmock.Sqlmock, query string) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs("Query", "Query").
 					WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
-				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, content_type, title, original_title, rating, poster_upload_id FROM content WHERE id = $1")).
-					WithArgs(1).
-					WillReturnRows(sqlmock.NewRows([]string{"id", "content_type", "title", "original_title", "rating", "poster_upload_id"}).
-						AddRow(1, "movie", "title", "original_title", 5.0, 1))
-				mock.ExpectQuery(regexp.QuoteMeta("SELECT genre_id FROM genre_content WHERE content_id = $1")).
-					WithArgs(1).
-					WillReturnRows(sqlmock.NewRows([]string{"genre_id"}).AddRow(1))
-				mock.ExpectQuery(regexp.QuoteMeta("SELECT country_id FROM country_content WHERE content_id = $1")).
-					WithArgs(1).
-					WillReturnRows(sqlmock.NewRows([]string{"country_id"}).AddRow(1))
-				mock.ExpectQuery(regexp.QuoteMeta("SELECT premiere, duration FROM movie WHERE content_id = $1")).
-					WithArgs(1).
-					WillReturnRows(sqlmock.NewRows([]string{"premiere", "duration"}).AddRow(time.Time{}, 100))
-				mock.ExpectQuery(regexp.QuoteMeta("SELECT id FROM role WHERE name_en = $1")).
-					WithArgs("actor").
-					WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
-				mock.ExpectQuery(regexp.QuoteMeta("SELECT name FROM genre WHERE id = $1")).
-					WithArgs(1).
-					WillReturnRows(sqlmock.NewRows([]string{"name"}).AddRow("genre"))
-				mock.ExpectQuery(regexp.QuoteMeta("SELECT id FROM role WHERE name_en = $1")).
-					WithArgs("director").
-					WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(2))
-				mock.ExpectQuery(regexp.QuoteMeta("SELECT person_id FROM person_role WHERE content_id = $1 AND role_id = $2")).
-					WithArgs(1, 1).
-					WillReturnRows(sqlmock.NewRows([]string{"person_id"}).AddRow(1))
-				mock.ExpectQuery(regexp.QuoteMeta("SELECT person_id FROM person_role WHERE content_id = $1 AND role_id = $2")).
-					WithArgs(1, 2).
-					WillReturnRows(sqlmock.NewRows([]string{"person_id"}).AddRow(1))
-				mock.ExpectQuery(regexp.QuoteMeta("SELECT name FROM country WHERE id = $1")).
-					WithArgs(1).
-					WillReturnRows(sqlmock.NewRows([]string{"name"}).AddRow("country"))
-				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, name, en_name, birth_date, death_date, sex, height, photo_upload_id FROM person WHERE id = $1")).
-					WithArgs(1).
-					WillReturnRows(sqlmock.NewRows([]string{"id", "name", "en_name", "birth_date", "death_date", "sex", "height", "photo_upload_id"}).
-						AddRow(1, "Имя", "Name", time.Time{}, time.Time{}, "M", 175, 1))
-				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, name, en_name, birth_date, death_date, sex, height, photo_upload_id FROM person WHERE id = $1")).
-					WithArgs(1).
-					WillReturnRows(sqlmock.NewRows([]string{"id", "name", "en_name", "birth_date", "death_date", "sex", "height", "photo_upload_id"}).
-						AddRow(1, "Имя", "Name", time.Time{}, time.Time{}, "M", 175, 1))
 			},
 		},
 	}
@@ -130,22 +75,18 @@ func TestSearchDB_SearchPerson(t *testing.T) {
 		Name        string
 		Query       string
 		ExpectedErr error
-		ExpectedOut []entity.Person
+		ExpectedOut []int
 		SetupMock   func(mock sqlmock.Sqlmock, query string)
 	}{
 		{
 			Name:        "Успешный поиск",
 			Query:       "Query",
-			ExpectedOut: []entity.Person{entity.GetExamplePerson()},
+			ExpectedOut: []int{1},
 			ExpectedErr: nil,
 			SetupMock: func(mock sqlmock.Sqlmock, query string) {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).
 					WithArgs("Query", "Query").
 					WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
-				mock.ExpectQuery(regexp.QuoteMeta("SELECT id, name, en_name, birth_date, death_date, sex, height, photo_upload_id FROM person WHERE id = $1")).
-					WithArgs(1).
-					WillReturnRows(sqlmock.NewRows([]string{"id", "name", "en_name", "birth_date", "death_date", "sex", "height", "photo_upload_id"}).
-						AddRow(1, "Имя", "Name", time.Time{}, time.Time{}, "M", 175, 1))
 			},
 		},
 	}

@@ -21,6 +21,9 @@ type Content struct {
 	PicturesStaticID []int    // Изображения
 	Facts            []string // Интересные факты
 
+	Ongoing     bool       // true - контент запланирован, false - контент вышел
+	OngoingDate *time.Time // Дата выхода
+
 	Country   []Country `json:"country"`   // Страны, где был произведен контент
 	Genres    []Genre   `json:"genres"`    // Жанры
 	Actors    []Person  `json:"actors"`    // Актеры

@@ -6,17 +6,20 @@ import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
+	"time"
 )
 
 type ContentService struct {
 	contentRepo repository.Content
 	staticUC    usecase.Static
+	secretKey   string
 }
 
-func NewContentService(contentRepo repository.Content, staticUC usecase.Static) usecase.Content {
+func NewContentService(contentRepo repository.Content, staticUC usecase.Static, secretKey string) usecase.Content {
 	return &ContentService{
 		contentRepo: contentRepo,
 		staticUC:    staticUC,
+		secretKey:   secretKey,
 	}
 }
 
@@ -172,6 +175,8 @@ func (c *ContentService) GetContentByID(id int) (*dto.Content, error) {
 		Editors:        personEntityToPreviewDTO(contentEntity.Editors),
 		Type:           contentEntity.Type,
 		SimilarContent: similarContent,
+		Ongoing:        contentEntity.Ongoing,
+		OngoingDate:    contentEntity.OngoingDate,
 	}
 	switch contentEntity.Type {
 	case entity.ContentTypeMovie:
@@ -260,6 +265,31 @@ func (c *ContentService) GetPersonByID(id int) (*dto.Person, error) {
 	return &personDTO, nil
 }
 
+func (c *ContentService) GetPreviewPersonByID(id int) (*dto.PersonPreviewWithPhoto, error) {
+	personEntity, err := c.contentRepo.GetPerson(id)
+	switch {
+	case errors.Is(err, repository.ErrPersonNotFound):
+		return nil, usecase.ErrPersonNotFound
+	case err != nil:
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении персоны"), err)
+	}
+	photo, err := c.staticUC.GetStatic(personEntity.GetPhotoStaticID())
+	switch {
+	case errors.Is(err, usecase.ErrStaticNotFound):
+		// Если фото не найдено, возвращаем пустую строку
+		photo = ""
+	case err != nil:
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении фото персоны"), err)
+	}
+	personDTO := dto.PersonPreviewWithPhoto{
+		ID:       personEntity.ID,
+		Name:     personEntity.Name,
+		EnName:   personEntity.EnName,
+		PhotoURL: photo,
+	}
+	return &personDTO, nil
+}
+
 // GetPreviewContentByID возвращает dto.PreviewContent по его ID
 func (c *ContentService) GetPreviewContentByID(id int) (*dto.PreviewContent, error) {
 	contentEntity, err := c.contentRepo.GetPreviewContent(id)
@@ -301,10 +331,10 @@ func (c *ContentService) GetPreviewContentByID(id int) (*dto.PreviewContent, err
 	releaseYear := 0
 	yearStart := 0
 	yearEnd := 0
-	if contentEntity.Type == entity.ContentTypeMovie && contentEntity.Movie != nil {
+	if contentEntity.Type == entity.ContentTypeMovie && contentEntity.Movie != nil && !contentEntity.Ongoing {
 		duration = contentEntity.Movie.Duration
 		releaseYear = contentEntity.Movie.Premiere.Year()
-	} else if contentEntity.Type == entity.ContentTypeSeries && contentEntity.Series != nil {
+	} else if contentEntity.Type == entity.ContentTypeSeries && contentEntity.Series != nil && !contentEntity.Ongoing {
 		yearStart = contentEntity.Series.YearStart
 		yearEnd = contentEntity.Series.YearEnd
 	}
@@ -323,6 +353,87 @@ func (c *ContentService) GetPreviewContentByID(id int) (*dto.PreviewContent, err
 		ReleaseYear:   releaseYear,
 		YearEnd:       yearEnd,
 		YearStart:     yearStart,
+		Ongoing:       contentEntity.Ongoing,
+		OngoingDate:   contentEntity.OngoingDate,
 	}
 	return &previewContentDTO, nil
+}
+
+func (c *ContentService) GetNearestOngoings() (*dto.PreviewOngoingContentList, error) {
+	nearestOngoings, err := c.contentRepo.GetNearestOngoings(10)
+	if err != nil {
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении ближайших релизов"), err)
+	}
+	previewContents := make([]*dto.PreviewContent, len(nearestOngoings))
+	for index, ongoing := range nearestOngoings {
+		preview, err := c.GetPreviewContentByID(ongoing)
+		if err != nil {
+			return nil, errors.Join(errors.New("ошибка при получении превью контента в GetNearestOngoings"), err)
+		}
+		previewContents[index] = preview
+	}
+	return &dto.PreviewOngoingContentList{
+		OnGoingContentList: previewContents,
+	}, nil
+}
+
+func (c *ContentService) GetOngoingContentByMonthAndYear(month, year int) (*dto.PreviewOngoingContentList, error) {
+	ongoingContentEntities, err := c.contentRepo.GetOngoingContentByMonthAndYear(month, year)
+	if err != nil {
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении релизов по месяцу и году"), err)
+	}
+	ongoingContent := make([]*dto.PreviewContent, len(ongoingContentEntities))
+	for index, ongoingContentEntity := range ongoingContentEntities {
+		preview, err := c.GetPreviewContentByID(ongoingContentEntity)
+		if err != nil {
+			return nil, errors.Join(
+				errors.New("ошибка при получении превью контента в GetOngoingContentByMonthAndYear"),
+				err,
+			)
+		}
+		ongoingContent[index] = preview
+	}
+	return &dto.PreviewOngoingContentList{
+		OnGoingContentList: ongoingContent,
+	}, nil
+}
+
+func (c *ContentService) GetAllOngoingsYears() (*dto.ReleaseYearsResponse, error) {
+	years, err := c.contentRepo.GetAllOngoingsYears()
+	if err != nil {
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении всех годов релизов"), err)
+	}
+	return &dto.ReleaseYearsResponse{
+		Years: years,
+	}, nil
+}
+
+func (c *ContentService) IsOngoingContentReleased(contentID int, releasedCh chan<- bool, errCh chan<- error) {
+	for {
+		isReleased, err := c.contentRepo.IsOngoingContentReleased(contentID)
+		if err != nil {
+			errCh <- entity.UsecaseWrap(errors.New("ошибка при проверке релиза"), err)
+			return
+		}
+		if isReleased {
+			releasedCh <- true
+			return
+		}
+		// Задержка перед следующим вызовом функции
+		time.Sleep(time.Duration(10) * time.Second)
+	}
+}
+
+func (c *ContentService) SetReleasedState(secretKey string, contentID int, isReleased bool) error {
+	if secretKey != c.secretKey {
+		return usecase.ErrContentInvalidSecretKey
+	}
+	err := c.contentRepo.SetReleasedState(contentID, isReleased)
+	switch {
+	case errors.Is(err, repository.ErrContentNotFound):
+		return usecase.ErrContentNotFound
+	case err != nil:
+		return entity.UsecaseWrap(errors.New("ошибка при установке состояния релиза"), err)
+	}
+	return nil
 }

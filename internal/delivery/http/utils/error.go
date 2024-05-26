@@ -7,6 +7,11 @@ import (
 	"net/url"
 )
 
+// WebsocketError логирует ошибку вебсокета
+func WebsocketError(ctx echo.Context, err error) {
+	ctx.Logger().Error(GetErrMsgFromContext(ctx, err))
+}
+
 // NewError возвращает *echo.HTTPError, чтобы middleware echo автоматически конвертировал её в JSON-ошибку. Если
 // ошибка содержит в себе entity.ClientError, то использует его в качестве сообщения об ошибке, в противном
 // случае приводит стандартное описание ошибки по её коду для избежания возможных утечек.

@@ -68,7 +68,7 @@ func TestContentService_GetContent(t *testing.T) {
 			defer ctrl.Finish()
 			mockContentRepo := mockrepo.NewMockContent(ctrl)
 			mockStaticRepo := mock_usecase.NewMockStatic(ctrl)
-			contentService := NewContentService(mockContentRepo, mockStaticRepo)
+			contentService := NewContentService(mockContentRepo, mockStaticRepo, "")
 			tc.SetupContentRepoMock(mockContentRepo)
 			tc.SetupStaticRepoMock(mockStaticRepo)
 			content, err := contentService.GetContentByID(tc.ContentID)

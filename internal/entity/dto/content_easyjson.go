@@ -447,6 +447,8 @@ func easyjson344736e9DecodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 			out.Poster = string(in.String())
 		case "rating":
 			out.Rating = float64(in.Float64())
+		case "ongoing":
+			out.Ongoing = bool(in.Bool())
 		case "type":
 			out.Type = string(in.String())
 		case "duration":
@@ -459,6 +461,18 @@ func easyjson344736e9DecodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 			out.YearStart = int(in.Int())
 		case "yearEnd":
 			out.YearEnd = int(in.Int())
+		case "ongoingDate":
+			if in.IsNull() {
+				in.Skip()
+				out.OngoingDate = nil
+			} else {
+				if out.OngoingDate == nil {
+					out.OngoingDate = new(time.Time)
+				}
+				if data := in.Raw(); in.Ok() {
+					in.AddError((*out.OngoingDate).UnmarshalJSON(data))
+				}
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -530,6 +544,11 @@ func easyjson344736e9EncodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 		out.Float64(float64(in.Rating))
 	}
 	{
+		const prefix string = ",\"ongoing\":"
+		out.RawString(prefix)
+		out.Bool(bool(in.Ongoing))
+	}
+	{
 		const prefix string = ",\"type\":"
 		out.RawString(prefix)
 		out.String(string(in.Type))
@@ -558,6 +577,11 @@ func easyjson344736e9EncodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 		const prefix string = ",\"yearEnd\":"
 		out.RawString(prefix)
 		out.Int(int(in.YearEnd))
+	}
+	if in.OngoingDate != nil {
+		const prefix string = ",\"ongoingDate\":"
+		out.RawString(prefix)
+		out.Raw((*in.OngoingDate).MarshalJSON())
 	}
 	out.RawByte('}')
 }
@@ -1457,6 +1481,20 @@ func easyjson344736e9DecodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 				}
 				in.Delim(']')
 			}
+		case "ongoing":
+			out.Ongoing = bool(in.Bool())
+		case "ongoingDate":
+			if in.IsNull() {
+				in.Skip()
+				out.OngoingDate = nil
+			} else {
+				if out.OngoingDate == nil {
+					out.OngoingDate = new(time.Time)
+				}
+				if data := in.Raw(); in.Ok() {
+					in.AddError((*out.OngoingDate).UnmarshalJSON(data))
+				}
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -1735,6 +1773,16 @@ func easyjson344736e9EncodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 			}
 			out.RawByte(']')
 		}
+	}
+	{
+		const prefix string = ",\"ongoing\":"
+		out.RawString(prefix)
+		out.Bool(bool(in.Ongoing))
+	}
+	if in.OngoingDate != nil {
+		const prefix string = ",\"ongoingDate\":"
+		out.RawString(prefix)
+		out.Raw((*in.OngoingDate).MarshalJSON())
 	}
 	out.RawByte('}')
 }

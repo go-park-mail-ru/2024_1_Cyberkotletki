@@ -315,9 +315,11 @@ func TestReviewService_CreateReview(t *testing.T) {
 				uc.EXPECT().FilterMessage("Test Text").Return("Test ****", nil)
 				uc.EXPECT().FilterMessage("Test Title").Return("**** Title", nil)
 			},
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
-			SetupStaticUCMock:    func(uc *mock_usecase.MockStatic) {},
+			SetupUserRepoMock: func(repo *mockrepo.MockUser) {},
+			SetupContentRepoMock: func(repo *mockrepo.MockContent) {
+				repo.EXPECT().GetContent(1).Return(&entity.Content{}, nil)
+			},
+			SetupStaticUCMock: func(uc *mock_usecase.MockStatic) {},
 		},
 		{
 			Name: "Рецензия уже существует",
@@ -338,9 +340,11 @@ func TestReviewService_CreateReview(t *testing.T) {
 				uc.EXPECT().FilterMessage("Test Text").Return("Test ****", nil)
 				uc.EXPECT().FilterMessage("Test Title").Return("**** Title", nil)
 			},
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
-			SetupStaticUCMock:    func(uc *mock_usecase.MockStatic) {},
+			SetupUserRepoMock: func(repo *mockrepo.MockUser) {},
+			SetupContentRepoMock: func(repo *mockrepo.MockContent) {
+				repo.EXPECT().GetContent(1).Return(&entity.Content{}, nil)
+			},
+			SetupStaticUCMock: func(uc *mock_usecase.MockStatic) {},
 		},
 		{
 			Name: "Ошибка при фильтрации текста",
@@ -358,9 +362,11 @@ func TestReviewService_CreateReview(t *testing.T) {
 			SetupProfanityUCMock: func(uc *mock_usecase.MockProfanity) {
 				uc.EXPECT().FilterMessage("Test Text").Return("", errors.New("profanity error"))
 			},
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
-			SetupStaticUCMock:    func(uc *mock_usecase.MockStatic) {},
+			SetupUserRepoMock: func(repo *mockrepo.MockUser) {},
+			SetupContentRepoMock: func(repo *mockrepo.MockContent) {
+				repo.EXPECT().GetContent(1).Return(&entity.Content{}, nil)
+			},
+			SetupStaticUCMock: func(uc *mock_usecase.MockStatic) {},
 		},
 		{
 			Name: "Ошибка при фильтрации заголовка",
@@ -379,9 +385,11 @@ func TestReviewService_CreateReview(t *testing.T) {
 				uc.EXPECT().FilterMessage("Test Text").Return("Test ****", nil)
 				uc.EXPECT().FilterMessage("Test Title").Return("", errors.New("profanity error"))
 			},
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
-			SetupStaticUCMock:    func(uc *mock_usecase.MockStatic) {},
+			SetupUserRepoMock: func(repo *mockrepo.MockUser) {},
+			SetupContentRepoMock: func(repo *mockrepo.MockContent) {
+				repo.EXPECT().GetContent(1).Return(&entity.Content{}, nil)
+			},
+			SetupStaticUCMock: func(uc *mock_usecase.MockStatic) {},
 		},
 		{
 			Name: "Успешно",
@@ -419,7 +427,7 @@ func TestReviewService_CreateReview(t *testing.T) {
 				repo.EXPECT().GetUserByID(1).Return(&entity.User{}, nil)
 			},
 			SetupContentRepoMock: func(repo *mockrepo.MockContent) {
-				repo.EXPECT().GetContent(1).Return(&entity.Content{}, nil)
+				repo.EXPECT().GetContent(1).Return(&entity.Content{}, nil).AnyTimes()
 			},
 			SetupStaticUCMock: func(uc *mock_usecase.MockStatic) {
 				uc.EXPECT().GetStatic(gomock.Any()).Return("", nil)
@@ -440,8 +448,10 @@ func TestReviewService_CreateReview(t *testing.T) {
 			SetupReviewRepoMock:  func(repo *mockrepo.MockReview) {},
 			SetupProfanityUCMock: func(uc *mock_usecase.MockProfanity) {},
 			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
-			SetupStaticUCMock:    func(uc *mock_usecase.MockStatic) {},
+			SetupContentRepoMock: func(repo *mockrepo.MockContent) {
+				repo.EXPECT().GetContent(1).Return(&entity.Content{}, nil)
+			},
+			SetupStaticUCMock: func(uc *mock_usecase.MockStatic) {},
 		},
 		{
 			Name: "Контент с таким айди не существует",
@@ -462,9 +472,11 @@ func TestReviewService_CreateReview(t *testing.T) {
 				uc.EXPECT().FilterMessage("Test Text").Return("Test ****", nil)
 				uc.EXPECT().FilterMessage("Test Title").Return("**** Title", nil)
 			},
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
-			SetupStaticUCMock:    func(uc *mock_usecase.MockStatic) {},
+			SetupUserRepoMock: func(repo *mockrepo.MockUser) {},
+			SetupContentRepoMock: func(repo *mockrepo.MockContent) {
+				repo.EXPECT().GetContent(1).Return(&entity.Content{}, nil)
+			},
+			SetupStaticUCMock: func(uc *mock_usecase.MockStatic) {},
 		},
 	}
 

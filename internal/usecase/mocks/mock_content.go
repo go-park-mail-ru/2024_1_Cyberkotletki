@@ -39,6 +39,21 @@ func (m *MockContent) EXPECT() *MockContentMockRecorder {
 	return m.recorder
 }
 
+// GetAllOngoingsYears mocks base method.
+func (m *MockContent) GetAllOngoingsYears() (*dto.ReleaseYearsResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllOngoingsYears")
+	ret0, _ := ret[0].(*dto.ReleaseYearsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllOngoingsYears indicates an expected call of GetAllOngoingsYears.
+func (mr *MockContentMockRecorder) GetAllOngoingsYears() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllOngoingsYears", reflect.TypeOf((*MockContent)(nil).GetAllOngoingsYears))
+}
+
 // GetContentByID mocks base method.
 func (m *MockContent) GetContentByID(id int) (*dto.Content, error) {
 	m.ctrl.T.Helper()
@@ -52,6 +67,36 @@ func (m *MockContent) GetContentByID(id int) (*dto.Content, error) {
 func (mr *MockContentMockRecorder) GetContentByID(id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContentByID", reflect.TypeOf((*MockContent)(nil).GetContentByID), id)
+}
+
+// GetNearestOngoings mocks base method.
+func (m *MockContent) GetNearestOngoings() (*dto.PreviewOngoingContentList, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetNearestOngoings")
+	ret0, _ := ret[0].(*dto.PreviewOngoingContentList)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNearestOngoings indicates an expected call of GetNearestOngoings.
+func (mr *MockContentMockRecorder) GetNearestOngoings() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNearestOngoings", reflect.TypeOf((*MockContent)(nil).GetNearestOngoings))
+}
+
+// GetOngoingContentByMonthAndYear mocks base method.
+func (m *MockContent) GetOngoingContentByMonthAndYear(month, year int) (*dto.PreviewOngoingContentList, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOngoingContentByMonthAndYear", month, year)
+	ret0, _ := ret[0].(*dto.PreviewOngoingContentList)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOngoingContentByMonthAndYear indicates an expected call of GetOngoingContentByMonthAndYear.
+func (mr *MockContentMockRecorder) GetOngoingContentByMonthAndYear(month, year any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOngoingContentByMonthAndYear", reflect.TypeOf((*MockContent)(nil).GetOngoingContentByMonthAndYear), month, year)
 }
 
 // GetPersonByID mocks base method.
@@ -82,4 +127,45 @@ func (m *MockContent) GetPreviewContentByID(id int) (*dto.PreviewContent, error)
 func (mr *MockContentMockRecorder) GetPreviewContentByID(id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPreviewContentByID", reflect.TypeOf((*MockContent)(nil).GetPreviewContentByID), id)
+}
+
+// GetPreviewPersonByID mocks base method.
+func (m *MockContent) GetPreviewPersonByID(id int) (*dto.PersonPreviewWithPhoto, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPreviewPersonByID", id)
+	ret0, _ := ret[0].(*dto.PersonPreviewWithPhoto)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPreviewPersonByID indicates an expected call of GetPreviewPersonByID.
+func (mr *MockContentMockRecorder) GetPreviewPersonByID(id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPreviewPersonByID", reflect.TypeOf((*MockContent)(nil).GetPreviewPersonByID), id)
+}
+
+// IsOngoingContentReleased mocks base method.
+func (m *MockContent) IsOngoingContentReleased(contentID int, releasedCh chan<- bool, errCh chan<- error) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "IsOngoingContentReleased", contentID, releasedCh, errCh)
+}
+
+// IsOngoingContentReleased indicates an expected call of IsOngoingContentReleased.
+func (mr *MockContentMockRecorder) IsOngoingContentReleased(contentID, releasedCh, errCh any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsOngoingContentReleased", reflect.TypeOf((*MockContent)(nil).IsOngoingContentReleased), contentID, releasedCh, errCh)
+}
+
+// SetReleasedState mocks base method.
+func (m *MockContent) SetReleasedState(secretKey string, contentID int, isReleased bool) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetReleasedState", secretKey, contentID, isReleased)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetReleasedState indicates an expected call of SetReleasedState.
+func (mr *MockContentMockRecorder) SetReleasedState(secretKey, contentID, isReleased any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetReleasedState", reflect.TypeOf((*MockContent)(nil).SetReleasedState), secretKey, contentID, isReleased)
 }

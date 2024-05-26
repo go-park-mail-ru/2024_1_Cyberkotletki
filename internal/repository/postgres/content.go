@@ -30,6 +30,8 @@ type ScanContent struct {
 	PosterStaticID   sql.NullInt64
 	TrailerURL       sql.NullString
 	BackdropStaticID sql.NullInt64
+	Ongoing          bool
+	OngoingDate      sql.NullTime
 }
 
 func NewContentRepository(db *sqlx.DB) repository.Content {
@@ -416,6 +418,8 @@ func (c *ContentDB) getContentInfo(id int) (*entity.Content, error) {
 		"poster_upload_id",
 		"trailer_url",
 		"backdrop_upload_id",
+		"ongoing",
+		"ongoing_date",
 	).
 		From("content").
 		Where(sq.Eq{"id": id}).
@@ -440,6 +444,8 @@ func (c *ContentDB) getContentInfo(id int) (*entity.Content, error) {
 		&scanContent.PosterStaticID,
 		&scanContent.TrailerURL,
 		&scanContent.BackdropStaticID,
+		&content.Ongoing,
+		&scanContent.OngoingDate,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -460,6 +466,9 @@ func (c *ContentDB) getContentInfo(id int) (*entity.Content, error) {
 	content.TrailerLink = scanContent.TrailerURL.String
 	content.BackdropStaticID = int(scanContent.BackdropStaticID.Int64)
 	content.Type = scanContent.ContentType
+	if scanContent.OngoingDate.Valid {
+		content.OngoingDate = &scanContent.OngoingDate.Time
+	}
 	return &content, nil
 }
 
@@ -605,6 +614,8 @@ func (c *ContentDB) getPreviewContentInfo(id int) (*entity.Content, error) {
 		"original_title",
 		"rating",
 		"poster_upload_id",
+		"ongoing",
+		"ongoing_date",
 	).
 		From("content").
 		Where(sq.Eq{"id": id}).
@@ -622,6 +633,8 @@ func (c *ContentDB) getPreviewContentInfo(id int) (*entity.Content, error) {
 		&scanContent.OriginalTitle,
 		&scanContent.Rating,
 		&scanContent.PosterStaticID,
+		&scanContent.Ongoing,
+		&scanContent.OngoingDate,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -635,6 +648,10 @@ func (c *ContentDB) getPreviewContentInfo(id int) (*entity.Content, error) {
 	content.OriginalTitle = scanContent.OriginalTitle.String
 	content.Rating = scanContent.Rating
 	content.PosterStaticID = int(scanContent.PosterStaticID.Int64)
+	content.Ongoing = scanContent.Ongoing
+	if scanContent.OngoingDate.Valid {
+		content.OngoingDate = &scanContent.OngoingDate.Time
+	}
 	return &content, nil
 }
 
@@ -869,4 +886,136 @@ func (c *ContentDB) GetSimilarContent(id int) ([]entity.Content, error) {
 	}
 
 	return contents, nil
+}
+
+func (c *ContentDB) GetNearestOngoings(limit int) ([]int, error) {
+	query, args, err := sq.Select("id").
+		From("content").
+		Where(sq.Eq{"ongoing": true}).
+		OrderBy("ongoing_date ASC").
+		Limit(uint64(limit)).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при формировании запроса GetNearestOngoings"))
+	}
+
+	rows, err := c.DB.Query(query, args...)
+	if err != nil {
+		return nil, entity.PSQLQueryErr("GetNearestOngoings", err)
+	}
+	defer rows.Close()
+
+	var contentIDs []int
+	for rows.Next() {
+		var contentID int
+		err := rows.Scan(&contentID)
+		if err != nil {
+			return nil, entity.PSQLQueryErr("GetNearestOngoings при сканировании", err)
+		}
+		contentIDs = append(contentIDs, contentID)
+	}
+
+	return contentIDs, nil
+}
+
+func (c *ContentDB) GetOngoingContentByMonthAndYear(month, year int) ([]int, error) {
+	query, args, err := sq.Select("id").
+		From("content").
+		Where(sq.Eq{"ongoing": true}).
+		Where(sq.Expr("EXTRACT(MONTH FROM ongoing_date) = ?", month)).
+		Where(sq.Expr("EXTRACT(YEAR FROM ongoing_date) = ?", year)).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при формировании запроса GetOngoingContentByMonthAndYear"))
+	}
+
+	rows, err := c.DB.Query(query, args...)
+	if err != nil {
+		return nil, entity.PSQLQueryErr("GetOngoingContentByMonthAndYear", err)
+	}
+	defer rows.Close()
+
+	var contentIDs []int
+	for rows.Next() {
+		var contentID int
+		err := rows.Scan(&contentID)
+		if err != nil {
+			return nil, entity.PSQLQueryErr("GetOngoingContentByMonthAndYear при сканировании", err)
+		}
+		contentIDs = append(contentIDs, contentID)
+	}
+
+	return contentIDs, nil
+}
+
+func (c *ContentDB) GetAllOngoingsYears() ([]int, error) {
+	query, args, err := sq.Select("EXTRACT(YEAR FROM ongoing_date)").
+		From("content").
+		Where(sq.Eq{"ongoing": true}).
+		GroupBy("EXTRACT(YEAR FROM ongoing_date)").
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при формировании запроса GetAllOngoingsYears"))
+	}
+
+	rows, err := c.DB.Query(query, args...)
+	if err != nil {
+		return nil, entity.PSQLQueryErr("GetAllOngoingsYears", err)
+	}
+	defer rows.Close()
+
+	var years []int
+	for rows.Next() {
+		var year int
+		err := rows.Scan(&year)
+		if err != nil {
+			return nil, entity.PSQLQueryErr("GetAllOngoingsYears при сканировании", err)
+		}
+		years = append(years, year)
+	}
+
+	return years, nil
+}
+
+func (c *ContentDB) IsOngoingContentReleased(contentID int) (bool, error) {
+	query, args, err := sq.Select("ongoing").
+		From("content").
+		Where(sq.Eq{"id": contentID}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return false, entity.PSQLWrap(err, fmt.Errorf("ошибка при формировании запроса IsOngoingContentReleased"))
+	}
+
+	var finished bool
+	err = c.DB.QueryRow(query, args...).Scan(&finished)
+	if err != nil {
+		return false, entity.PSQLQueryErr("IsOngoingContentReleased", err)
+	}
+
+	return !finished, nil
+}
+
+func (c *ContentDB) SetReleasedState(contentID int, released bool) error {
+	query, args, err := sq.Update("content").
+		Set("ongoing", !released).
+		Where(sq.Eq{"id": contentID}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return entity.PSQLWrap(err, fmt.Errorf("ошибка при формировании запроса SetReleasedState"))
+	}
+
+	rowsAffected, err := c.DB.Exec(query, args...)
+	if err != nil {
+		return entity.PSQLQueryErr("SetReleasedState", err)
+	}
+	if totalAffected, err := rowsAffected.RowsAffected(); err != nil || totalAffected == 0 {
+		return repository.ErrContentNotFound
+	}
+
+	return nil
 }

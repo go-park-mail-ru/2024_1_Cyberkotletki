@@ -20,6 +20,18 @@ type Content interface {
 	GetPersonRoles(personID int) ([]entity.PersonRole, error)
 	// GetSimilarContent возвращает похожий контент
 	GetSimilarContent(id int) ([]entity.Content, error)
+	// GetNearestOngoings возвращает ближайшие релизы
+	GetNearestOngoings(limit int) ([]int, error)
+	// GetOngoingContentByMonthAndYear возвращает релизы по месяцу и году
+	GetOngoingContentByMonthAndYear(month, year int) ([]int, error)
+	// GetAllOngoingsYears возвращает все года релизов
+	GetAllOngoingsYears() ([]int, error)
+	// IsOngoingContentReleased возвращает true, если контент вышел
+	// Если контент не найден, возвращает ErrContentNotFound
+	IsOngoingContentReleased(contentID int) (bool, error)
+	// SetReleasedState устанавливает состояние релиза
+	// Если контент не найден, возвращает ErrContentNotFound
+	SetReleasedState(contentID int, isReleased bool) error
 }
 
 var (
