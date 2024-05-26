@@ -11,4 +11,4 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 RUN python3 -m spacy download en
 
 # Запускаем main.py при старте контейнера
-CMD ["python3", "./main.py", "--addr=0.0.0.0:8050"]
+CMD ["python3", "-u", "./main.py", "--addr=0.0.0.0:8050"]
