@@ -11,7 +11,7 @@ BEGIN
     -- операция затратная, но рецензии оставляют сравнительно редко, так что будем считать это допустимым
     IF TG_OP = 'DELETE' THEN
         UPDATE content
-        SET rating = (SELECT AVG(content_rating) FROM review WHERE content_id = OLD.content_id)
+        SET rating = COALESCE((SELECT AVG(content_rating) FROM review WHERE content_id = OLD.content_id), imdb, 0)
         WHERE id = OLD.content_id;
     ELSE
         UPDATE content
