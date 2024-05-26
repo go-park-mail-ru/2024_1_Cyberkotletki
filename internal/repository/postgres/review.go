@@ -3,6 +3,8 @@ package postgres
 import (
 	"database/sql"
 	"errors"
+	"time"
+
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/config"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
@@ -22,6 +24,14 @@ func NewReviewRepository(database config.PostgresDatabase) (repository.Review, e
 	if err = db.Ping(); err != nil {
 		return nil, err
 	}
+
+	// запрос на изменение рецензии заннимает примерно 200 мс, 1 соединение может
+	// обработать 5 req/sec или 300 req/min
+	// запрос на вывод рецензий выполняется одноврменно с фильмом, занимает 40 мс.
+	db.SetMaxOpenConns(100)
+	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(time.Second * 10)
+
 	return &ReviewDB{
 		DB: db,
 	}, nil

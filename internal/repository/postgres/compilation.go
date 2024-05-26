@@ -3,6 +3,8 @@ package postgres
 import (
 	"database/sql"
 	"errors"
+	"time"
+
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/config"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
@@ -19,6 +21,12 @@ func NewCompilationRepository(database config.PostgresDatabase) (repository.Comp
 	if err != nil {
 		return nil, err
 	}
+	// запрос заднимает примерно 100 мс, 1 соединение может обработать 10 req/sec или 600 req/min
+	// 100 соединений может обработать 1000 req/sec или 60000 req/min
+	db.SetMaxOpenConns(100)
+	db.SetMaxIdleConns(5)
+	// подборок мало
+	db.SetConnMaxLifetime(time.Second * 5)
 	return &CompilationDB{
 		DB: db,
 	}, nil

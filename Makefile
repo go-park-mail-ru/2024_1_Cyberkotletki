@@ -50,11 +50,11 @@ run-session-storage-container:
 run-db-container:
 	# PostgreSQL запустится на дефолтном порту 5432. Если контейнер уже запущен, то ничего не произойдёт
 	if ! docker inspect -f '{{.State.Running}}' db 2>/dev/null ; then \
-		docker run --publish=5432:5432 --name db -e POSTGRES_PASSWORD=default_password -d postgres; \
+		docker run --publish=5432:5432 --name db -e POSTGRES_PASSWORD=default_password -v $(PWD)/config/postgresql.conf:/etc/postgresql/postgresql.conf -d postgres -c 'config_file=/etc/postgresql/postgresql.conf'; \
 	fi
 	sleep 2
 	# создаём базу данных и пользователя, выдаём права
-	-docker exec -it db psql -U postgres -c "CREATE USER kinoskop_admin PASSWORD 'admin_secret_password'"
+	-docker exec -it db psql -U postgres -c "CREATE USER kinoskop_admin WITH SUPERUSER PASSWORD 'admin_secret_password'"
 	-docker exec -it db psql -U postgres -c "CREATE DATABASE kinoskop"
 	-docker exec -it db psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE kinoskop TO kinoskop_admin"
 	-docker exec -it db psql -U postgres -c "ALTER DATABASE kinoskop OWNER TO kinoskop_admin;"
@@ -76,7 +76,7 @@ gen-migration:
 	# Пример использования: make gen-migration name=create_users_table
 	@if [ -z "$(name)" ]; then
 		echo "Нужно указать название миграции параметром 'name'";
-		exit 1;
+		exit 1; \
 	fi
 	goose -dir=db/migrations create $(name) sql
 

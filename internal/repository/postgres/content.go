@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
+
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/config"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
@@ -52,6 +54,13 @@ func NewContentRepository(database config.PostgresDatabase) (repository.Content,
 	if err = db.Ping(); err != nil {
 		return nil, err
 	}
+
+	// запросs занимают до 1 с, 1 соединение может обработать 1 req/sec или 60 req/min
+	// 100 соединений может обработать 100 req/sec или 6000 req/min
+	db.SetMaxOpenConns(100)
+	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(time.Second * 10)
+
 	return &ContentDB{
 		DB: db,
 	}, nil

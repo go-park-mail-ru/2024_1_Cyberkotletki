@@ -1,5 +1,7 @@
 -- +goose Up
 
+CREATE EXTENSION pg_stat_statements;
+
 -- Создание таблицы static
 CREATE TABLE IF NOT EXISTS static
 (
@@ -137,7 +139,7 @@ CREATE TABLE IF NOT EXISTS season
     year_start INT
         CONSTRAINT season_year_start_positive CHECK (year_start > 0) NOT NULL,
     year_end   INT CHECK (year_end >= year_start),
-    CONSTRAINT UNIQUE (tv_series_id, title),
+    CONSTRAINT unique_tv_series_id_title UNIQUE (tv_series_id, title),
     FOREIGN KEY (tv_series_id) REFERENCES tv_series (id) ON DELETE CASCADE
 );
 

@@ -10,3 +10,7 @@ services:
       - "80:80"
     depends_on:
       - "goservice"
+  db:
+    image: postgres
+    volumes:
+      - ./config/postgresql.conf:/etc/postgresql/postgresql.conf

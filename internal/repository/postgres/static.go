@@ -4,13 +4,15 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/config"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
 	_ "github.com/lib/pq" // Драйвер для работы с PostgreSQL
-	"os"
-	"path/filepath"
 )
 
 type StaticDB struct {
@@ -27,6 +29,11 @@ func NewStaticRepository(database config.PostgresDatabase, basicPath string, max
 	if err := db.Ping(); err != nil {
 		return nil, err
 	}
+	// аватарка всегда в углу и много кто ее ставит
+	db.SetMaxOpenConns(200)
+	db.SetMaxIdleConns(2)
+	db.SetConnMaxLifetime(time.Second * 10)
+
 	return &StaticDB{
 		DB:        db,
 		basicPath: basicPath,

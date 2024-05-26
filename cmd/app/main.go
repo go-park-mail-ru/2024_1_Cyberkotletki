@@ -4,6 +4,10 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
+	"os/signal"
+	"time"
+
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/config"
 	_ "github.com/go-park-mail-ru/2024_1_Cyberkotletki/docs"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/app"
@@ -11,9 +15,6 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/mcuadros/go-defaults"
 	"gopkg.in/yaml.v3"
-	"os"
-	"os/signal"
-	"time"
 )
 
 func GenerateExampleConfig() {

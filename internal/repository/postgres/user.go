@@ -3,6 +3,8 @@ package postgres
 import (
 	"database/sql"
 	"errors"
+	"time"
+
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/config"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
@@ -42,6 +44,12 @@ func NewUserRepository(database config.PostgresDatabase) (repository.User, error
 	if err := db.Ping(); err != nil {
 		return nil, err
 	}
+
+	// почти при каждом запросе проверяется авторизация
+	db.SetMaxOpenConns(200)
+	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(time.Second * 5)
+
 	return &UsersDB{
 		DB: db,
 	}, nil
