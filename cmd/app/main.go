@@ -164,7 +164,7 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	reviewDelivery := delivery.NewReviewEndpoints(reviewUseCase, authUseCase)
 	compilationDelivery := delivery.NewCompilationEndpoints(compilationUseCase)
 	searchDelivery := delivery.NewSearchEndpoints(searchUseCase)
-	ongoingDelivery := delivery.NewOngoingContentEndpoints(contentUseCase)
+	ongoingDelivery := delivery.NewOngoingContentEndpoints(contentUseCase, authUseCase)
 	favouriteDelivery := delivery.NewFavouriteEndpoints(favouriteUseCase, authUseCase)
 
 	// REST API

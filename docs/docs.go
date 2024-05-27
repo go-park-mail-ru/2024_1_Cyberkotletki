@@ -576,12 +576,43 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.PreviewOngoingContent"
+                                "$ref": "#/definitions/dto.PreviewContent"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/ongoing/subscriptions": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ongoing_content"
+                ],
+                "summary": "Получить ID контентов, на которые подписан пользователь",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SubscriptionsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/echo.HTTPError"
                         }
@@ -744,6 +775,124 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/ongoing/{id}/subscribe": {
+            "post": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ongoing_content"
+                ],
+                "summary": "Подписаться на выход контента",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID контента",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ongoing_content"
+                ],
+                "summary": "Отписаться от выхода контента",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID контента",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/ongoing/{year}/{month}": {
             "get": {
                 "produces": [
@@ -775,7 +924,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.PreviewOngoingContent"
+                                "$ref": "#/definitions/dto.PreviewContent"
                             }
                         }
                     },
@@ -2022,6 +2171,14 @@ const docTemplate = `{
                 "movie": {
                     "$ref": "#/definitions/dto.MovieContent"
                 },
+                "ongoing": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "ongoingDate": {
+                    "type": "string",
+                    "example": "2022-01-02T15:04:05Z"
+                },
                 "operators": {
                     "type": "array",
                     "items": {
@@ -2308,6 +2465,15 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 1
                 },
+                "ongoing": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "ongoingDate": {
+                    "description": "Поля, которые есть только у онгоингов",
+                    "type": "string",
+                    "example": "2022-01-02T15:04:05Z"
+                },
                 "originalTitle": {
                     "type": "string",
                     "example": "Batman"
@@ -2392,40 +2558,6 @@ const docTemplate = `{
                     "description": "Поля, которые есть только у сериалов",
                     "type": "integer",
                     "example": 2020
-                }
-            }
-        },
-        "dto.PreviewOngoingContent": {
-            "type": "object",
-            "properties": {
-                "genre": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "Боевик"
-                    ]
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "poster": {
-                    "type": "string",
-                    "example": "/static/poster.jpg"
-                },
-                "releaseDate": {
-                    "type": "string",
-                    "example": "2022-01-02T15:04:05Z"
-                },
-                "title": {
-                    "type": "string",
-                    "example": "Бэтмен"
-                },
-                "type": {
-                    "type": "string",
-                    "example": "movie"
                 }
             }
         },
@@ -2638,6 +2770,17 @@ const docTemplate = `{
                 "yearStart": {
                     "type": "integer",
                     "example": 2020
+                }
+            }
+        },
+        "dto.SubscriptionsResponse": {
+            "type": "object",
+            "properties": {
+                "subscriptions": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },

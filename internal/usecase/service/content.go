@@ -437,3 +437,42 @@ func (c *ContentService) SetReleasedState(secretKey string, contentID int, isRel
 	}
 	return nil
 }
+
+func (c *ContentService) SubscribeOnContent(userID, contentID int) error {
+	err := c.contentRepo.SubscribeOnContent(userID, contentID)
+	switch {
+	case errors.Is(err, repository.ErrContentNotFound):
+		return usecase.ErrContentNotFound
+	case errors.Is(err, repository.ErrUserNotFound):
+		return usecase.ErrUserNotFound
+	case err != nil:
+		return entity.UsecaseWrap(errors.New("ошибка при подписке на контент"), err)
+	}
+	return nil
+}
+
+func (c *ContentService) UnsubscribeFromContent(userID, contentID int) error {
+	err := c.contentRepo.UnsubscribeFromContent(userID, contentID)
+	switch {
+	case errors.Is(err, repository.ErrContentNotFound):
+		return usecase.ErrContentNotFound
+	case errors.Is(err, repository.ErrUserNotFound):
+		return usecase.ErrUserNotFound
+	case err != nil:
+		return entity.UsecaseWrap(errors.New("ошибка при отписке от контента"), err)
+	}
+	return nil
+}
+
+func (c *ContentService) GetSubscribedContentIDs(userID int) (*dto.SubscriptionsResponse, error) {
+	contentIDs, err := c.contentRepo.GetSubscribedContentIDs(userID)
+	switch {
+	case errors.Is(err, repository.ErrUserNotFound):
+		return nil, usecase.ErrUserNotFound
+	case err != nil:
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении подписок пользователя"), err)
+	}
+	return &dto.SubscriptionsResponse{
+		Subscriptions: contentIDs,
+	}, nil
+}

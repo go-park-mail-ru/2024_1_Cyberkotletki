@@ -32,6 +32,17 @@ type Content interface {
 	// SetReleasedState устанавливает состояние релиза
 	// Если контент не найден, возвращает ErrContentNotFound
 	SetReleasedState(contentID int, isReleased bool) error
+	// SubscribeOnContent подписывает пользователя на контент
+	// Если контент не найден, возвращает ErrContentNotFound
+	// Если пользователь не найден, возвращает ErrUserNotFound
+	SubscribeOnContent(userID, contentID int) error
+	// UnsubscribeFromContent отписывает пользователя от контента
+	// Если контент не найден, возвращает ErrContentNotFound
+	// Если пользователь не найден, возвращает ErrUserNotFound
+	UnsubscribeFromContent(userID, contentID int) error
+	// GetSubscribedContentIDs возвращает id контентов, на которые подписан пользователь
+	// Если пользователь не найден, возвращает ErrUserNotFound
+	GetSubscribedContentIDs(userID int) ([]int, error)
 }
 
 var (

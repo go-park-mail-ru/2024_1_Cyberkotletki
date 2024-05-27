@@ -9,6 +9,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -1018,4 +1019,73 @@ func (c *ContentDB) SetReleasedState(contentID int, released bool) error {
 	}
 
 	return nil
+}
+
+func (c *ContentDB) SubscribeOnContent(userID, contentID int) error {
+	query, args, err := sq.Insert("ongoing_subscribe").
+		Columns("user_id", "content_id").
+		Values(userID, contentID).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return entity.PSQLWrap(err, fmt.Errorf("ошибка при формировании запроса SubscribeOnContent"))
+	}
+
+	_, err = c.DB.Exec(query, args...)
+	var pqErr *pq.Error
+	if errors.As(err, &pqErr) && pqErr.Code == entity.PSQLUniqueViolation {
+		return nil
+	}
+	if err != nil {
+		return entity.PSQLQueryErr("SubscribeOnContent", err)
+	}
+
+	return nil
+}
+
+func (c *ContentDB) UnsubscribeFromContent(userID, contentID int) error {
+	query, args, err := sq.Delete("ongoing_subscribe").
+		Where(sq.Eq{"user_id": userID, "content_id": contentID}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return entity.PSQLWrap(err, fmt.Errorf("ошибка при формировании запроса UnsubscribeFromContent"))
+	}
+
+	// Неважно сколько rows affected, т.к. пользователь может не быть подписан на контент
+	_, err = c.DB.Exec(query, args...)
+	if err != nil {
+		return entity.PSQLQueryErr("UnsubscribeFromContent", err)
+	}
+
+	return nil
+}
+
+func (c *ContentDB) GetSubscribedContentIDs(userID int) ([]int, error) {
+	query, args, err := sq.Select("content_id").
+		From("ongoing_subscribe").
+		Where(sq.Eq{"user_id": userID}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при формировании запроса GetSubscribedContentIDs"))
+	}
+
+	rows, err := c.DB.Query(query, args...)
+	if err != nil {
+		return nil, entity.PSQLQueryErr("GetSubscribedContentIDs", err)
+	}
+	defer rows.Close()
+
+	contentIDs := make([]int, 0)
+	for rows.Next() {
+		var contentID int
+		err := rows.Scan(&contentID)
+		if err != nil {
+			return nil, entity.PSQLQueryErr("GetSubscribedContentIDs при сканировании", err)
+		}
+		contentIDs = append(contentIDs, contentID)
+	}
+
+	return contentIDs, nil
 }

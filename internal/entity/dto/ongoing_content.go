@@ -11,3 +11,7 @@ type ReleaseYearsResponse struct {
 type IsOngoingContentFinishedResponse struct {
 	IsReleased bool `json:"is_released" example:"true"`
 }
+
+type SubscriptionsResponse struct {
+	Subscriptions []int `json:"subscriptions"`
+}

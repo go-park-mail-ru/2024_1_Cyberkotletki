@@ -30,6 +30,17 @@ type Content interface {
 	IsOngoingContentReleased(contentID int, releasedCh chan<- bool, errCh chan<- error)
 	// SetReleasedState устанавливает состояние релиза
 	SetReleasedState(secretKey string, contentID int, isReleased bool) error
+	// SubscribeOnContent подписывает пользователя на контент
+	// Если контент не найден, возвращает ErrContentNotFound
+	// Если пользователь не найден, возвращает ErrUserNotFound
+	SubscribeOnContent(userID, contentID int) error
+	// UnsubscribeFromContent отписывает пользователя от контента
+	// Если контент не найден, возвращает ErrContentNotFound
+	// Если пользователь не найден, возвращает ErrUserNotFound
+	UnsubscribeFromContent(userID, contentID int) error
+	// GetSubscribedContentIDs возвращает id контентов, на которые подписан пользователь
+	// Если пользователь не найден, возвращает ErrUserNotFound
+	GetSubscribedContentIDs(userID int) (*dto.SubscriptionsResponse, error)
 }
 
 var (

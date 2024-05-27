@@ -101,6 +101,12 @@ definitions:
         type: number
       movie:
         $ref: '#/definitions/dto.MovieContent'
+      ongoing:
+        example: true
+        type: boolean
+      ongoingDate:
+        example: "2022-01-02T15:04:05Z"
+        type: string
       operators:
         items:
           $ref: '#/definitions/dto.PersonPreview'
@@ -305,6 +311,13 @@ definitions:
       id:
         example: 1
         type: integer
+      ongoing:
+        example: true
+        type: boolean
+      ongoingDate:
+        description: Поля, которые есть только у онгоингов
+        example: "2022-01-02T15:04:05Z"
+        type: string
       originalTitle:
         example: Batman
         type: string
@@ -368,30 +381,6 @@ definitions:
         description: Поля, которые есть только у сериалов
         example: 2020
         type: integer
-    type: object
-  dto.PreviewOngoingContent:
-    properties:
-      genre:
-        example:
-        - Боевик
-        items:
-          type: string
-        type: array
-      id:
-        example: 1
-        type: integer
-      poster:
-        example: /static/poster.jpg
-        type: string
-      releaseDate:
-        example: "2022-01-02T15:04:05Z"
-        type: string
-      title:
-        example: Бэтмен
-        type: string
-      type:
-        example: movie
-        type: string
     type: object
   dto.Register:
     properties:
@@ -549,6 +538,13 @@ definitions:
       yearStart:
         example: 2020
         type: integer
+    type: object
+  dto.SubscriptionsResponse:
+    properties:
+      subscriptions:
+        items:
+          type: integer
+        type: array
     type: object
   dto.UpdatePassword:
     properties:
@@ -1047,6 +1043,81 @@ paths:
       summary: Установить состояние релиза
       tags:
       - ongoing_content
+  /api/ongoing/{id}/subscribe:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID контента
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      security:
+      - _csrf: []
+      summary: Отписаться от выхода контента
+      tags:
+      - ongoing_content
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID контента
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      security:
+      - _csrf: []
+      summary: Подписаться на выход контента
+      tags:
+      - ongoing_content
   /api/ongoing/{year}/{month}:
     get:
       parameters:
@@ -1067,7 +1138,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.PreviewOngoingContent'
+              $ref: '#/definitions/dto.PreviewContent'
             type: array
         "400":
           description: Bad Request
@@ -1093,7 +1164,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.PreviewOngoingContent'
+              $ref: '#/definitions/dto.PreviewContent'
             type: array
         "400":
           description: Bad Request
@@ -1104,6 +1175,26 @@ paths:
           schema:
             $ref: '#/definitions/echo.HTTPError'
       summary: Получить ближайшие релизы
+      tags:
+      - ongoing_content
+  /api/ongoing/subscriptions:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SubscriptionsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Получить ID контентов, на которые подписан пользователь
       tags:
       - ongoing_content
   /api/ongoing/years:
