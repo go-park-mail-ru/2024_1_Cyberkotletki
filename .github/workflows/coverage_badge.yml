@@ -28,7 +28,7 @@ jobs:
     - name: Test
       run: |
           go test -coverprofile=test.coverage.tmp ./internal/...
-          cat test.coverage.tmp | grep -v 'mocks' | grep -v 'proto' > test.coverage
+          cat test.coverage.tmp | grep -v 'mocks' | grep -v 'proto' | grep -v 'easyjson' > test.coverage
 
     - name: Update coverage badge
       run: |

@@ -5,7 +5,8 @@ run-tests:
 	@go generate $(PKG_INTERNAL)
 	@if go test -race $(PKG_INTERNAL) -coverprofile=test.coverage.tmp $(PKG_INTERNAL) ; then \
     	cat test.coverage.tmp | grep -v 'mocks' | grep -v 'proto' | grep -v 'easyjson' > test.coverage ; \
-    	go tool cover -func test.coverage | tail -n 1 && rm test.coverage.tmp && rm test.coverage ; \
+    	go tool cover -func test.coverage | tail -n 1 ; \
+    	go tool cover -func test.coverage | grep 'total:' | awk '{print $$3}' && rm test.coverage.tmp && rm test.coverage ; \
     	echo "\033[0;32mТесты прошли успешно\033[0m" ; \
     else \
     	echo "\033[0;31mТесты обнаружили проблемы\033[0m" ; \
