@@ -816,56 +816,40 @@ func (c *ContentDB) GetPersonRoles(personID int) ([]entity.PersonRole, error) {
 }
 
 func (c *ContentDB) GetSimilarContent(id int) ([]entity.Content, error) {
-	// Получаем жанры, режиссеров и актеров для данного контента
-	genres, err := c.getContentGenres(id)
-	if err != nil {
-		return nil, err
-	}
-	directors, err := c.getPersonsByRoleAndContentID(entity.RoleDirector, id)
-	if err != nil {
-		return nil, err
-	}
-	actors, err := c.getPersonsByRoleAndContentID(entity.RoleActor, id)
-	if err != nil {
-		return nil, err
-	}
+	// ну тут уж придётся обойтись без squirrel :)
+	query := `
+    WITH target_persons AS (
+        SELECT pr.person_id
+        FROM person_role pr
+        WHERE pr.content_id = $1
+    ),
+    target_genres AS (
+        SELECT gc.genre_id
+        FROM genre_content gc
+        WHERE gc.content_id = $1
+    ),
+    matched_contents AS (
+        SELECT pr.content_id, COUNT(*) AS person_match_count
+        FROM person_role pr
+        JOIN target_persons tp ON pr.person_id = tp.person_id
+        WHERE pr.content_id != $1
+        GROUP BY pr.content_id
+    ),
+    genre_matched_contents AS (
+        SELECT gc.content_id, COUNT(*) AS genre_match_count
+        FROM genre_content gc
+        JOIN target_genres tg ON gc.genre_id = tg.genre_id
+        WHERE gc.content_id != $1
+        GROUP BY gc.content_id
+    )
+    SELECT mc.content_id
+    FROM matched_contents mc
+    JOIN genre_matched_contents gmc ON mc.content_id = gmc.content_id
+    ORDER BY (mc.person_match_count + gmc.genre_match_count) DESC
+    LIMIT 10;
+    `
 
-	// Создаем списки ID жанров, режиссеров и актеров
-	genreIDs := make([]int, len(genres))
-	for i, genre := range genres {
-		genreIDs[i] = genre.ID
-	}
-	directorIDs := make([]int, len(directors))
-	for i, director := range directors {
-		directorIDs[i] = director.ID
-	}
-	actorIDs := make([]int, len(actors))
-	for i, actor := range actors {
-		actorIDs[i] = actor.ID
-	}
-
-	// Составляем запрос
-	query := sq.Select("c.id").
-		From("content AS c").
-		LeftJoin("genre_content AS gc ON c.id = gc.content_id").
-		LeftJoin("person_role AS pr ON c.id = pr.content_id").
-		Where(sq.Or{
-			sq.Eq{"gc.genre_id": genreIDs},
-			sq.Eq{"pr.person_id": append(directorIDs, actorIDs...)},
-		}).
-		Where(sq.NotEq{"c.id": id}).
-		GroupBy("c.id").
-		OrderBy("MAX(c.rating) DESC").
-		Limit(10).
-		PlaceholderFormat(sq.Dollar)
-
-	// Выполняем запрос
-	sql, args, err := query.ToSql()
-	if err != nil {
-		return nil, err
-	}
-
-	rows, err := c.DB.Query(sql, args...)
+	rows, err := c.DB.Query(query, id)
 	if err != nil {
 		return nil, err
 	}

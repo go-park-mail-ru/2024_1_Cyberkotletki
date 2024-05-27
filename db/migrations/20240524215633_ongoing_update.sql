@@ -3,17 +3,6 @@
 DROP TABLE IF EXISTS genre_ongoing_content;
 DROP TABLE IF EXISTS ongoing_content;
 
-
--- Новое ограничение для static
-WITH min_ids AS (
-    SELECT MIN(id) AS id
-    FROM static
-    GROUP BY path, name
-)
-DELETE FROM static
-WHERE id NOT IN (SELECT id FROM min_ids);
-ALTER TABLE static ADD CONSTRAINT static_path_name UNIQUE (path, name);
-
 -- Добавление нового поля в таблицу content
 ALTER TABLE content ADD COLUMN ongoing BOOLEAN DEFAULT false NOT NULL;
 ALTER TABLE content ADD COLUMN ongoing_date TIMESTAMPTZ DEFAULT NULL;
