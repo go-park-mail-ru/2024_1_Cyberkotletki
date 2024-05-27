@@ -131,8 +131,13 @@ func (h *OngoingContentEndpoints) IsReleased(ctx echo.Context) error {
 
 		for {
 			select {
-			case isReleased := <-releasedCh:
-				if err := websocket.Message.Send(ws, strconv.FormatBool(isReleased)); err != nil {
+			case <-releasedCh:
+				content, err := h.contentUC.GetPreviewContentByID(int(id))
+				if err != nil {
+					utils.WebsocketError(ctx, err)
+					return
+				}
+				if err := websocket.JSON.Send(ws, content); err != nil {
 					return
 				}
 				return
