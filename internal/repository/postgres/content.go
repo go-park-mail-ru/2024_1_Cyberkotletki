@@ -55,11 +55,11 @@ func NewContentRepository(database config.PostgresDatabase) (repository.Content,
 		return nil, err
 	}
 
-	// запросs занимают до 1 с, 1 соединение может обработать 1 req/sec или 60 req/min
-	// 100 соединений может обработать 100 req/sec или 6000 req/min
-	db.SetMaxOpenConns(100)
+	// запросы занимают до 1 с, 1 соединение может обработать 1 req/sec или 60 req/min
+	// оптимальным будет 25 соединений
+	db.SetMaxOpenConns(25)
 	db.SetMaxIdleConns(5)
-	db.SetConnMaxLifetime(time.Second * 10)
+	db.SetConnMaxLifetime(time.Minute)
 
 	return &ContentDB{
 		DB: db,

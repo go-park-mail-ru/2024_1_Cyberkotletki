@@ -46,9 +46,10 @@ func NewUserRepository(database config.PostgresDatabase) (repository.User, error
 	}
 
 	// почти при каждом запросе проверяется авторизация
-	db.SetMaxOpenConns(200)
-	db.SetMaxIdleConns(5)
-	db.SetConnMaxLifetime(time.Second * 5)
+	// оптимальным будет 25 соединений
+	db.SetMaxOpenConns(25)
+	db.SetMaxIdleConns(10)
+	db.SetConnMaxLifetime(time.Minute)
 
 	return &UsersDB{
 		DB: db,

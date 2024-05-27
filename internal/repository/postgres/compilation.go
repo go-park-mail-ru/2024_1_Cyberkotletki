@@ -22,11 +22,11 @@ func NewCompilationRepository(database config.PostgresDatabase) (repository.Comp
 		return nil, err
 	}
 	// запрос заднимает примерно 100 мс, 1 соединение может обработать 10 req/sec или 600 req/min
-	// 100 соединений может обработать 1000 req/sec или 60000 req/min
-	db.SetMaxOpenConns(100)
+	// оптимальным будет 25 соединений
+	db.SetMaxOpenConns(25)
 	db.SetMaxIdleConns(5)
 	// подборок мало
-	db.SetConnMaxLifetime(time.Second * 5)
+	db.SetConnMaxLifetime(time.Minute)
 	return &CompilationDB{
 		DB: db,
 	}, nil

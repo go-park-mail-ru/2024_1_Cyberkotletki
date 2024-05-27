@@ -25,12 +25,13 @@ func NewReviewRepository(database config.PostgresDatabase) (repository.Review, e
 		return nil, err
 	}
 
-	// запрос на изменение рецензии заннимает примерно 200 мс, 1 соединение может
+	// запрос на изменение рецензии занимает примерно 200 мс, 1 соединение может
 	// обработать 5 req/sec или 300 req/min
-	// запрос на вывод рецензий выполняется одноврменно с фильмом, занимает 40 мс.
-	db.SetMaxOpenConns(100)
+	// запрос на вывод рецензий выполняется одновременно с фильмом, занимает 40 мс,
+	// нужно установить такие же параметры
+	db.SetMaxOpenConns(25)
 	db.SetMaxIdleConns(5)
-	db.SetConnMaxLifetime(time.Second * 10)
+	db.SetConnMaxLifetime(time.Minute)
 
 	return &ReviewDB{
 		DB: db,

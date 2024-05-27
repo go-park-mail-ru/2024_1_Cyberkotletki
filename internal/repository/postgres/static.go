@@ -30,9 +30,10 @@ func NewStaticRepository(database config.PostgresDatabase, basicPath string, max
 		return nil, err
 	}
 	// аватарка всегда в углу и много кто ее ставит
-	db.SetMaxOpenConns(200)
-	db.SetMaxIdleConns(2)
-	db.SetConnMaxLifetime(time.Second * 10)
+	// оптимальным будет 25 соединений
+	db.SetMaxOpenConns(30)
+	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(time.Minute)
 
 	return &StaticDB{
 		DB:        db,
