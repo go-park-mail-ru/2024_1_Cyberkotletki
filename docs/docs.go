@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/auth/isAuth": {
+        "/api/auth/isAuth": {
             "get": {
                 "description": "Проверяет, авторизован ли пользователь",
                 "tags": [
@@ -50,7 +50,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/auth/logout": {
+        "/api/auth/logout": {
             "post": {
                 "security": [
                     {
@@ -78,7 +78,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/auth/logoutAll": {
+        "/api/auth/logoutAll": {
             "post": {
                 "security": [
                     {
@@ -112,7 +112,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/compilation/type/{compilationType}": {
+        "/api/compilation/type/{compilationType}": {
             "get": {
                 "description": "Получение списка подборок по id типа подборки",
                 "consumes": [
@@ -147,12 +147,6 @@ const docTemplate = `{
                             "$ref": "#/definitions/echo.HTTPError"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/echo.HTTPError"
-                        }
-                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -162,7 +156,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/compilation/types": {
+        "/api/compilation/types": {
             "get": {
                 "description": "Получение списка подборок по id",
                 "consumes": [
@@ -182,18 +176,6 @@ const docTemplate = `{
                             "$ref": "#/definitions/dto.CompilationTypeResponseList"
                         }
                     },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/echo.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/echo.HTTPError"
-                        }
-                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -203,7 +185,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/compilation/{id}/{page}": {
+        "/api/compilation/{id}/{page}": {
             "get": {
                 "description": "Получение карточек контента подборки по id",
                 "consumes": [
@@ -236,7 +218,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.CompilationContent"
+                            "$ref": "#/definitions/dto.Compilation"
                         }
                     },
                     "400": {
@@ -260,7 +242,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/content/person/{id}": {
+        "/api/content/person/{id}": {
             "get": {
                 "description": "Получение персоны по id",
                 "produces": [
@@ -307,7 +289,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/content/{id}": {
+        "/api/content/{id}": {
             "get": {
                 "description": "Получение контента по id",
                 "produces": [
@@ -354,7 +336,620 @@ const docTemplate = `{
                 }
             }
         },
-        "/playground/ping": {
+        "/api/favourite": {
+            "put": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
+                "description": "Добавление в избранное. Если уже в избранном, то ошибка не возвращается (идемпотентный метод).",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Favourite"
+                ],
+                "parameters": [
+                    {
+                        "description": "Данные для добавления в избранное",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateFavouriteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/favourite/my": {
+            "get": {
+                "description": "Получение избранного пользователя",
+                "tags": [
+                    "Favourite"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.FavouritesResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/favourite/status/{id}": {
+            "get": {
+                "description": "Получение статуса контента в избранном",
+                "tags": [
+                    "Favourite"
+                ],
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Идентификатор контента",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.FavouriteStatusResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/favourite/{id}": {
+            "get": {
+                "description": "Получение избранного пользователя",
+                "tags": [
+                    "Favourite"
+                ],
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Идентификатор пользователя",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.FavouritesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
+                "description": "Удаление из избранного.",
+                "tags": [
+                    "Favourite"
+                ],
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Идентификатор контента",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/ongoing/nearest": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ongoing_content"
+                ],
+                "summary": "Получить ближайшие релизы",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.PreviewContent"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/ongoing/subscriptions": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ongoing_content"
+                ],
+                "summary": "Получить ID контентов, на которые подписан пользователь",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SubscriptionsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/ongoing/years": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ongoing_content"
+                ],
+                "summary": "Получить все года релизов",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/ongoing/{id}/is_released": {
+            "get": {
+                "tags": [
+                    "ongoing_content"
+                ],
+                "summary": "Проверить, вышел ли контент. Использует WebSocket",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID контента",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "101": {
+                        "description": "WebSocket connection is established",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ongoing_content"
+                ],
+                "summary": "Установить состояние релиза",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID контента",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Секретный ключ",
+                        "name": "secret_key",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Вышел ли контент",
+                        "name": "is_released",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/ongoing/{id}/subscribe": {
+            "post": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ongoing_content"
+                ],
+                "summary": "Подписаться на выход контента",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID контента",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ongoing_content"
+                ],
+                "summary": "Отписаться от выхода контента",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID контента",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/ongoing/{year}/{month}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ongoing_content"
+                ],
+                "summary": "Получить релизы по месяцу и году",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Месяц",
+                        "name": "month",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Год",
+                        "name": "year",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.PreviewContent"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/playground/ping": {
             "get": {
                 "description": "Проверка соединения через классический ping pong",
                 "tags": [
@@ -370,7 +965,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/review": {
+        "/api/review": {
             "put": {
                 "security": [
                     {
@@ -485,6 +1080,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/echo.HTTPError"
                         }
                     },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
                     "409": {
                         "description": "Conflict",
                         "schema": {
@@ -500,7 +1101,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/review/content/{id}/{page}": {
+        "/api/review/content/{id}/{page}": {
             "get": {
                 "description": "Получить рецензии контента",
                 "produces": [
@@ -548,7 +1149,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/review/myReview": {
+        "/api/review/myReview": {
             "get": {
                 "description": "Получить рецензию пользователя к контенту",
                 "produces": [
@@ -580,6 +1181,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/echo.HTTPError"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -595,7 +1202,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/review/recent": {
+        "/api/review/recent": {
             "get": {
                 "description": "Получить последние рецензии",
                 "produces": [
@@ -621,7 +1228,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/review/user/{id}/recent": {
+        "/api/review/user/{id}/recent": {
             "get": {
                 "description": "Получить последние рецензии пользователя",
                 "produces": [
@@ -662,7 +1269,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/review/user/{id}/{page}": {
+        "/api/review/user/{id}/{page}": {
             "get": {
                 "description": "Получить рецензии пользователя",
                 "produces": [
@@ -710,7 +1317,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/review/{id}": {
+        "/api/review/{id}": {
             "get": {
                 "description": "Получить рецензию по id",
                 "consumes": [
@@ -819,21 +1426,18 @@ const docTemplate = `{
                 }
             }
         },
-        "/review/{id}/dislike": {
+        "/api/review/{id}/vote": {
             "put": {
                 "security": [
                     {
                         "_csrf": []
                     }
                 ],
-                "description": "Поставить дизлайк рецензии",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Поставить оценку на рецензию",
                 "tags": [
                     "review"
                 ],
-                "summary": "Поставить дизлайк рецензии",
+                "summary": "Поставить оценку на рецензию",
                 "parameters": [
                     {
                         "type": "integer",
@@ -841,60 +1445,12 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
                     },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/echo.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/echo.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/echo.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/echo.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/review/{id}/like": {
-            "put": {
-                "security": [
                     {
-                        "_csrf": []
-                    }
-                ],
-                "description": "Поставить лайк рецензии",
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "review"
-                ],
-                "summary": "Поставить лайк рецензии",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID рецензии",
-                        "name": "id",
-                        "in": "path",
+                        "type": "boolean",
+                        "description": "Лайк или дизлайк",
+                        "name": "vote",
+                        "in": "query",
                         "required": true
                     }
                 ],
@@ -982,7 +1538,47 @@ const docTemplate = `{
                 }
             }
         },
-        "/static/{id}": {
+        "/api/search": {
+            "get": {
+                "description": "Поиск фильмов, сериалов и персон",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Search"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Поисковый запрос",
+                        "name": "query",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SearchResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/static/{id}": {
             "get": {
                 "description": "Получение ссылки на статический файл по id. Возвращает ссылку подобного вида:",
                 "consumes": [
@@ -1025,7 +1621,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/avatar": {
+        "/api/user/avatar": {
             "put": {
                 "security": [
                     {
@@ -1033,9 +1629,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Позволяет загрузить аватарку пользователя. Необходимо быть авторизованным",
-                "consumes": [
-                    "application/json"
-                ],
                 "tags": [
                     "User"
                 ],
@@ -1081,7 +1674,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/login": {
+        "/api/user/login": {
             "post": {
                 "security": [
                     {
@@ -1137,7 +1730,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/me": {
+        "/api/user/me": {
             "get": {
                 "description": "Возвращает id авторизованного пользователя",
                 "consumes": [
@@ -1175,7 +1768,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/password": {
+        "/api/user/password": {
             "put": {
                 "security": [
                     {
@@ -1233,7 +1826,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/profile": {
+        "/api/user/profile": {
             "get": {
                 "description": "Возвращает профиль пользователя по id",
                 "consumes": [
@@ -1338,7 +1931,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/register": {
+        "/api/user/register": {
             "post": {
                 "security": [
                     {
@@ -1387,33 +1980,56 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/static/{path}": {
+            "get": {
+                "description": "Получение статического файла по относительному пути. Возвращает файл в виде байтов.",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Static"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Путь до статики",
+                        "name": "path",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "невалидный путь до статики",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "файл не найден",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
-        "dto.CompilationContent": {
-            "type": "object",
-            "properties": {
-                "compilation_id": {
-                    "type": "integer",
-                    "format": "int",
-                    "example": 1
-                },
-                "content_id": {
-                    "type": "integer",
-                    "format": "int",
-                    "example": 1
-                }
-            }
-        },
-        "dto.CompilationResponse": {
+        "dto.Compilation": {
             "type": "object",
             "properties": {
                 "compilation_type_id": {
-                    "type": "integer",
-                    "format": "int",
-                    "example": 1
-                },
-                "content_length": {
                     "type": "integer",
                     "format": "int",
                     "example": 1
@@ -1423,10 +2039,10 @@ const docTemplate = `{
                     "format": "int",
                     "example": 1
                 },
-                "poster_upload_id": {
-                    "type": "integer",
-                    "format": "int",
-                    "example": 1
+                "poster": {
+                    "type": "string",
+                    "format": "string",
+                    "example": "static/poster.jpg"
                 },
                 "title": {
                     "type": "string",
@@ -1441,12 +2057,12 @@ const docTemplate = `{
                 "compilations": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/dto.CompilationResponse"
+                        "$ref": "#/definitions/dto.Compilation"
                     }
                 }
             }
         },
-        "dto.CompilationTypeResponse": {
+        "dto.CompilationType": {
             "type": "object",
             "properties": {
                 "id": {
@@ -1467,7 +2083,7 @@ const docTemplate = `{
                 "compilation_types": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/dto.CompilationTypeResponse"
+                        "$ref": "#/definitions/dto.CompilationType"
                     }
                 }
             }
@@ -1485,17 +2101,13 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 18
                 },
-                "audience": {
-                    "type": "integer",
-                    "example": 1000000
-                },
-                "boxOffice": {
-                    "type": "integer",
-                    "example": 1000000
+                "backdropURL": {
+                    "type": "string",
+                    "example": "/static/backdrop.jpg"
                 },
                 "budget": {
-                    "type": "integer",
-                    "example": 1000000
+                    "type": "string",
+                    "example": "1000000"
                 },
                 "composers": {
                     "type": "array",
@@ -1529,6 +2141,15 @@ const docTemplate = `{
                         "$ref": "#/definitions/dto.PersonPreview"
                     }
                 },
+                "facts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "Факты о фильме или сериале"
+                    ]
+                },
                 "genres": {
                     "type": "array",
                     "items": {
@@ -1547,12 +2168,16 @@ const docTemplate = `{
                     "type": "number",
                     "example": 9.1
                 },
-                "marketing": {
-                    "type": "integer",
-                    "example": 1000000
-                },
                 "movie": {
                     "$ref": "#/definitions/dto.MovieContent"
+                },
+                "ongoing": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "ongoingDate": {
+                    "type": "string",
+                    "example": "2022-01-02T15:04:05Z"
                 },
                 "operators": {
                     "type": "array",
@@ -1563,6 +2188,16 @@ const docTemplate = `{
                 "originalTitle": {
                     "type": "string",
                     "example": "Batman"
+                },
+                "picturesURL": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "/static/picture1.jpg",
+                        "/static/picture2.jpg"
+                    ]
                 },
                 "posterURL": {
                     "type": "string",
@@ -1581,6 +2216,12 @@ const docTemplate = `{
                 "series": {
                     "$ref": "#/definitions/dto.SeriesContent"
                 },
+                "similarContent": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PreviewContentCardVertical"
+                    }
+                },
                 "slogan": {
                     "type": "string",
                     "example": "I'm Batman"
@@ -1588,6 +2229,10 @@ const docTemplate = `{
                 "title": {
                     "type": "string",
                     "example": "Бэтмен"
+                },
+                "trailerLink": {
+                    "type": "string",
+                    "example": "https://www.youtube.com/watch?v=123456"
                 },
                 "type": {
                     "type": "string",
@@ -1601,9 +2246,29 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CreateFavouriteRequest": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "description": "nolint:lll",
+                    "type": "string",
+                    "format": "string",
+                    "example": "favourite"
+                },
+                "contentID": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
+                }
+            }
+        },
         "dto.Episode": {
             "type": "object",
             "properties": {
+                "duration": {
+                    "type": "integer",
+                    "example": 45
+                },
                 "episodeNumber": {
                     "type": "integer",
                     "example": 1
@@ -1615,6 +2280,42 @@ const docTemplate = `{
                 "title": {
                     "type": "string",
                     "example": "Название серии"
+                }
+            }
+        },
+        "dto.Favourite": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "description": "nolint:lll",
+                    "type": "string",
+                    "format": "string",
+                    "example": "favourite"
+                },
+                "content": {
+                    "$ref": "#/definitions/dto.PreviewContent"
+                }
+            }
+        },
+        "dto.FavouriteStatusResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "description": "nolint:lll",
+                    "type": "string",
+                    "format": "string",
+                    "example": "favourite"
+                }
+            }
+        },
+        "dto.FavouritesResponse": {
+            "type": "object",
+            "properties": {
+                "favourites": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.Favourite"
+                    }
                 }
             }
         },
@@ -1643,10 +2344,6 @@ const docTemplate = `{
                 "premiere": {
                     "type": "string",
                     "example": "2020-01-01"
-                },
-                "release": {
-                    "type": "string",
-                    "example": "2020-01-01"
                 }
             }
         },
@@ -1657,25 +2354,13 @@ const docTemplate = `{
                     "type": "string",
                     "example": "1964-09-02"
                 },
-                "birthPlace": {
-                    "type": "string",
-                    "example": "Бейрут"
-                },
-                "children": {
-                    "type": "string",
-                    "example": "Homer, Bart, Lisa, Maggie"
-                },
                 "deathDate": {
                     "type": "string",
                     "example": "2021-09-02"
                 },
-                "endCareer": {
+                "enName": {
                     "type": "string",
-                    "example": "2021-09-02"
-                },
-                "firstName": {
-                    "type": "string",
-                    "example": "Киану"
+                    "example": "Keanu Reeves"
                 },
                 "height": {
                     "type": "integer",
@@ -1685,52 +2370,68 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 1
                 },
-                "lastName": {
+                "name": {
                     "type": "string",
-                    "example": "Ривз"
+                    "example": "Киану Ривз"
                 },
                 "photoURL": {
                     "type": "string",
                     "example": "/static/photo.jpg"
                 },
                 "roles": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.PreviewContentCard"
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/dto.PreviewContentCardVertical"
+                        }
                     }
                 },
                 "sex": {
                     "type": "string",
                     "example": "M"
-                },
-                "spouse": {
-                    "type": "string",
-                    "example": "Алисия Викандер"
-                },
-                "startCareer": {
-                    "type": "string",
-                    "example": "1984-09-02"
                 }
             }
         },
         "dto.PersonPreview": {
             "type": "object",
             "properties": {
-                "firstName": {
+                "enName": {
                     "type": "string",
-                    "example": "Киану"
+                    "example": "Keanu Reeves"
                 },
                 "id": {
                     "type": "integer",
                     "example": 1
                 },
-                "lastName": {
+                "name": {
                     "type": "string",
-                    "example": "Ривз"
+                    "example": "Киану Ривз"
                 }
             }
         },
-        "dto.PreviewContentCard": {
+        "dto.PersonPreviewWithPhoto": {
+            "type": "object",
+            "properties": {
+                "enName": {
+                    "type": "string",
+                    "example": "Keanu Reeves"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Киану Ривз"
+                },
+                "photoURL": {
+                    "type": "string",
+                    "example": "/static/photo.jpg"
+                }
+            }
+        },
+        "dto.PreviewContent": {
             "type": "object",
             "properties": {
                 "actors": {
@@ -1764,6 +2465,15 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 1
                 },
+                "ongoing": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "ongoingDate": {
+                    "description": "Поля, которые есть только у онгоингов",
+                    "type": "string",
+                    "example": "2022-01-02T15:04:05Z"
+                },
                 "originalTitle": {
                     "type": "string",
                     "example": "Batman"
@@ -1776,7 +2486,7 @@ const docTemplate = `{
                     "type": "number",
                     "example": 9.1
                 },
-                "releaseYear": {
+                "release": {
                     "type": "integer",
                     "example": 2020
                 },
@@ -1798,6 +2508,54 @@ const docTemplate = `{
                     "example": 2021
                 },
                 "yearStart": {
+                    "type": "integer",
+                    "example": 2020
+                }
+            }
+        },
+        "dto.PreviewContentCardVertical": {
+            "type": "object",
+            "properties": {
+                "genre": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "Боевик"
+                    ]
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "poster": {
+                    "type": "string",
+                    "example": "/static/poster.jpg"
+                },
+                "rating": {
+                    "type": "number",
+                    "example": 9.1
+                },
+                "releaseYear": {
+                    "description": "Поля, которые есть только у фильмов",
+                    "type": "integer",
+                    "example": 2020
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Бэтмен"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "movie"
+                },
+                "yearEnd": {
+                    "type": "integer",
+                    "example": 2021
+                },
+                "yearStart": {
+                    "description": "Поля, которые есть только у сериалов",
                     "type": "integer",
                     "example": 2020
                 }
@@ -1911,11 +2669,31 @@ const docTemplate = `{
         "dto.ReviewResponseList": {
             "type": "object",
             "properties": {
+                "count": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 10
+                },
+                "page": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
+                },
+                "pages": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
+                },
                 "reviews": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.ReviewResponse"
                     }
+                },
+                "total": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
                 }
             }
         },
@@ -1944,6 +2722,23 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.SearchResult": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PreviewContent"
+                    }
+                },
+                "persons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PersonPreviewWithPhoto"
+                    }
+                }
+            }
+        },
         "dto.Season": {
             "type": "object",
             "properties": {
@@ -1956,14 +2751,6 @@ const docTemplate = `{
                 "id": {
                     "type": "integer",
                     "example": 1
-                },
-                "yearEnd": {
-                    "type": "integer",
-                    "example": 2020
-                },
-                "yearStart": {
-                    "type": "integer",
-                    "example": 2020
                 }
             }
         },
@@ -1983,6 +2770,17 @@ const docTemplate = `{
                 "yearStart": {
                     "type": "integer",
                     "example": 2020
+                }
+            }
+        },
+        "dto.SubscriptionsResponse": {
+            "type": "object",
+            "properties": {
+                "subscriptions": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },
@@ -2024,16 +2822,36 @@ const docTemplate = `{
         "dto.UserReviewResponseList": {
             "type": "object",
             "properties": {
+                "count": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 10
+                },
                 "me": {
                     "type": "boolean",
                     "format": "bool",
                     "example": true
+                },
+                "page": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
+                },
+                "pages": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
                 },
                 "reviews": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.ReviewResponse"
                     }
+                },
+                "total": {
+                    "type": "integer",
+                    "format": "int",
+                    "example": 1
                 }
             }
         },
@@ -2068,7 +2886,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "",
-	BasePath:         "/api",
+	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "API Киноскопа",
 	Description:      "сервис Киноскоп (аналог кинопоиска)",

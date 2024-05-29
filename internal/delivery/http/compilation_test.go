@@ -1,7 +1,8 @@
 package http
 
 import (
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
+	"errors"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
 	mockusecase "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/mocks"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"
@@ -27,19 +28,10 @@ func TestCompilationEndpoints_GetCompilationTypes(t *testing.T) {
 			},
 		},
 		{
-			Name:        "Не найдено",
-			ExpectedErr: &echo.HTTPError{Code: 404, Message: "категория не найдена"},
-			SetupCompilationUsecaseMock: func(usecase *mockusecase.MockCompilation) {
-				usecase.EXPECT().GetCompilationTypes().Return(nil,
-					entity.NewClientError("категория не найдена", entity.ErrNotFound))
-			},
-		},
-		{
 			Name:        "Неизвестная ошибка",
-			ExpectedErr: &echo.HTTPError{Code: 500, Message: "Неизвестно"},
+			ExpectedErr: &echo.HTTPError{Code: 500, Message: "Внутренняя ошибка сервера", Internal: errors.New("123")},
 			SetupCompilationUsecaseMock: func(usecase *mockusecase.MockCompilation) {
-				usecase.EXPECT().GetCompilationTypes().Return(nil,
-					entity.NewClientError("Неизвестно", entity.ErrInternal))
+				usecase.EXPECT().GetCompilationTypes().Return(nil, errors.New("123"))
 			},
 		},
 	}
@@ -81,21 +73,17 @@ func TestCompilationEndpoints_GetCompilationsByCompilationType(t *testing.T) {
 			},
 		},
 		{
-			Name:              "Не найдено",
-			CompilationTypeID: "2",
-			ExpectedErr:       &echo.HTTPError{Code: 404, Message: "Подборки не найдены"},
-			SetupCompilationUsecaseMock: func(usecase *mockusecase.MockCompilation) {
-				usecase.EXPECT().GetCompilationsByCompilationType(2).Return(nil,
-					entity.NewClientError("Подборки не найдены", entity.ErrNotFound))
-			},
+			Name:                        "Невалидный айди",
+			CompilationTypeID:           "два",
+			ExpectedErr:                 &echo.HTTPError{Code: 400, Message: "Невалидный id типа подборки"},
+			SetupCompilationUsecaseMock: func(usecase *mockusecase.MockCompilation) {},
 		},
 		{
-			Name:              "Неизвестная ошибка",
+			Name:              "Внутренняя ошибка сервера",
 			CompilationTypeID: "3",
-			ExpectedErr:       &echo.HTTPError{Code: 500, Message: "Неизвестная ошибка"},
+			ExpectedErr:       &echo.HTTPError{Code: 500, Message: "Внутренняя ошибка сервера", Internal: errors.New("123")},
 			SetupCompilationUsecaseMock: func(usecase *mockusecase.MockCompilation) {
-				usecase.EXPECT().GetCompilationsByCompilationType(3).Return(nil,
-					entity.NewClientError("Неизвестная ошибка", entity.ErrInternal))
+				usecase.EXPECT().GetCompilationsByCompilationType(3).Return(nil, errors.New("123"))
 			},
 		},
 	}
@@ -138,27 +126,41 @@ func TestCompilationEndpoints_GetCompilationContent(t *testing.T) {
 			Page:          "1",
 			ExpectedErr:   nil,
 			SetupCompilationUsecaseMock: func(usecase *mockusecase.MockCompilation) {
-				usecase.EXPECT().GetCompilationContent(1, 1, 10).Return(nil, nil)
+				usecase.EXPECT().GetCompilationContent(1, 1).Return(nil, nil)
 			},
 		},
 		{
 			Name:          "Не найдено",
 			CompilationID: "2",
 			Page:          "1",
-			ExpectedErr:   &echo.HTTPError{Code: 404, Message: "Контент не найден"},
-			SetupCompilationUsecaseMock: func(usecase *mockusecase.MockCompilation) {
-				usecase.EXPECT().GetCompilationContent(2, 1, 10).Return(nil,
-					entity.NewClientError("Контент не найден", entity.ErrNotFound))
+			ExpectedErr:   &echo.HTTPError{Code: 404, Message: "Подборка не найдена"},
+			SetupCompilationUsecaseMock: func(uc *mockusecase.MockCompilation) {
+				uc.EXPECT().GetCompilationContent(2, 1).Return(nil, usecase.ErrCompilationNotFound)
 			},
 		},
 		{
-			Name:          "Неизвестная ошибка",
+			Name:          "Внутренняя ошибка сервера",
 			CompilationID: "3",
 			Page:          "1",
-			ExpectedErr:   &echo.HTTPError{Code: 500, Message: "Неизвестная ошибка"},
+			ExpectedErr:   &echo.HTTPError{Code: 500, Message: "Внутренняя ошибка сервера", Internal: errors.New("123")},
 			SetupCompilationUsecaseMock: func(usecase *mockusecase.MockCompilation) {
-				usecase.EXPECT().GetCompilationContent(3, 1, 10).Return(nil,
-					entity.NewClientError("Неизвестная ошибка", entity.ErrInternal))
+				usecase.EXPECT().GetCompilationContent(3, 1).Return(nil, errors.New("123"))
+			},
+		},
+		{
+			Name:                        "Невалидный айди",
+			CompilationID:               "два",
+			Page:                        "1",
+			ExpectedErr:                 &echo.HTTPError{Code: 400, Message: "Невалидный id подборки", Internal: nil},
+			SetupCompilationUsecaseMock: func(usecase *mockusecase.MockCompilation) {},
+		},
+		{
+			Name:          "Невалидная страница",
+			CompilationID: "1",
+			Page:          "два",
+			ExpectedErr:   nil,
+			SetupCompilationUsecaseMock: func(usecase *mockusecase.MockCompilation) {
+				usecase.EXPECT().GetCompilationContent(1, 1).Return(nil, nil)
 			},
 		},
 	}

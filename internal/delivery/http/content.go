@@ -1,8 +1,8 @@
 package http
 
 import (
+	"errors"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http/utils"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -32,22 +32,21 @@ func (h *ContentEndpoints) Configure(server *echo.Group) {
 // @Failure 400 {object} echo.HTTPError
 // @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
-// @Router /content/{id} [get]
+// @Router /api/content/{id} [get]
 func (h *ContentEndpoints) GetContent(ctx echo.Context) error {
 	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
-		return utils.NewError(ctx, http.StatusBadRequest, entity.NewClientError("невалидный id контента"))
+		return utils.NewError(ctx, http.StatusBadRequest, "Невалидный id контента", nil)
 	}
 	content, err := h.useCase.GetContentByID(int(id))
-	if err != nil {
-		switch {
-		case entity.Contains(err, entity.ErrNotFound):
-			return utils.NewError(ctx, http.StatusNotFound, err)
-		default:
-			return utils.NewError(ctx, http.StatusInternalServerError, err)
-		}
+	switch {
+	case errors.Is(err, usecase.ErrContentNotFound):
+		return utils.NewError(ctx, http.StatusNotFound, "Контент с таким id не найден", err)
+	case err != nil:
+		return utils.NewError(ctx, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
+	default:
+		return utils.WriteJSON(ctx, content)
 	}
-	return utils.WriteJSON(ctx, content)
 }
 
 // GetPerson
@@ -60,20 +59,19 @@ func (h *ContentEndpoints) GetContent(ctx echo.Context) error {
 // @Failure 400 {object} echo.HTTPError
 // @Failure 404 {object} echo.HTTPError
 // @Failure 500 {object} echo.HTTPError
-// @Router /content/person/{id} [get]
+// @Router /api/content/person/{id} [get]
 func (h *ContentEndpoints) GetPerson(ctx echo.Context) error {
 	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
-		return utils.NewError(ctx, http.StatusBadRequest, entity.NewClientError("невалидный id персоны"))
+		return utils.NewError(ctx, http.StatusBadRequest, "Невалидный id персоны", nil)
 	}
 	person, err := h.useCase.GetPersonByID(int(id))
-	if err != nil {
-		switch {
-		case entity.Contains(err, entity.ErrNotFound):
-			return utils.NewError(ctx, http.StatusNotFound, err)
-		default:
-			return utils.NewError(ctx, http.StatusInternalServerError, err)
-		}
+	switch {
+	case errors.Is(err, usecase.ErrPersonNotFound):
+		return utils.NewError(ctx, http.StatusNotFound, "Персона с таким id не найдена", err)
+	case err != nil:
+		return utils.NewError(ctx, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
+	default:
+		return utils.WriteJSON(ctx, person)
 	}
-	return utils.WriteJSON(ctx, person)
 }

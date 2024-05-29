@@ -12,3 +12,7 @@ type UserProfile struct {
 	Rating int    `json:"rating"`
 	Avatar string `json:"avatar"`
 }
+
+type MyID struct {
+	ID int `json:"id"`
+}

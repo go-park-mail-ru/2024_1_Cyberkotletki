@@ -1,40 +1,55 @@
 package http
 
 import (
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
+	"bytes"
+	"errors"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
 	mockusecase "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/mocks"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"testing"
 )
 
-func TestStaticEndpoints_GetStaticUrl(t *testing.T) {
+func TestStaticEndpoints_GetStatic(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
 		Name                   string
-		StaticId               int
+		StaticId               string
 		ExpectedErr            error
 		SetupStaticUsecaseMock func(usecase *mockusecase.MockStatic)
 	}{
 		{
 			Name:        "Получение URL",
-			StaticId:    1,
+			StaticId:    "1",
 			ExpectedErr: nil,
 			SetupStaticUsecaseMock: func(usecase *mockusecase.MockStatic) {
-				usecase.EXPECT().GetStaticURL(1).Return("static_url", nil)
+				usecase.EXPECT().GetStatic(1).Return("static_url", nil)
 			},
 		},
 		{
+			Name:                   "Невалидный id",
+			StaticId:               "invalid_id",
+			ExpectedErr:            &echo.HTTPError{Code: 400, Message: "Невалидный id статики"},
+			SetupStaticUsecaseMock: func(uc *mockusecase.MockStatic) {},
+		},
+		{
 			Name:        "Статики с таким id нет",
-			StaticId:    2,
-			ExpectedErr: &echo.HTTPError{Code: 404, Message: "файл не найден"},
-			SetupStaticUsecaseMock: func(usecase *mockusecase.MockStatic) {
-				usecase.EXPECT().GetStaticURL(2).Return("", entity.NewClientError("файл не найден", entity.ErrNotFound))
+			StaticId:    "2",
+			ExpectedErr: &echo.HTTPError{Code: 404, Message: "Статика не найдена"},
+			SetupStaticUsecaseMock: func(uc *mockusecase.MockStatic) {
+				uc.EXPECT().GetStatic(2).Return("", usecase.ErrStaticNotFound)
+			},
+		},
+		{
+			Name:        "Внутренняя ошибка сервера",
+			StaticId:    "3",
+			ExpectedErr: &echo.HTTPError{Code: 500, Message: "Внутренняя ошибка сервера", Internal: errors.New("123")},
+			SetupStaticUsecaseMock: func(uc *mockusecase.MockStatic) {
+				uc.EXPECT().GetStatic(3).Return("", errors.New("123"))
 			},
 		},
 	}
@@ -49,13 +64,70 @@ func TestStaticEndpoints_GetStaticUrl(t *testing.T) {
 			mockStaticUsecase := mockusecase.NewMockStatic(ctrl)
 			staticEndpoints := NewStaticEndpoints(mockStaticUsecase)
 			tc.SetupStaticUsecaseMock(mockStaticUsecase)
-			req := httptest.NewRequest(http.MethodGet, "/static/1", nil)
+			req := httptest.NewRequest(http.MethodGet, "/static/", nil)
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
 			c.SetPath("/static/:id")
 			c.SetParamNames("id")
-			c.SetParamValues(strconv.Itoa(tc.StaticId))
+			c.SetParamValues(tc.StaticId)
 			err := staticEndpoints.GetStaticURL(c)
+			require.Equal(t, tc.ExpectedErr, err)
+		})
+	}
+}
+
+func TestStaticEndpoints_GetStaticFile(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		Name                   string
+		StaticPath             string
+		ExpectedErr            error
+		SetupStaticUsecaseMock func(usecase *mockusecase.MockStatic)
+	}{
+		{
+			Name:        "Получение файла",
+			StaticPath:  "path",
+			ExpectedErr: nil,
+			SetupStaticUsecaseMock: func(usecase *mockusecase.MockStatic) {
+				usecase.EXPECT().GetStaticFile("path").Return(bytes.NewReader([]byte{1}), nil)
+			},
+		},
+		{
+			Name:        "Статики с таким путем нет",
+			StaticPath:  "path",
+			ExpectedErr: &echo.HTTPError{Code: 404, Message: "Статика не найдена"},
+			SetupStaticUsecaseMock: func(uc *mockusecase.MockStatic) {
+				uc.EXPECT().GetStaticFile("path").Return(nil, usecase.ErrStaticNotFound)
+			},
+		},
+		{
+			Name:        "Внутренняя ошибка сервера",
+			StaticPath:  "path",
+			ExpectedErr: &echo.HTTPError{Code: 500, Message: "Внутренняя ошибка сервера", Internal: errors.New("123")},
+			SetupStaticUsecaseMock: func(uc *mockusecase.MockStatic) {
+				uc.EXPECT().GetStaticFile("path").Return(nil, errors.New("123"))
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+			e := echo.New()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			mockStaticUsecase := mockusecase.NewMockStatic(ctrl)
+			staticEndpoints := NewStaticEndpoints(mockStaticUsecase)
+			tc.SetupStaticUsecaseMock(mockStaticUsecase)
+			req := httptest.NewRequest(http.MethodGet, "/static/", nil)
+			rec := httptest.NewRecorder()
+			c := e.NewContext(req, rec)
+			c.SetPath("/static/:path")
+			c.SetParamNames("path")
+			c.SetParamValues(tc.StaticPath)
+			err := staticEndpoints.GetStaticFile(c)
 			require.Equal(t, tc.ExpectedErr, err)
 		})
 	}

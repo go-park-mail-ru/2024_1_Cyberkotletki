@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+option go_package = "./;static";
+
+package static;
+// protoc --go_out=. *.proto --go-grpc_out=.
+
+message Static{
+  uint64 id = 1;
+  string uri = 2;
+}
+
+message StaticUpload {
+  bytes chunk = 1;
+}
+
+message Nothing {
+  bool dummy = 1;
+}
+
+service StaticService {
+  rpc GetStatic(Static) returns (Static) {}
+  rpc UploadAvatar(stream StaticUpload) returns (Static) {}
+  rpc GetStaticFile(Static) returns (stream StaticUpload) {}
+  rpc Ping(Nothing) returns (Nothing) {}
+}

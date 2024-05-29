@@ -40,45 +40,60 @@ func (m *MockUser) EXPECT() *MockUserMockRecorder {
 }
 
 // AddUser mocks base method.
-func (m *MockUser) AddUser(arg0 *entity.User) (*entity.User, error) {
+func (m *MockUser) AddUser(email string, passwordHash, passwordSalt []byte) (*entity.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddUser", arg0)
+	ret := m.ctrl.Call(m, "AddUser", email, passwordHash, passwordSalt)
 	ret0, _ := ret[0].(*entity.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // AddUser indicates an expected call of AddUser.
-func (mr *MockUserMockRecorder) AddUser(arg0 any) *gomock.Call {
+func (mr *MockUserMockRecorder) AddUser(email, passwordHash, passwordSalt any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddUser", reflect.TypeOf((*MockUser)(nil).AddUser), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddUser", reflect.TypeOf((*MockUser)(nil).AddUser), email, passwordHash, passwordSalt)
 }
 
-// GetUser mocks base method.
-func (m *MockUser) GetUser(arg0 map[string]any) (*entity.User, error) {
+// GetUserByEmail mocks base method.
+func (m *MockUser) GetUserByEmail(userEmail string) (*entity.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUser", arg0)
+	ret := m.ctrl.Call(m, "GetUserByEmail", userEmail)
 	ret0, _ := ret[0].(*entity.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetUser indicates an expected call of GetUser.
-func (mr *MockUserMockRecorder) GetUser(arg0 any) *gomock.Call {
+// GetUserByEmail indicates an expected call of GetUserByEmail.
+func (mr *MockUserMockRecorder) GetUserByEmail(userEmail any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockUser)(nil).GetUser), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByEmail", reflect.TypeOf((*MockUser)(nil).GetUserByEmail), userEmail)
+}
+
+// GetUserByID mocks base method.
+func (m *MockUser) GetUserByID(userID int) (*entity.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserByID", userID)
+	ret0, _ := ret[0].(*entity.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserByID indicates an expected call of GetUserByID.
+func (mr *MockUserMockRecorder) GetUserByID(userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByID", reflect.TypeOf((*MockUser)(nil).GetUserByID), userID)
 }
 
 // UpdateUser mocks base method.
-func (m *MockUser) UpdateUser(params, values map[string]any) error {
+func (m *MockUser) UpdateUser(user *entity.User) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUser", params, values)
+	ret := m.ctrl.Call(m, "UpdateUser", user)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateUser indicates an expected call of UpdateUser.
-func (mr *MockUserMockRecorder) UpdateUser(params, values any) *gomock.Call {
+func (mr *MockUserMockRecorder) UpdateUser(user any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockUser)(nil).UpdateUser), params, values)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockUser)(nil).UpdateUser), user)
 }

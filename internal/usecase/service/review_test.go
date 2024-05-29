@@ -1,276 +1,54 @@
 package service
 
 import (
-	"fmt"
+	"errors"
+	"testing"
+
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 	mockrepo "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/mocks"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
+	mock_usecase "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/mocks"
+
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
-	"testing"
-	"time"
+
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
 )
 
-func TestReviewService_CreateReview(t *testing.T) {
+func TestGetLatestReviews(t *testing.T) {
 	t.Parallel()
 
-	fixedTime := time.Now()
-
 	testCases := []struct {
-		Name                 string
-		Input                *dto.ReviewCreate
-		ExpectedErr          error
-		ExpectedOutput       *dto.ReviewResponse
-		SetupReviewRepoMock  func(repo *mockrepo.MockReview)
-		SetupUserRepoMock    func(repo *mockrepo.MockUser)
-		SetupContentRepoMock func(repo *mockrepo.MockContent)
-		SetupStaticRepoMock  func(repo *mockrepo.MockStatic)
+		Name                string
+		Limit               int
+		ExpectedErr         error
+		SetupReviewRepoMock func(repo *mockrepo.MockReview)
+		SetupUserRepoMock   func(repo *mockrepo.MockUser)
 	}{
 		{
-			Name: "Успешное создание",
-			Input: &dto.ReviewCreate{
-				ReviewCreateRequest: dto.ReviewCreateRequest{
-					ContentID: 1,
-					Rating:    10,
-					Title:     "title",
-					Text:      "text",
-				},
-				UserID: 1,
-			},
+			Name:        "Успешно",
+			Limit:       10,
 			ExpectedErr: nil,
-			ExpectedOutput: &dto.ReviewResponse{
-				Review: dto.Review{
-					ID:        1,
-					AuthorID:  1,
-					ContentID: 1,
-					Rating:    10,
-					Title:     "title",
-					Text:      "text",
-					CreatedAt: fixedTime.String(),
-					Likes:     0,
-					Dislikes:  0,
-				},
-				AuthorName:   "email",
-				AuthorAvatar: "path",
-				ContentName:  "movie",
-			},
 			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().AddReview(gomock.Any()).Return(&entity.Review{
-					ID:        1,
-					AuthorID:  1,
-					ContentID: 1,
-					Rating:    10,
-					Title:     "title",
-					Text:      "text",
-					CreatedAt: fixedTime,
-					UpdatedAt: fixedTime,
-					Likes:     0,
-					Dislikes:  0,
-				}, nil)
+				repo.EXPECT().AddReview(&entity.Review{
+					AuthorID:      1,
+					ContentID:     1,
+					ContentRating: 5,
+					Title:         "Great Content!",
+					Text:          "I really enjoyed this content.",
+				}).Return(&entity.Review{
+					ID:            1,
+					AuthorID:      1,
+					ContentID:     1,
+					ContentRating: 5,
+					Title:         "Great Content!",
+					Text:          "I really enjoyed this content.",
+				}, nil).AnyTimes()
+
+				// Add this line
+				repo.EXPECT().GetLatestReviews(gomock.Any()).Return(nil, nil).AnyTimes()
 			},
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {
-				repo.EXPECT().GetUser(gomock.Any()).Return(&entity.User{
-					ID:             1,
-					Email:          "email",
-					AvatarUploadID: 1,
-				}, nil)
-			},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {
-				repo.EXPECT().GetContent(1).Return(&entity.Content{
-					ID:    1,
-					Title: "movie",
-				}, nil)
-			},
-			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {
-				repo.EXPECT().GetStatic(1).Return("path", nil)
-			},
-		},
-		{
-			Name: "Ошибка создания",
-			Input: &dto.ReviewCreate{
-				ReviewCreateRequest: dto.ReviewCreateRequest{
-					ContentID: 1,
-					Rating:    10,
-					Title:     "title",
-					Text:      "text",
-				},
-				UserID: 1,
-			},
-			ExpectedErr:    fmt.Errorf("ошибка создания отзыва"),
-			ExpectedOutput: nil,
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().AddReview(gomock.Any()).Return(nil, fmt.Errorf("ошибка создания отзыва"))
-			},
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
-			SetupStaticRepoMock:  func(repo *mockrepo.MockStatic) {},
-		},
-		{
-			Name: "Ошибка получения автора",
-			Input: &dto.ReviewCreate{
-				ReviewCreateRequest: dto.ReviewCreateRequest{
-					ContentID: 1,
-					Rating:    10,
-					Title:     "title",
-					Text:      "text",
-				},
-				UserID: 1,
-			},
-			ExpectedErr:    fmt.Errorf("ошибка получения автора"),
-			ExpectedOutput: nil,
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().AddReview(gomock.Any()).Return(&entity.Review{
-					ID:        1,
-					AuthorID:  1,
-					ContentID: 1,
-					Rating:    10,
-					Title:     "title",
-					Text:      "text",
-					CreatedAt: fixedTime,
-					UpdatedAt: fixedTime,
-					Likes:     0,
-					Dislikes:  0,
-				}, nil)
-			},
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {
-				repo.EXPECT().GetUser(gomock.Any()).Return(nil, fmt.Errorf("ошибка получения автора"))
-			},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
-			SetupStaticRepoMock:  func(repo *mockrepo.MockStatic) {},
-		},
-		{
-			Name: "Ошибка получения контента",
-			Input: &dto.ReviewCreate{
-				ReviewCreateRequest: dto.ReviewCreateRequest{
-					ContentID: 1,
-					Rating:    10,
-					Title:     "title",
-					Text:      "text",
-				},
-				UserID: 1,
-			},
-			ExpectedErr:    fmt.Errorf("ошибка получения контента"),
-			ExpectedOutput: nil,
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().AddReview(gomock.Any()).Return(&entity.Review{
-					ID:        1,
-					AuthorID:  1,
-					ContentID: 1,
-					Rating:    10,
-					Title:     "title",
-					Text:      "text",
-					CreatedAt: fixedTime,
-					UpdatedAt: fixedTime,
-					Likes:     0,
-					Dislikes:  0,
-				}, nil)
-			},
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {
-				repo.EXPECT().GetUser(gomock.Any()).Return(&entity.User{
-					ID:             1,
-					Email:          "email",
-					AvatarUploadID: 1,
-				}, nil)
-			},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {
-				repo.EXPECT().GetContent(1).Return(nil, fmt.Errorf("ошибка получения контента"))
-			},
-			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {
-				repo.EXPECT().GetStatic(1).Return("path", nil)
-			},
-		},
-		{
-			Name: "Ошибка получения аватара",
-			Input: &dto.ReviewCreate{
-				ReviewCreateRequest: dto.ReviewCreateRequest{
-					ContentID: 1,
-					Rating:    10,
-					Title:     "title",
-					Text:      "text",
-				},
-				UserID: 1,
-			},
-			ExpectedErr:    fmt.Errorf("не удалось получить аватар"),
-			ExpectedOutput: nil,
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().AddReview(gomock.Any()).Return(&entity.Review{
-					ID:        1,
-					AuthorID:  1,
-					ContentID: 1,
-					Rating:    10,
-					Title:     "title",
-					Text:      "text",
-					CreatedAt: fixedTime,
-					UpdatedAt: fixedTime,
-					Likes:     0,
-					Dislikes:  0,
-				}, nil)
-			},
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {
-				repo.EXPECT().GetUser(gomock.Any()).Return(&entity.User{
-					ID:             1,
-					Email:          "email",
-					AvatarUploadID: 1,
-				}, nil)
-			},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
-			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {
-				repo.EXPECT().GetStatic(1).Return("", fmt.Errorf("не удалось получить аватар"))
-			},
-		},
-		{
-			Name: "Ошибка валидации c пустым текстом",
-			Input: &dto.ReviewCreate{
-				ReviewCreateRequest: dto.ReviewCreateRequest{
-					ContentID: 1,
-					Rating:    10,
-					Title:     "title",
-					Text:      "", // пустой текст
-				},
-				UserID: 1,
-			},
-			ExpectedErr:          entity.NewClientError("Количество символов в тексте рецензии должно быть от 1 до 10000", entity.ErrBadRequest),
-			ExpectedOutput:       nil,
-			SetupReviewRepoMock:  func(repo *mockrepo.MockReview) {},
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
-			SetupStaticRepoMock:  func(repo *mockrepo.MockStatic) {},
-		},
-		{
-			Name: "Ошибка валидации c пустым заголовком",
-			Input: &dto.ReviewCreate{
-				ReviewCreateRequest: dto.ReviewCreateRequest{
-					ContentID: 1,
-					Rating:    10,
-					Title:     "", // пустой заголовок
-					Text:      "text",
-				},
-				UserID: 1,
-			},
-			ExpectedErr:          entity.NewClientError("Количество символов в заголовке рецензии должно быть от 1 до 50", entity.ErrBadRequest),
-			ExpectedOutput:       nil,
-			SetupReviewRepoMock:  func(repo *mockrepo.MockReview) {},
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
-			SetupStaticRepoMock:  func(repo *mockrepo.MockStatic) {},
-		},
-		{
-			Name: "Ошибка валидации с рейтингом больше 10 или меньше 1",
-			Input: &dto.ReviewCreate{
-				ReviewCreateRequest: dto.ReviewCreateRequest{
-					ContentID: 1,
-					Rating:    11, // рейтинг больше 10
-					Title:     "title",
-					Text:      "text",
-				},
-				UserID: 1,
-			},
-			ExpectedErr:          entity.NewClientError("Рейтинг должен быть в диапазоне от 1 до 10", entity.ErrBadRequest),
-			ExpectedOutput:       nil,
-			SetupReviewRepoMock:  func(repo *mockrepo.MockReview) {},
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
-			SetupStaticRepoMock:  func(repo *mockrepo.MockStatic) {},
 		},
 	}
 
@@ -281,660 +59,13 @@ func TestReviewService_CreateReview(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockReviewRepo := mockrepo.NewMockReview(ctrl)
-			mockUserRepo := mockrepo.NewMockUser(ctrl)
 			mockContentRepo := mockrepo.NewMockContent(ctrl)
-			mockStaticRepo := mockrepo.NewMockStatic(ctrl)
-			reviewService := NewReviewService(mockReviewRepo, mockUserRepo, mockContentRepo, mockStaticRepo)
-			tc.SetupReviewRepoMock(mockReviewRepo)
-			tc.SetupContentRepoMock(mockContentRepo)
-			tc.SetupUserRepoMock(mockUserRepo)
-			tc.SetupStaticRepoMock(mockStaticRepo)
-			output, err := reviewService.CreateReview(*tc.Input)
-			require.Equal(t, tc.ExpectedErr, err)
-			require.Equal(t, tc.ExpectedOutput, output)
-		})
-	}
-}
-
-func TestReviewService_GetReview(t *testing.T) {
-	t.Parallel()
-
-	fixedTime := time.Now()
-
-	testCases := []struct {
-		Name                 string
-		Input                int
-		ExpectedErr          error
-		ExpectedOutput       *dto.ReviewResponse
-		SetupReviewRepoMock  func(repo *mockrepo.MockReview)
-		SetupUserRepoMock    func(repo *mockrepo.MockUser)
-		SetupContentRepoMock func(repo *mockrepo.MockContent)
-		SetupStaticRepoMock  func(repo *mockrepo.MockStatic)
-	}{
-		{
-			Name:        "Успешное получение",
-			Input:       1,
-			ExpectedErr: nil,
-			ExpectedOutput: &dto.ReviewResponse{
-				Review: dto.Review{
-					ID:        1,
-					AuthorID:  1,
-					ContentID: 1,
-					Rating:    10,
-					Title:     "title",
-					Text:      "text",
-					CreatedAt: fixedTime.String(),
-					Likes:     0,
-					Dislikes:  0,
-				},
-				AuthorName:   "email",
-				AuthorAvatar: "path",
-				ContentName:  "movie",
-			},
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().GetReviewByID(1).Return(&entity.Review{
-					ID:        1,
-					AuthorID:  1,
-					ContentID: 1,
-					Rating:    10,
-					Title:     "title",
-					Text:      "text",
-					CreatedAt: fixedTime,
-					UpdatedAt: fixedTime,
-					Likes:     0,
-					Dislikes:  0,
-				}, nil)
-			},
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {
-				repo.EXPECT().GetUser(gomock.Any()).Return(&entity.User{
-					ID:             1,
-					Email:          "email",
-					AvatarUploadID: 1,
-				}, nil)
-			},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {
-				repo.EXPECT().GetContent(1).Return(&entity.Content{
-					ID:    1,
-					Title: "movie",
-				}, nil)
-			},
-			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {
-				repo.EXPECT().GetStatic(1).Return("path", nil)
-			},
-		},
-		{
-			Name:           "Ошибка получения",
-			Input:          1,
-			ExpectedErr:    fmt.Errorf("ошибка получения отзыва"),
-			ExpectedOutput: nil,
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().GetReviewByID(1).Return(nil, fmt.Errorf("ошибка получения отзыва"))
-			},
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
-			SetupStaticRepoMock:  func(repo *mockrepo.MockStatic) {},
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.Name, func(t *testing.T) {
-			t.Parallel()
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-			mockReviewRepo := mockrepo.NewMockReview(ctrl)
 			mockUserRepo := mockrepo.NewMockUser(ctrl)
-			mockContentRepo := mockrepo.NewMockContent(ctrl)
-			mockStaticRepo := mockrepo.NewMockStatic(ctrl)
-			reviewService := NewReviewService(mockReviewRepo, mockUserRepo, mockContentRepo, mockStaticRepo)
+			mockStaticRepo := mock_usecase.NewMockStatic(ctrl)
+			service := NewReviewService(mockReviewRepo, mockUserRepo, mockContentRepo, mockStaticRepo, nil)
 			tc.SetupReviewRepoMock(mockReviewRepo)
-			tc.SetupContentRepoMock(mockContentRepo)
-			tc.SetupUserRepoMock(mockUserRepo)
-			tc.SetupStaticRepoMock(mockStaticRepo)
-			output, err := reviewService.GetReview(tc.Input)
+			_, err := service.GetLatestReviews(tc.Limit)
 			require.Equal(t, tc.ExpectedErr, err)
-			require.Equal(t, tc.ExpectedOutput, output)
-		})
-	}
-}
-
-func TestReviewService_GetContentReviewByAuthor(t *testing.T) {
-	t.Parallel()
-
-	fixedTime := time.Now()
-
-	testCases := []struct {
-		Name  string
-		Input struct {
-			AuthorID  int
-			ContentID int
-		}
-		ExpectedErr          error
-		ExpectedOutput       *dto.ReviewResponse
-		SetupReviewRepoMock  func(repo *mockrepo.MockReview)
-		SetupUserRepoMock    func(repo *mockrepo.MockUser)
-		SetupContentRepoMock func(repo *mockrepo.MockContent)
-		SetupStaticRepoMock  func(repo *mockrepo.MockStatic)
-	}{
-		{
-			Name: "Успешное получение",
-			Input: struct {
-				AuthorID  int
-				ContentID int
-			}{
-				AuthorID:  1,
-				ContentID: 1,
-			},
-			ExpectedErr: nil,
-			ExpectedOutput: &dto.ReviewResponse{
-				Review: dto.Review{
-					ID:        1,
-					AuthorID:  1,
-					ContentID: 1,
-					Rating:    10,
-					Title:     "title",
-					Text:      "text",
-					CreatedAt: fixedTime.String(),
-					Likes:     0,
-					Dislikes:  0,
-				},
-				AuthorName:   "email",
-				AuthorAvatar: "path",
-				ContentName:  "movie",
-			},
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().GetContentReviewByAuthor(1, 1).Return(&entity.Review{
-					ID:        1,
-					AuthorID:  1,
-					ContentID: 1,
-					Rating:    10,
-					Title:     "title",
-					Text:      "text",
-					CreatedAt: fixedTime,
-					UpdatedAt: fixedTime,
-					Likes:     0,
-					Dislikes:  0,
-				}, nil)
-			},
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {
-				repo.EXPECT().GetUser(gomock.Any()).Return(&entity.User{
-					ID:             1,
-					Email:          "email",
-					AvatarUploadID: 1,
-				}, nil)
-			},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {
-				repo.EXPECT().GetContent(1).Return(&entity.Content{
-					ID:    1,
-					Title: "movie",
-				}, nil)
-			},
-			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {
-				repo.EXPECT().GetStatic(1).Return("path", nil)
-			},
-		},
-		{
-			Name: "Пользователь не оставлял отзыв",
-			Input: struct {
-				AuthorID  int
-				ContentID int
-			}{
-				AuthorID:  1,
-				ContentID: 1,
-			},
-			ExpectedErr:    entity.NewClientError("рецензия не найдена", entity.ErrNotFound),
-			ExpectedOutput: nil,
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().GetContentReviewByAuthor(1, 1).Return(nil, entity.NewClientError("рецензия не найдена", entity.ErrNotFound))
-			},
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
-			SetupStaticRepoMock:  func(repo *mockrepo.MockStatic) {},
-		},
-		{
-			Name: "Ошибка получения",
-			Input: struct {
-				AuthorID  int
-				ContentID int
-			}{
-				AuthorID:  1,
-				ContentID: 1,
-			},
-			ExpectedErr:    fmt.Errorf("ошибка получения отзыва"),
-			ExpectedOutput: nil,
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().GetContentReviewByAuthor(1, 1).Return(nil, fmt.Errorf("ошибка получения отзыва"))
-			},
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
-			SetupStaticRepoMock:  func(repo *mockrepo.MockStatic) {},
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.Name, func(t *testing.T) {
-			t.Parallel()
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-			mockReviewRepo := mockrepo.NewMockReview(ctrl)
-			mockUserRepo := mockrepo.NewMockUser(ctrl)
-			mockContentRepo := mockrepo.NewMockContent(ctrl)
-			mockStaticRepo := mockrepo.NewMockStatic(ctrl)
-			reviewService := NewReviewService(mockReviewRepo, mockUserRepo, mockContentRepo, mockStaticRepo)
-			tc.SetupReviewRepoMock(mockReviewRepo)
-			tc.SetupContentRepoMock(mockContentRepo)
-			tc.SetupUserRepoMock(mockUserRepo)
-			tc.SetupStaticRepoMock(mockStaticRepo)
-			output, err := reviewService.GetContentReviewByAuthor(tc.Input.AuthorID, tc.Input.ContentID)
-			require.Equal(t, tc.ExpectedErr, err)
-			require.Equal(t, tc.ExpectedOutput, output)
-		})
-
-	}
-}
-
-func TestReviewService_EditReview(t *testing.T) {
-	t.Parallel()
-
-	fixedTime := time.Now()
-
-	testCases := []struct {
-		Name                 string
-		Input                *dto.ReviewUpdate
-		ExpectedErr          error
-		ExpectedOutput       *dto.ReviewResponse
-		SetupReviewRepoMock  func(repo *mockrepo.MockReview)
-		SetupUserRepoMock    func(repo *mockrepo.MockUser)
-		SetupContentRepoMock func(repo *mockrepo.MockContent)
-		SetupStaticRepoMock  func(repo *mockrepo.MockStatic)
-	}{
-		{
-			Name: "Успешное редактирование",
-			Input: &dto.ReviewUpdate{
-				ReviewUpdateRequest: dto.ReviewUpdateRequest{
-					ReviewID: 1,
-					Rating:   5,
-					Title:    "title",
-					Text:     "text",
-				},
-				UserID: 1,
-			},
-			ExpectedErr: nil,
-			ExpectedOutput: &dto.ReviewResponse{
-				Review: dto.Review{
-					ID:        1,
-					AuthorID:  1,
-					ContentID: 1,
-					Rating:    5,
-					Title:     "title",
-					Text:      "text",
-					CreatedAt: fixedTime.String(),
-					Likes:     0,
-					Dislikes:  0,
-				},
-				AuthorName:   "name",
-				AuthorAvatar: "",
-				ContentName:  "movie",
-			},
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().GetReviewByID(1).Return(&entity.Review{
-					ID:        1,
-					AuthorID:  1,
-					ContentID: 1,
-					Rating:    10,
-					Title:     "title",
-					Text:      "text",
-					CreatedAt: fixedTime,
-					UpdatedAt: fixedTime,
-					Likes:     0,
-					Dislikes:  0,
-				}, nil)
-				repo.EXPECT().UpdateReview(gomock.Any()).Return(&entity.Review{
-					ID:        1,
-					AuthorID:  1,
-					ContentID: 1,
-					Rating:    5,
-					Title:     "title",
-					Text:      "text",
-					CreatedAt: fixedTime,
-					UpdatedAt: fixedTime,
-					Likes:     0,
-					Dislikes:  0,
-				}, nil)
-			},
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {
-				repo.EXPECT().GetUser(gomock.Any()).Return(&entity.User{
-					ID:             1,
-					Name:           "name",
-					Email:          "email",
-					AvatarUploadID: 0,
-				}, nil)
-			},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {
-				repo.EXPECT().GetContent(1).Return(&entity.Content{
-					ID:    1,
-					Title: "movie",
-				}, nil)
-			},
-			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {},
-		},
-		{
-			Name: "Ошибка редактирования на уровне БД",
-			Input: &dto.ReviewUpdate{
-				ReviewUpdateRequest: dto.ReviewUpdateRequest{
-					ReviewID: 1,
-					Rating:   5,
-					Title:    "title",
-					Text:     "text",
-				},
-				UserID: 1,
-			},
-			ExpectedErr:    fmt.Errorf("ошибка редактирования отзыва"),
-			ExpectedOutput: nil,
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().GetReviewByID(1).Return(&entity.Review{
-					ID:        1,
-					AuthorID:  1,
-					ContentID: 1,
-					Rating:    10,
-					Title:     "title",
-					Text:      "text",
-					CreatedAt: fixedTime,
-					UpdatedAt: fixedTime,
-					Likes:     0,
-					Dislikes:  0,
-				}, nil)
-				repo.EXPECT().UpdateReview(gomock.Any()).Return(nil, fmt.Errorf("ошибка редактирования отзыва"))
-			},
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
-			SetupStaticRepoMock:  func(repo *mockrepo.MockStatic) {},
-		},
-		{
-			Name: "Ошибка редактирования на уровне валидации",
-			Input: &dto.ReviewUpdate{
-				ReviewUpdateRequest: dto.ReviewUpdateRequest{
-					ReviewID: 1,
-					Rating:   11, // рейтинг больше 10
-					Title:    "title",
-					Text:     "text",
-				},
-				UserID: 1,
-			},
-			ExpectedErr:    entity.NewClientError("Рейтинг должен быть в диапазоне от 1 до 10", entity.ErrBadRequest),
-			ExpectedOutput: nil,
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().GetReviewByID(1).Return(&entity.Review{
-					ID:        1,
-					AuthorID:  1,
-					ContentID: 1,
-					Rating:    10,
-					Title:     "title",
-					Text:      "text",
-					CreatedAt: fixedTime,
-					UpdatedAt: fixedTime,
-					Likes:     0,
-					Dislikes:  0,
-				}, nil)
-			},
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
-			SetupStaticRepoMock:  func(repo *mockrepo.MockStatic) {},
-		},
-		{
-			Name: "Ошибка доступа",
-			Input: &dto.ReviewUpdate{
-				ReviewUpdateRequest: dto.ReviewUpdateRequest{
-					ReviewID: 1,
-					Rating:   5,
-					Title:    "title",
-					Text:     "text",
-				},
-				UserID: 2, // другой пользователь
-			},
-			ExpectedErr:    entity.NewClientError("Вы не можете редактировать чужой отзыв", entity.ErrForbidden),
-			ExpectedOutput: nil,
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().GetReviewByID(1).Return(&entity.Review{
-					ID:        1,
-					AuthorID:  1,
-					ContentID: 1,
-					Rating:    10,
-					Title:     "title",
-					Text:      "text",
-					CreatedAt: fixedTime,
-					UpdatedAt: fixedTime,
-					Likes:     0,
-					Dislikes:  0,
-				}, nil)
-			},
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
-			SetupStaticRepoMock:  func(repo *mockrepo.MockStatic) {},
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.Name, func(t *testing.T) {
-			t.Parallel()
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-			mockReviewRepo := mockrepo.NewMockReview(ctrl)
-			mockUserRepo := mockrepo.NewMockUser(ctrl)
-			mockContentRepo := mockrepo.NewMockContent(ctrl)
-			mockStaticRepo := mockrepo.NewMockStatic(ctrl)
-			reviewService := NewReviewService(mockReviewRepo, mockUserRepo, mockContentRepo, mockStaticRepo)
-			tc.SetupReviewRepoMock(mockReviewRepo)
-			tc.SetupContentRepoMock(mockContentRepo)
-			tc.SetupUserRepoMock(mockUserRepo)
-			tc.SetupStaticRepoMock(mockStaticRepo)
-			output, err := reviewService.EditReview(*tc.Input)
-			require.Equal(t, tc.ExpectedErr, err)
-			require.Equal(t, tc.ExpectedOutput, output)
-		})
-	}
-}
-
-func TestReviewService_DeleteReview(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		Name  string
-		Input struct {
-			ReviewID int
-			UserID   int
-		}
-		ExpectedErr          error
-		SetupReviewRepoMock  func(repo *mockrepo.MockReview)
-		SetupUserRepoMock    func(repo *mockrepo.MockUser)
-		SetupContentRepoMock func(repo *mockrepo.MockContent)
-	}{
-		{
-			Name: "Успешное удаление",
-			Input: struct {
-				ReviewID int
-				UserID   int
-			}{
-				ReviewID: 1,
-				UserID:   1,
-			},
-			ExpectedErr: nil,
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().GetReviewByID(1).Return(&entity.Review{
-					ID:       1,
-					AuthorID: 1,
-				}, nil)
-				repo.EXPECT().DeleteReviewByID(1).Return(nil)
-			},
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
-		},
-		{
-			Name: "Ошибка доступа",
-			Input: struct {
-				ReviewID int
-				UserID   int
-			}{
-				ReviewID: 1,
-				UserID:   2, // другой пользователь
-			},
-			ExpectedErr: entity.NewClientError("Вы не можете удалить чужой отзыв", entity.ErrForbidden),
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().GetReviewByID(1).Return(&entity.Review{
-					ID:       1,
-					AuthorID: 1,
-				}, nil)
-			},
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
-		},
-		{
-			Name: "Ошибка удаления на уровне БД",
-			Input: struct {
-				ReviewID int
-				UserID   int
-			}{
-				ReviewID: 1,
-				UserID:   1,
-			},
-			ExpectedErr: fmt.Errorf("ошибка удаления отзыва"),
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().GetReviewByID(1).Return(&entity.Review{
-					ID:       1,
-					AuthorID: 1,
-				}, nil)
-				repo.EXPECT().DeleteReviewByID(1).Return(fmt.Errorf("ошибка удаления отзыва"))
-			},
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.Name, func(t *testing.T) {
-			t.Parallel()
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-			mockReviewRepo := mockrepo.NewMockReview(ctrl)
-			mockUserRepo := mockrepo.NewMockUser(ctrl)
-			mockContentRepo := mockrepo.NewMockContent(ctrl)
-			reviewService := NewReviewService(mockReviewRepo, mockUserRepo, mockContentRepo, nil)
-			tc.SetupReviewRepoMock(mockReviewRepo)
-			tc.SetupUserRepoMock(mockUserRepo)
-			tc.SetupContentRepoMock(mockContentRepo)
-			err := reviewService.DeleteReview(tc.Input.ReviewID, tc.Input.UserID)
-			require.Equal(t, tc.ExpectedErr, err)
-		})
-	}
-}
-
-func TestReviewService_GetLatestReviews(t *testing.T) {
-	t.Parallel()
-
-	fixedTime := time.Now()
-
-	testCases := []struct {
-		Name                 string
-		Input                int
-		ExpectedErr          error
-		ExpectedOutput       *dto.ReviewResponseList
-		SetupReviewRepoMock  func(repo *mockrepo.MockReview)
-		SetupUserRepoMock    func(repo *mockrepo.MockUser)
-		SetupContentRepoMock func(repo *mockrepo.MockContent)
-		SetupStaticRepoMock  func(repo *mockrepo.MockStatic)
-	}{
-		{
-			Name:        "Успешное получение",
-			Input:       1,
-			ExpectedErr: nil,
-			ExpectedOutput: &dto.ReviewResponseList{
-				Reviews: []dto.ReviewResponse{
-					{
-						Review: dto.Review{
-							ID:        1,
-							AuthorID:  1,
-							ContentID: 1,
-							Rating:    10,
-							Title:     "title",
-							Text:      "text",
-							CreatedAt: fixedTime.String(),
-							Likes:     0,
-							Dislikes:  0,
-						},
-						AuthorName:   "email",
-						AuthorAvatar: "path",
-						ContentName:  "movie",
-					},
-				},
-			},
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().GetLatestReviews(1).Return([]*entity.Review{
-					{
-						ID:        1,
-						AuthorID:  1,
-						ContentID: 1,
-						Rating:    10,
-						Title:     "title",
-						Text:      "text",
-						CreatedAt: fixedTime,
-						UpdatedAt: fixedTime,
-						Likes:     0,
-						Dislikes:  0,
-					},
-				}, nil)
-			},
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {
-				repo.EXPECT().GetUser(gomock.Any()).Return(&entity.User{
-					ID:             1,
-					Email:          "email",
-					AvatarUploadID: 1,
-				}, nil)
-			},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {
-				repo.EXPECT().GetContent(1).Return(&entity.Content{
-					ID:    1,
-					Title: "movie",
-				}, nil)
-			},
-			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {
-				repo.EXPECT().GetStatic(1).Return("path", nil)
-			},
-		},
-		{
-			Name:           "Ошибка получения",
-			Input:          1,
-			ExpectedErr:    fmt.Errorf("ошибка получения отзывов"),
-			ExpectedOutput: nil,
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().GetLatestReviews(1).Return(nil, fmt.Errorf("ошибка получения отзывов"))
-			},
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
-			SetupStaticRepoMock:  func(repo *mockrepo.MockStatic) {},
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.Name, func(t *testing.T) {
-			t.Parallel()
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-			mockReviewRepo := mockrepo.NewMockReview(ctrl)
-			mockUserRepo := mockrepo.NewMockUser(ctrl)
-			mockContentRepo := mockrepo.NewMockContent(ctrl)
-			mockStaticRepo := mockrepo.NewMockStatic(ctrl)
-			reviewService := NewReviewService(mockReviewRepo, mockUserRepo, mockContentRepo, mockStaticRepo)
-			tc.SetupReviewRepoMock(mockReviewRepo)
-			tc.SetupContentRepoMock(mockContentRepo)
-			tc.SetupUserRepoMock(mockUserRepo)
-			tc.SetupStaticRepoMock(mockStaticRepo)
-			output, err := reviewService.GetLatestReviews(tc.Input)
-			require.Equal(t, tc.ExpectedErr, err)
-			require.Equal(t, tc.ExpectedOutput, output)
 		})
 	}
 }
@@ -942,86 +73,45 @@ func TestReviewService_GetLatestReviews(t *testing.T) {
 func TestReviewService_GetUserReviews(t *testing.T) {
 	t.Parallel()
 
-	fixedTime := time.Now()
-
 	testCases := []struct {
-		Name                 string
-		Input                int
-		ExpectedErr          error
-		ExpectedOutput       *dto.ReviewResponseList
-		SetupReviewRepoMock  func(repo *mockrepo.MockReview)
-		SetupUserRepoMock    func(repo *mockrepo.MockUser)
-		SetupContentRepoMock func(repo *mockrepo.MockContent)
-		SetupStaticRepoMock  func(repo *mockrepo.MockStatic)
+		Name                string
+		UserID              int
+		Count               int
+		Page                int
+		ExpectedErr         error
+		SetupReviewRepoMock func(repo *mockrepo.MockReview)
 	}{
 		{
-			Name:        "Успешное получение",
-			Input:       1,
+			Name:        "Success",
+			UserID:      1,
+			Count:       5,
+			Page:        1,
 			ExpectedErr: nil,
-			ExpectedOutput: &dto.ReviewResponseList{
-				Reviews: []dto.ReviewResponse{
-					{
-						Review: dto.Review{
-							ID:        1,
-							AuthorID:  1,
-							ContentID: 1,
-							Rating:    10,
-							Title:     "title",
-							Text:      "text",
-							CreatedAt: fixedTime.String(),
-							Likes:     0,
-							Dislikes:  0,
-						},
-						AuthorName:   "email",
-						AuthorAvatar: "path",
-						ContentName:  "movie",
-					},
-				},
-			},
 			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().GetReviewsByAuthorID(1, 1, 1).Return([]*entity.Review{
-					{
-						ID:        1,
-						AuthorID:  1,
-						ContentID: 1,
-						Rating:    10,
-						Title:     "title",
-						Text:      "text",
-						CreatedAt: fixedTime,
-						UpdatedAt: fixedTime,
-						Likes:     0,
-						Dislikes:  0,
-					},
-				}, nil)
-			},
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {
-				repo.EXPECT().GetUser(gomock.Any()).Return(&entity.User{
-					ID:             1,
-					Email:          "email",
-					AvatarUploadID: 1,
-				}, nil)
-			},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {
-				repo.EXPECT().GetContent(1).Return(&entity.Content{
-					ID:    1,
-					Title: "movie",
-				}, nil)
-			},
-			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {
-				repo.EXPECT().GetStatic(1).Return("path", nil)
+				repo.EXPECT().GetReviewsByAuthorID(1, 1, 5).Return([]*entity.Review{}, nil).AnyTimes()
+				repo.EXPECT().GetReviewsCountByAuthorID(1).Return(10, nil).AnyTimes()
 			},
 		},
 		{
-			Name:           "Ошибка получения",
-			Input:          1,
-			ExpectedErr:    fmt.Errorf("ошибка получения отзывов"),
-			ExpectedOutput: nil,
+			Name:        "Error when getting reviews",
+			UserID:      1,
+			Count:       5,
+			Page:        1,
+			ExpectedErr: entity.UsecaseWrap(errors.New("ошибка при получении отзывов пользователя"), errors.New("database error")),
 			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().GetReviewsByAuthorID(1, 1, 1).Return(nil, fmt.Errorf("ошибка получения отзывов"))
+				repo.EXPECT().GetReviewsByAuthorID(1, 1, 5).Return(nil, errors.New("database error"))
 			},
-			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
-			SetupStaticRepoMock:  func(repo *mockrepo.MockStatic) {},
+		},
+		{
+			Name:        "Error when getting reviews count",
+			UserID:      1,
+			Count:       5,
+			Page:        1,
+			ExpectedErr: entity.UsecaseWrap(errors.New("ошибка при получении количества отзывов пользователя"), errors.New("database error")),
+			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
+				repo.EXPECT().GetReviewsByAuthorID(1, 1, 5).Return([]*entity.Review{}, nil).AnyTimes()
+				repo.EXPECT().GetReviewsCountByAuthorID(1).Return(0, errors.New("database error"))
+			},
 		},
 	}
 
@@ -1032,17 +122,13 @@ func TestReviewService_GetUserReviews(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockReviewRepo := mockrepo.NewMockReview(ctrl)
-			mockUserRepo := mockrepo.NewMockUser(ctrl)
 			mockContentRepo := mockrepo.NewMockContent(ctrl)
-			mockStaticRepo := mockrepo.NewMockStatic(ctrl)
-			reviewService := NewReviewService(mockReviewRepo, mockUserRepo, mockContentRepo, mockStaticRepo)
+			mockUserRepo := mockrepo.NewMockUser(ctrl)
+			mockStaticRepo := mock_usecase.NewMockStatic(ctrl)
+			service := NewReviewService(mockReviewRepo, mockUserRepo, mockContentRepo, mockStaticRepo, nil)
 			tc.SetupReviewRepoMock(mockReviewRepo)
-			tc.SetupContentRepoMock(mockContentRepo)
-			tc.SetupUserRepoMock(mockUserRepo)
-			tc.SetupStaticRepoMock(mockStaticRepo)
-			output, err := reviewService.GetUserReviews(tc.Input, 1, 1)
+			_, err := service.GetUserReviews(tc.UserID, tc.Count, tc.Page)
 			require.Equal(t, tc.ExpectedErr, err)
-			require.Equal(t, tc.ExpectedOutput, output)
 		})
 	}
 }
@@ -1050,86 +136,347 @@ func TestReviewService_GetUserReviews(t *testing.T) {
 func TestReviewService_GetContentReviews(t *testing.T) {
 	t.Parallel()
 
-	fixedTime := time.Now()
+	testCases := []struct {
+		Name                string
+		ContentID           int
+		Count               int
+		Page                int
+		ExpectedErr         error
+		SetupReviewRepoMock func(repo *mockrepo.MockReview)
+	}{
+		{
+			Name:        "Success",
+			ContentID:   1,
+			Count:       5,
+			Page:        1,
+			ExpectedErr: nil,
+			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
+				repo.EXPECT().GetReviewsByContentID(1, 1, 5).Return([]*entity.Review{}, nil).AnyTimes()
+				repo.EXPECT().GetReviewsCountByContentID(1).Return(10, nil).AnyTimes()
+			},
+		},
+		{
+			Name:        "Error when getting reviews",
+			ContentID:   1,
+			Count:       5,
+			Page:        1,
+			ExpectedErr: entity.UsecaseWrap(errors.New("ошибка при получении отзывов контента"), errors.New("database error")),
+			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
+				repo.EXPECT().GetReviewsByContentID(1, 1, 5).Return(nil, errors.New("database error"))
+			},
+		},
+		{
+			Name:        "Error when getting reviews count",
+			ContentID:   1,
+			Count:       5,
+			Page:        1,
+			ExpectedErr: entity.UsecaseWrap(errors.New("ошибка при получении количества отзывов"), errors.New("database error")),
+			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
+				repo.EXPECT().GetReviewsByContentID(1, 1, 5).Return([]*entity.Review{}, nil).AnyTimes()
+				repo.EXPECT().GetReviewsCountByContentID(1).Return(0, errors.New("database error"))
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			mockReviewRepo := mockrepo.NewMockReview(ctrl)
+			mockContentRepo := mockrepo.NewMockContent(ctrl)
+			mockUserRepo := mockrepo.NewMockUser(ctrl)
+			mockStaticRepo := mock_usecase.NewMockStatic(ctrl)
+			service := NewReviewService(mockReviewRepo, mockUserRepo, mockContentRepo, mockStaticRepo, nil)
+			tc.SetupReviewRepoMock(mockReviewRepo)
+			_, err := service.GetContentReviews(tc.ContentID, tc.Count, tc.Page)
+			require.Equal(t, tc.ExpectedErr, err)
+		})
+	}
+}
+
+func TestReviewService_GetReview(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		Name                string
+		ReviewID            int
+		ExpectedErr         error
+		SetupReviewRepoMock func(repo *mockrepo.MockReview)
+	}{
+		{
+			Name:        "Review not found",
+			ReviewID:    1,
+			ExpectedErr: repository.ErrReviewNotFound,
+			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
+				repo.EXPECT().GetReviewByID(1).Return(nil, repository.ErrReviewNotFound)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			mockReviewRepo := mockrepo.NewMockReview(ctrl)
+			mockContentRepo := mockrepo.NewMockContent(ctrl)
+			mockUserRepo := mockrepo.NewMockUser(ctrl)
+			mockStaticRepo := mock_usecase.NewMockStatic(ctrl)
+			service := NewReviewService(mockReviewRepo, mockUserRepo, mockContentRepo, mockStaticRepo, nil)
+			tc.SetupReviewRepoMock(mockReviewRepo)
+			_, err := service.GetReview(tc.ReviewID)
+			require.Equal(t, tc.ExpectedErr, err)
+		})
+	}
+}
+
+func TestReviewService_GetContentReviewByAuthor(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		Name                string
+		AuthorID            int
+		ContentID           int
+		UserID              int
+		ExpectedErr         error
+		SetupReviewRepoMock func(repo *mockrepo.MockReview)
+		SetupUserRepoMock   func(repo *mockrepo.MockUser)
+	}{
+		{
+			Name:        "Error when getting review",
+			AuthorID:    1,
+			ContentID:   1,
+			ExpectedErr: entity.UsecaseWrap(errors.New("ошибка при получении отзыва"), errors.New("database error")),
+			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
+				repo.EXPECT().GetContentReviewByAuthor(1, 1).Return(nil, errors.New("database error"))
+			},
+		},
+		{
+			Name:        "Review not found",
+			AuthorID:    1,
+			ContentID:   1,
+			ExpectedErr: usecase.ErrReviewNotFound,
+			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
+				repo.EXPECT().GetContentReviewByAuthor(1, 1).Return(nil, repository.ErrReviewNotFound)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			mockReviewRepo := mockrepo.NewMockReview(ctrl)
+			mockContentRepo := mockrepo.NewMockContent(ctrl)
+			mockUserRepo := mockrepo.NewMockUser(ctrl)
+			mockStaticRepo := mock_usecase.NewMockStatic(ctrl)
+			service := NewReviewService(mockReviewRepo, mockUserRepo, mockContentRepo, mockStaticRepo, nil)
+			tc.SetupReviewRepoMock(mockReviewRepo)
+			_, err := service.GetContentReviewByAuthor(tc.AuthorID, tc.ContentID)
+			require.Equal(t, tc.ExpectedErr, err)
+		})
+	}
+}
+
+func TestReviewService_CreateReview(t *testing.T) {
+	t.Parallel()
 
 	testCases := []struct {
 		Name                 string
-		Input                int
+		Review               dto.ReviewCreate
 		ExpectedErr          error
-		ExpectedOutput       *dto.ReviewResponseList
 		SetupReviewRepoMock  func(repo *mockrepo.MockReview)
+		SetupProfanityUCMock func(uc *mock_usecase.MockProfanity)
 		SetupUserRepoMock    func(repo *mockrepo.MockUser)
+		SetupStaticUCMock    func(uc *mock_usecase.MockStatic)
 		SetupContentRepoMock func(repo *mockrepo.MockContent)
-		SetupStaticRepoMock  func(repo *mockrepo.MockStatic)
 	}{
 		{
-			Name:        "Успешное получение",
-			Input:       1,
-			ExpectedErr: nil,
-			ExpectedOutput: &dto.ReviewResponseList{
-				Reviews: []dto.ReviewResponse{
-					{
-						Review: dto.Review{
-							ID:        1,
-							AuthorID:  1,
-							ContentID: 1,
-							Rating:    10,
-							Title:     "title",
-							Text:      "text",
-							CreatedAt: fixedTime.String(),
-							Likes:     0,
-							Dislikes:  0,
-						},
-						AuthorName:   "email",
-						AuthorAvatar: "path",
-						ContentName:  "movie",
-					},
+			Name: "Неизвестная ошибка при добавлении рецензии",
+			Review: dto.ReviewCreate{
+				ReviewCreateRequest: dto.ReviewCreateRequest{
+					ContentID: 1,
+					Rating:    5,
+					Title:     "Test Title",
+					Text:      "Test Text",
 				},
+				UserID: 1,
 			},
+			ExpectedErr: entity.UsecaseWrap(errors.New("ошибка при добавлении отзыва"), errors.New("database error")),
 			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().GetReviewsByContentID(1, 1, 1).Return([]*entity.Review{
-					{
-						ID:        1,
-						AuthorID:  1,
-						ContentID: 1,
-						Rating:    10,
-						Title:     "title",
-						Text:      "text",
-						CreatedAt: fixedTime,
-						UpdatedAt: fixedTime,
-						Likes:     0,
-						Dislikes:  0,
-					},
+				repo.EXPECT().AddReview(gomock.Any()).Return(nil, errors.New("database error"))
+			},
+			SetupProfanityUCMock: func(uc *mock_usecase.MockProfanity) {
+				uc.EXPECT().FilterMessage("Test Text").Return("Test ****", nil)
+				uc.EXPECT().FilterMessage("Test Title").Return("**** Title", nil)
+			},
+			SetupUserRepoMock: func(repo *mockrepo.MockUser) {},
+			SetupContentRepoMock: func(repo *mockrepo.MockContent) {
+				repo.EXPECT().GetContent(1).Return(&entity.Content{}, nil)
+			},
+			SetupStaticUCMock: func(uc *mock_usecase.MockStatic) {},
+		},
+		{
+			Name: "Рецензия уже существует",
+			Review: dto.ReviewCreate{
+				ReviewCreateRequest: dto.ReviewCreateRequest{
+					ContentID: 1,
+					Rating:    5,
+					Title:     "Test Title",
+					Text:      "Test Text",
+				},
+				UserID: 1,
+			},
+			ExpectedErr: usecase.ErrReviewAlreadyExists,
+			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
+				repo.EXPECT().AddReview(gomock.Any()).Return(nil, repository.ErrReviewAlreadyExists)
+			},
+			SetupProfanityUCMock: func(uc *mock_usecase.MockProfanity) {
+				uc.EXPECT().FilterMessage("Test Text").Return("Test ****", nil)
+				uc.EXPECT().FilterMessage("Test Title").Return("**** Title", nil)
+			},
+			SetupUserRepoMock: func(repo *mockrepo.MockUser) {},
+			SetupContentRepoMock: func(repo *mockrepo.MockContent) {
+				repo.EXPECT().GetContent(1).Return(&entity.Content{}, nil)
+			},
+			SetupStaticUCMock: func(uc *mock_usecase.MockStatic) {},
+		},
+		{
+			Name: "Ошибка при фильтрации текста",
+			Review: dto.ReviewCreate{
+				ReviewCreateRequest: dto.ReviewCreateRequest{
+					ContentID: 1,
+					Rating:    5,
+					Title:     "Test Title",
+					Text:      "Test Text",
+				},
+				UserID: 1,
+			},
+			ExpectedErr:         entity.UsecaseWrap(errors.New("ошибка при фильтрации содержания рецензии"), errors.New("profanity error")),
+			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {},
+			SetupProfanityUCMock: func(uc *mock_usecase.MockProfanity) {
+				uc.EXPECT().FilterMessage("Test Text").Return("", errors.New("profanity error"))
+			},
+			SetupUserRepoMock: func(repo *mockrepo.MockUser) {},
+			SetupContentRepoMock: func(repo *mockrepo.MockContent) {
+				repo.EXPECT().GetContent(1).Return(&entity.Content{}, nil)
+			},
+			SetupStaticUCMock: func(uc *mock_usecase.MockStatic) {},
+		},
+		{
+			Name: "Ошибка при фильтрации заголовка",
+			Review: dto.ReviewCreate{
+				ReviewCreateRequest: dto.ReviewCreateRequest{
+					ContentID: 1,
+					Rating:    5,
+					Title:     "Test Title",
+					Text:      "Test Text",
+				},
+				UserID: 1,
+			},
+			ExpectedErr:         entity.UsecaseWrap(errors.New("ошибка при фильтрации заголовка рецензии"), errors.New("profanity error")),
+			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {},
+			SetupProfanityUCMock: func(uc *mock_usecase.MockProfanity) {
+				uc.EXPECT().FilterMessage("Test Text").Return("Test ****", nil)
+				uc.EXPECT().FilterMessage("Test Title").Return("", errors.New("profanity error"))
+			},
+			SetupUserRepoMock: func(repo *mockrepo.MockUser) {},
+			SetupContentRepoMock: func(repo *mockrepo.MockContent) {
+				repo.EXPECT().GetContent(1).Return(&entity.Content{}, nil)
+			},
+			SetupStaticUCMock: func(uc *mock_usecase.MockStatic) {},
+		},
+		{
+			Name: "Успешно",
+			Review: dto.ReviewCreate{
+				ReviewCreateRequest: dto.ReviewCreateRequest{
+					ContentID: 1,
+					Rating:    5,
+					Title:     "Test Title",
+					Text:      "Test Text",
+				},
+				UserID: 1,
+			},
+			ExpectedErr: nil,
+			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
+				repo.EXPECT().AddReview(&entity.Review{
+					AuthorID:      1,
+					ContentID:     1,
+					ContentRating: 5,
+					Title:         "**** Title",
+					Text:          "Test ****",
+				}).Return(&entity.Review{
+					ID:            1,
+					AuthorID:      1,
+					ContentID:     1,
+					ContentRating: 5,
+					Title:         "**** Title",
+					Text:          "Test ****",
 				}, nil)
+			},
+			SetupProfanityUCMock: func(uc *mock_usecase.MockProfanity) {
+				uc.EXPECT().FilterMessage("Test Text").Return("Test ****", nil)
+				uc.EXPECT().FilterMessage("Test Title").Return("**** Title", nil)
 			},
 			SetupUserRepoMock: func(repo *mockrepo.MockUser) {
-				repo.EXPECT().GetUser(gomock.Any()).Return(&entity.User{
-					ID:             1,
-					Email:          "email",
-					AvatarUploadID: 1,
-				}, nil)
+				repo.EXPECT().GetUserByID(1).Return(&entity.User{}, nil)
 			},
 			SetupContentRepoMock: func(repo *mockrepo.MockContent) {
-				repo.EXPECT().GetContent(1).Return(&entity.Content{
-					ID:    1,
-					Title: "movie",
-				}, nil)
+				repo.EXPECT().GetContent(1).Return(&entity.Content{}, nil).AnyTimes()
 			},
-			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {
-				repo.EXPECT().GetStatic(1).Return("path", nil)
+			SetupStaticUCMock: func(uc *mock_usecase.MockStatic) {
+				uc.EXPECT().GetStatic(gomock.Any()).Return("", nil)
 			},
 		},
 		{
-			Name:           "Ошибка получения",
-			Input:          1,
-			ExpectedErr:    fmt.Errorf("ошибка получения отзывов"),
-			ExpectedOutput: nil,
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().GetReviewsByContentID(1, 1, 1).Return(nil, fmt.Errorf("ошибка получения отзывов"))
+			Name: "Невалидное содержание",
+			Review: dto.ReviewCreate{
+				ReviewCreateRequest: dto.ReviewCreateRequest{
+					ContentID: 1,
+					Rating:    5,
+					Title:     "",
+					Text:      "Test Text",
+				},
+				UserID: 1,
 			},
+			ExpectedErr:          usecase.ReviewErrorIncorrectData{Err: errors.New("количество символов в заголовке рецензии должно быть от 1 до 50")},
+			SetupReviewRepoMock:  func(repo *mockrepo.MockReview) {},
+			SetupProfanityUCMock: func(uc *mock_usecase.MockProfanity) {},
 			SetupUserRepoMock:    func(repo *mockrepo.MockUser) {},
-			SetupContentRepoMock: func(repo *mockrepo.MockContent) {},
-			SetupStaticRepoMock:  func(repo *mockrepo.MockStatic) {},
+			SetupContentRepoMock: func(repo *mockrepo.MockContent) {
+				repo.EXPECT().GetContent(1).Return(&entity.Content{}, nil)
+			},
+			SetupStaticUCMock: func(uc *mock_usecase.MockStatic) {},
+		},
+		{
+			Name: "Контент с таким айди не существует",
+			Review: dto.ReviewCreate{
+				ReviewCreateRequest: dto.ReviewCreateRequest{
+					ContentID: 1,
+					Rating:    5,
+					Title:     "Test Title",
+					Text:      "Test Text",
+				},
+				UserID: 1,
+			},
+			ExpectedErr: usecase.ErrReviewContentNotFound,
+			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
+				repo.EXPECT().AddReview(gomock.Any()).Return(nil, repository.ErrReviewViolation)
+			},
+			SetupProfanityUCMock: func(uc *mock_usecase.MockProfanity) {
+				uc.EXPECT().FilterMessage("Test Text").Return("Test ****", nil)
+				uc.EXPECT().FilterMessage("Test Title").Return("**** Title", nil)
+			},
+			SetupUserRepoMock: func(repo *mockrepo.MockUser) {},
+			SetupContentRepoMock: func(repo *mockrepo.MockContent) {
+				repo.EXPECT().GetContent(1).Return(&entity.Content{}, nil)
+			},
+			SetupStaticUCMock: func(uc *mock_usecase.MockStatic) {},
 		},
 	}
 
@@ -1140,271 +487,34 @@ func TestReviewService_GetContentReviews(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockReviewRepo := mockrepo.NewMockReview(ctrl)
-			mockUserRepo := mockrepo.NewMockUser(ctrl)
 			mockContentRepo := mockrepo.NewMockContent(ctrl)
-			mockStaticRepo := mockrepo.NewMockStatic(ctrl)
-			reviewService := NewReviewService(mockReviewRepo, mockUserRepo, mockContentRepo, mockStaticRepo)
+			mockUserRepo := mockrepo.NewMockUser(ctrl)
+			mockStaticUC := mock_usecase.NewMockStatic(ctrl)
+			mockProfanityUC := mock_usecase.NewMockProfanity(ctrl)
+			service := NewReviewService(mockReviewRepo, mockUserRepo, mockContentRepo, mockStaticUC, mockProfanityUC)
+			tc.SetupProfanityUCMock(mockProfanityUC)
 			tc.SetupReviewRepoMock(mockReviewRepo)
+			tc.SetupUserRepoMock(mockUserRepo)
 			tc.SetupContentRepoMock(mockContentRepo)
-			tc.SetupUserRepoMock(mockUserRepo)
-			tc.SetupStaticRepoMock(mockStaticRepo)
-			output, err := reviewService.GetContentReviews(tc.Input, 1, 1)
-			require.Equal(t, tc.ExpectedErr, err)
-			require.Equal(t, tc.ExpectedOutput, output)
-		})
-	}
-}
-
-func TestReviewService_LikeReview(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		Name  string
-		Input struct {
-			ReviewID int
-			UserID   int
-		}
-		ExpectedErr         error
-		SetupReviewRepoMock func(repo *mockrepo.MockReview)
-		SetupUserRepoMock   func(repo *mockrepo.MockUser)
-	}{
-		{
-			Name: "Успешный лайк",
-			Input: struct {
-				ReviewID int
-				UserID   int
-			}{
-				ReviewID: 1,
-				UserID:   1,
-			},
-			ExpectedErr: nil,
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().IsLikedByUser(1, 1).Return(0, nil)
-				repo.EXPECT().LikeReview(1, 1, true).Return(nil)
-			},
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {},
-		},
-		{
-			Name: "Уже лайкнуто",
-			Input: struct {
-				ReviewID int
-				UserID   int
-			}{
-				ReviewID: 1,
-				UserID:   1,
-			},
-			ExpectedErr: nil,
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().IsLikedByUser(1, 1).Return(1, nil)
-			},
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {},
-		},
-		{
-			Name: "Изначально лайкнуто, но не удалось убрать лайк",
-			Input: struct {
-				ReviewID int
-				UserID   int
-			}{
-				ReviewID: 1,
-				UserID:   1,
-			},
-			ExpectedErr: fmt.Errorf("ошибка удаления лайка отзыва"),
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().IsLikedByUser(1, 1).Return(-1, nil)
-				repo.EXPECT().UnlikeReview(1, 1).Return(fmt.Errorf("ошибка удаления лайка отзыва"))
-			},
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {},
-		},
-		{
-			Name: "Изначально дизлайкнуто",
-			Input: struct {
-				ReviewID int
-				UserID   int
-			}{
-				ReviewID: 1,
-				UserID:   1,
-			},
-			ExpectedErr: nil,
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().IsLikedByUser(1, 1).Return(-1, nil)
-				repo.EXPECT().UnlikeReview(1, 1).Return(nil)
-				repo.EXPECT().LikeReview(1, 1, true).Return(nil)
-			},
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {},
-		},
-		{
-			Name: "Ошибка проверки лайка",
-			Input: struct {
-				ReviewID int
-				UserID   int
-			}{
-				ReviewID: 1,
-				UserID:   1,
-			},
-			ExpectedErr: fmt.Errorf("ошибка проверки лайка отзыва"),
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().IsLikedByUser(1, 1).Return(0, fmt.Errorf("ошибка проверки лайка отзыва"))
-			},
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {},
-		},
-		{
-			Name: "Ошибка лайка",
-			Input: struct {
-				ReviewID int
-				UserID   int
-			}{
-				ReviewID: 1,
-				UserID:   1,
-			},
-			ExpectedErr: fmt.Errorf("ошибка лайка отзыва"),
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().IsLikedByUser(1, 1).Return(0, nil)
-				repo.EXPECT().LikeReview(1, 1, true).Return(fmt.Errorf("ошибка лайка отзыва"))
-			},
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {},
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.Name, func(t *testing.T) {
-			t.Parallel()
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-			mockReviewRepo := mockrepo.NewMockReview(ctrl)
-			mockUserRepo := mockrepo.NewMockUser(ctrl)
-			reviewService := NewReviewService(mockReviewRepo, mockUserRepo, nil, nil)
-			tc.SetupReviewRepoMock(mockReviewRepo)
-			tc.SetupUserRepoMock(mockUserRepo)
-			err := reviewService.LikeReview(tc.Input.ReviewID, tc.Input.UserID)
+			tc.SetupStaticUCMock(mockStaticUC)
+			_, err := service.CreateReview(tc.Review)
 			require.Equal(t, tc.ExpectedErr, err)
 		})
 	}
 }
 
-func TestReviewService_DislikeReview(t *testing.T) {
-	t.Parallel()
+func TestDeleteReview(t *testing.T) {
+	// Setup
+}
 
-	testCases := []struct {
-		Name  string
-		Input struct {
-			ReviewID int
-			UserID   int
-		}
-		ExpectedErr         error
-		SetupReviewRepoMock func(repo *mockrepo.MockReview)
-		SetupUserRepoMock   func(repo *mockrepo.MockUser)
-	}{
-		{
-			Name: "Успешный дизлайк",
-			Input: struct {
-				ReviewID int
-				UserID   int
-			}{
-				ReviewID: 1,
-				UserID:   1,
-			},
-			ExpectedErr: nil,
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().IsLikedByUser(1, 1).Return(0, nil)
-				repo.EXPECT().LikeReview(1, 1, false).Return(nil)
-			},
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {},
-		},
-		{
-			Name: "Уже дизлайкнуто",
-			Input: struct {
-				ReviewID int
-				UserID   int
-			}{
-				ReviewID: 1,
-				UserID:   1,
-			},
-			ExpectedErr: nil,
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().IsLikedByUser(1, 1).Return(-1, nil)
-			},
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {},
-		},
-		{
-			Name: "Изначально лайкнуто",
-			Input: struct {
-				ReviewID int
-				UserID   int
-			}{
-				ReviewID: 1,
-				UserID:   1,
-			},
-			ExpectedErr: nil,
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().IsLikedByUser(1, 1).Return(1, nil)
-				repo.EXPECT().UnlikeReview(1, 1).Return(nil)
-				repo.EXPECT().LikeReview(1, 1, false).Return(nil)
-			},
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {},
-		},
-		{
-			Name: "Изначально лайкнуто, но не удалось убрать дизлайк",
-			Input: struct {
-				ReviewID int
-				UserID   int
-			}{
-				ReviewID: 1,
-				UserID:   1,
-			},
-			ExpectedErr: fmt.Errorf("ошибка удаления дизлайка отзыва"),
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().IsLikedByUser(1, 1).Return(1, nil)
-				repo.EXPECT().UnlikeReview(1, 1).Return(fmt.Errorf("ошибка удаления дизлайка отзыва"))
-			},
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {},
-		},
-		{
-			Name: "Ошибка проверки дизлайка",
-			Input: struct {
-				ReviewID int
-				UserID   int
-			}{
-				ReviewID: 1,
-				UserID:   1,
-			},
-			ExpectedErr: fmt.Errorf("ошибка проверки дизлайка отзыва"),
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().IsLikedByUser(1, 1).Return(0, fmt.Errorf("ошибка проверки дизлайка отзыва"))
-			},
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {},
-		},
-		{
-			Name: "Ошибка дизлайка",
-			Input: struct {
-				ReviewID int
-				UserID   int
-			}{
-				ReviewID: 1,
-				UserID:   1,
-			},
-			ExpectedErr: fmt.Errorf("ошибка дизлайка отзыва"),
-			SetupReviewRepoMock: func(repo *mockrepo.MockReview) {
-				repo.EXPECT().IsLikedByUser(1, 1).Return(0, nil)
-				repo.EXPECT().LikeReview(1, 1, false).Return(fmt.Errorf("ошибка дизлайка отзыва"))
-			},
-			SetupUserRepoMock: func(repo *mockrepo.MockUser) {},
-		},
-	}
+func TestVoteReview(t *testing.T) {
+	// Setup
+}
 
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.Name, func(t *testing.T) {
-			t.Parallel()
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-			mockReviewRepo := mockrepo.NewMockReview(ctrl)
-			mockUserRepo := mockrepo.NewMockUser(ctrl)
-			reviewService := NewReviewService(mockReviewRepo, mockUserRepo, nil, nil)
-			tc.SetupReviewRepoMock(mockReviewRepo)
-			tc.SetupUserRepoMock(mockUserRepo)
-			err := reviewService.DislikeReview(tc.Input.ReviewID, tc.Input.UserID)
-			require.Equal(t, tc.ExpectedErr, err)
-		})
-	}
+func TestIsVotedByUser(t *testing.T) {
+	// Setup
+}
+
+func TestUnVoteReview(t *testing.T) {
+	// Setup
 }

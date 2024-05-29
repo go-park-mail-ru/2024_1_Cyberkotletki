@@ -1,23 +1,7 @@
-basePath: /api
 definitions:
-  dto.CompilationContent:
-    properties:
-      compilation_id:
-        example: 1
-        format: int
-        type: integer
-      content_id:
-        example: 1
-        format: int
-        type: integer
-    type: object
-  dto.CompilationResponse:
+  dto.Compilation:
     properties:
       compilation_type_id:
-        example: 1
-        format: int
-        type: integer
-      content_length:
         example: 1
         format: int
         type: integer
@@ -25,10 +9,10 @@ definitions:
         example: 1
         format: int
         type: integer
-      poster_upload_id:
-        example: 1
-        format: int
-        type: integer
+      poster:
+        example: static/poster.jpg
+        format: string
+        type: string
       title:
         example: The Best
         format: string
@@ -38,10 +22,10 @@ definitions:
     properties:
       compilations:
         items:
-          $ref: '#/definitions/dto.CompilationResponse'
+          $ref: '#/definitions/dto.Compilation'
         type: array
     type: object
-  dto.CompilationTypeResponse:
+  dto.CompilationType:
     properties:
       id:
         example: 1
@@ -56,7 +40,7 @@ definitions:
     properties:
       compilation_types:
         items:
-          $ref: '#/definitions/dto.CompilationTypeResponse'
+          $ref: '#/definitions/dto.CompilationType'
         type: array
     type: object
   dto.Content:
@@ -68,15 +52,12 @@ definitions:
       ageRestriction:
         example: 18
         type: integer
-      audience:
-        example: 1000000
-        type: integer
-      boxOffice:
-        example: 1000000
-        type: integer
+      backdropURL:
+        example: /static/backdrop.jpg
+        type: string
       budget:
-        example: 1000000
-        type: integer
+        example: "1000000"
+        type: string
       composers:
         items:
           $ref: '#/definitions/dto.PersonPreview'
@@ -99,6 +80,12 @@ definitions:
         items:
           $ref: '#/definitions/dto.PersonPreview'
         type: array
+      facts:
+        example:
+        - Факты о фильме или сериале
+        items:
+          type: string
+        type: array
       genres:
         example:
         - Боевик
@@ -112,11 +99,14 @@ definitions:
       imdbRating:
         example: 9.1
         type: number
-      marketing:
-        example: 1000000
-        type: integer
       movie:
         $ref: '#/definitions/dto.MovieContent'
+      ongoing:
+        example: true
+        type: boolean
+      ongoingDate:
+        example: "2022-01-02T15:04:05Z"
+        type: string
       operators:
         items:
           $ref: '#/definitions/dto.PersonPreview'
@@ -124,6 +114,13 @@ definitions:
       originalTitle:
         example: Batman
         type: string
+      picturesURL:
+        example:
+        - /static/picture1.jpg
+        - /static/picture2.jpg
+        items:
+          type: string
+        type: array
       posterURL:
         example: /static/poster.jpg
         type: string
@@ -136,11 +133,18 @@ definitions:
         type: number
       series:
         $ref: '#/definitions/dto.SeriesContent'
+      similarContent:
+        items:
+          $ref: '#/definitions/dto.PreviewContentCardVertical'
+        type: array
       slogan:
         example: I'm Batman
         type: string
       title:
         example: Бэтмен
+        type: string
+      trailerLink:
+        example: https://www.youtube.com/watch?v=123456
         type: string
       type:
         example: movie
@@ -150,8 +154,23 @@ definitions:
           $ref: '#/definitions/dto.PersonPreview'
         type: array
     type: object
+  dto.CreateFavouriteRequest:
+    properties:
+      category:
+        description: nolint:lll
+        example: favourite
+        format: string
+        type: string
+      contentID:
+        example: 1
+        format: int
+        type: integer
+    type: object
   dto.Episode:
     properties:
+      duration:
+        example: 45
+        type: integer
       episodeNumber:
         example: 1
         type: integer
@@ -161,6 +180,31 @@ definitions:
       title:
         example: Название серии
         type: string
+    type: object
+  dto.Favourite:
+    properties:
+      category:
+        description: nolint:lll
+        example: favourite
+        format: string
+        type: string
+      content:
+        $ref: '#/definitions/dto.PreviewContent'
+    type: object
+  dto.FavouriteStatusResponse:
+    properties:
+      status:
+        description: nolint:lll
+        example: favourite
+        format: string
+        type: string
+    type: object
+  dto.FavouritesResponse:
+    properties:
+      favourites:
+        items:
+          $ref: '#/definitions/dto.Favourite'
+        type: array
     type: object
   dto.Login:
     properties:
@@ -181,29 +225,17 @@ definitions:
       premiere:
         example: "2020-01-01"
         type: string
-      release:
-        example: "2020-01-01"
-        type: string
     type: object
   dto.Person:
     properties:
       birthDate:
         example: "1964-09-02"
         type: string
-      birthPlace:
-        example: Бейрут
-        type: string
-      children:
-        example: Homer, Bart, Lisa, Maggie
-        type: string
       deathDate:
         example: "2021-09-02"
         type: string
-      endCareer:
-        example: "2021-09-02"
-        type: string
-      firstName:
-        example: Киану
+      enName:
+        example: Keanu Reeves
         type: string
       height:
         example: 185
@@ -211,39 +243,50 @@ definitions:
       id:
         example: 1
         type: integer
-      lastName:
-        example: Ривз
+      name:
+        example: Киану Ривз
         type: string
       photoURL:
         example: /static/photo.jpg
         type: string
       roles:
-        items:
-          $ref: '#/definitions/dto.PreviewContentCard'
-        type: array
+        additionalProperties:
+          items:
+            $ref: '#/definitions/dto.PreviewContentCardVertical'
+          type: array
+        type: object
       sex:
         example: M
-        type: string
-      spouse:
-        example: Алисия Викандер
-        type: string
-      startCareer:
-        example: "1984-09-02"
         type: string
     type: object
   dto.PersonPreview:
     properties:
-      firstName:
-        example: Киану
+      enName:
+        example: Keanu Reeves
         type: string
       id:
         example: 1
         type: integer
-      lastName:
-        example: Ривз
+      name:
+        example: Киану Ривз
         type: string
     type: object
-  dto.PreviewContentCard:
+  dto.PersonPreviewWithPhoto:
+    properties:
+      enName:
+        example: Keanu Reeves
+        type: string
+      id:
+        example: 1
+        type: integer
+      name:
+        example: Киану Ривз
+        type: string
+      photoURL:
+        example: /static/photo.jpg
+        type: string
+    type: object
+  dto.PreviewContent:
     properties:
       actors:
         example:
@@ -268,6 +311,13 @@ definitions:
       id:
         example: 1
         type: integer
+      ongoing:
+        example: true
+        type: boolean
+      ongoingDate:
+        description: Поля, которые есть только у онгоингов
+        example: "2022-01-02T15:04:05Z"
+        type: string
       originalTitle:
         example: Batman
         type: string
@@ -277,7 +327,7 @@ definitions:
       rating:
         example: 9.1
         type: number
-      releaseYear:
+      release:
         example: 2020
         type: integer
       seasonsNumber:
@@ -294,6 +344,41 @@ definitions:
         example: 2021
         type: integer
       yearStart:
+        example: 2020
+        type: integer
+    type: object
+  dto.PreviewContentCardVertical:
+    properties:
+      genre:
+        example:
+        - Боевик
+        items:
+          type: string
+        type: array
+      id:
+        example: 1
+        type: integer
+      poster:
+        example: /static/poster.jpg
+        type: string
+      rating:
+        example: 9.1
+        type: number
+      releaseYear:
+        description: Поля, которые есть только у фильмов
+        example: 2020
+        type: integer
+      title:
+        example: Бэтмен
+        type: string
+      type:
+        example: movie
+        type: string
+      yearEnd:
+        example: 2021
+        type: integer
+      yearStart:
+        description: Поля, которые есть только у сериалов
         example: 2020
         type: integer
     type: object
@@ -380,10 +465,26 @@ definitions:
     type: object
   dto.ReviewResponseList:
     properties:
+      count:
+        example: 10
+        format: int
+        type: integer
+      page:
+        example: 1
+        format: int
+        type: integer
+      pages:
+        example: 1
+        format: int
+        type: integer
       reviews:
         items:
           $ref: '#/definitions/dto.ReviewResponse'
         type: array
+      total:
+        example: 1
+        format: int
+        type: integer
     type: object
   dto.ReviewUpdateRequest:
     properties:
@@ -404,6 +505,17 @@ definitions:
         format: string
         type: string
     type: object
+  dto.SearchResult:
+    properties:
+      content:
+        items:
+          $ref: '#/definitions/dto.PreviewContent'
+        type: array
+      persons:
+        items:
+          $ref: '#/definitions/dto.PersonPreviewWithPhoto'
+        type: array
+    type: object
   dto.Season:
     properties:
       episodes:
@@ -412,12 +524,6 @@ definitions:
         type: array
       id:
         example: 1
-        type: integer
-      yearEnd:
-        example: 2020
-        type: integer
-      yearStart:
-        example: 2020
         type: integer
     type: object
   dto.SeriesContent:
@@ -432,6 +538,13 @@ definitions:
       yearStart:
         example: 2020
         type: integer
+    type: object
+  dto.SubscriptionsResponse:
+    properties:
+      subscriptions:
+        items:
+          type: integer
+        type: array
     type: object
   dto.UpdatePassword:
     properties:
@@ -459,14 +572,30 @@ definitions:
     type: object
   dto.UserReviewResponseList:
     properties:
+      count:
+        example: 10
+        format: int
+        type: integer
       me:
         example: true
         format: bool
         type: boolean
+      page:
+        example: 1
+        format: int
+        type: integer
+      pages:
+        example: 1
+        format: int
+        type: integer
       reviews:
         items:
           $ref: '#/definitions/dto.ReviewResponse'
         type: array
+      total:
+        example: 1
+        format: int
+        type: integer
     type: object
   dto.UserUpdate:
     properties:
@@ -485,7 +614,7 @@ info:
   title: API Киноскопа
   version: "1.0"
 paths:
-  /auth/isAuth:
+  /api/auth/isAuth:
     get:
       description: Проверяет, авторизован ли пользователь
       parameters:
@@ -508,7 +637,7 @@ paths:
             $ref: '#/definitions/echo.HTTPError'
       tags:
       - Auth
-  /auth/logout:
+  /api/auth/logout:
     post:
       description: Удаляет сессию
       parameters:
@@ -525,7 +654,7 @@ paths:
       - _csrf: []
       tags:
       - Auth
-  /auth/logoutAll:
+  /api/auth/logoutAll:
     post:
       description: Удаляет все сессии пользователя
       parameters:
@@ -546,7 +675,7 @@ paths:
       - _csrf: []
       tags:
       - Auth
-  /compilation/{id}/{page}:
+  /api/compilation/{id}/{page}:
     get:
       consumes:
       - application/json
@@ -568,7 +697,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.CompilationContent'
+            $ref: '#/definitions/dto.Compilation'
         "400":
           description: Bad Request
           schema:
@@ -584,7 +713,7 @@ paths:
       summary: Получение карточек контента подборки
       tags:
       - compilation
-  /compilation/type/{compilationType}:
+  /api/compilation/type/{compilationType}:
     get:
       consumes:
       - application/json
@@ -606,10 +735,6 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/echo.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/echo.HTTPError'
         "500":
           description: Internal Server Error
           schema:
@@ -617,7 +742,7 @@ paths:
       summary: Получение списка подборок по типу подборок
       tags:
       - compilation
-  /compilation/types:
+  /api/compilation/types:
     get:
       consumes:
       - application/json
@@ -629,14 +754,6 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/dto.CompilationTypeResponseList'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/echo.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/echo.HTTPError'
         "500":
           description: Internal Server Error
           schema:
@@ -644,7 +761,7 @@ paths:
       summary: Получение списка подборок
       tags:
       - compilation
-  /content/{id}:
+  /api/content/{id}:
     get:
       description: Получение контента по id
       parameters:
@@ -675,7 +792,7 @@ paths:
       summary: Получение контента по id
       tags:
       - content
-  /content/person/{id}:
+  /api/content/person/{id}:
     get:
       description: Получение персоны по id
       parameters:
@@ -706,7 +823,403 @@ paths:
       summary: Получение персоны по id
       tags:
       - content
-  /playground/ping:
+  /api/favourite:
+    put:
+      consumes:
+      - application/json
+      description: Добавление в избранное. Если уже в избранном, то ошибка не возвращается
+        (идемпотентный метод).
+      parameters:
+      - description: Данные для добавления в избранное
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateFavouriteRequest'
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      security:
+      - _csrf: []
+      tags:
+      - Favourite
+  /api/favourite/{id}:
+    delete:
+      description: Удаление из избранного.
+      parameters:
+      - description: Идентификатор контента
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      security:
+      - _csrf: []
+      tags:
+      - Favourite
+    get:
+      description: Получение избранного пользователя
+      parameters:
+      - description: Идентификатор пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.FavouritesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      tags:
+      - Favourite
+  /api/favourite/my:
+    get:
+      description: Получение избранного пользователя
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.FavouritesResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      tags:
+      - Favourite
+  /api/favourite/status/{id}:
+    get:
+      description: Получение статуса контента в избранном
+      parameters:
+      - description: Идентификатор контента
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.FavouriteStatusResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      tags:
+      - Favourite
+  /api/ongoing/{id}/is_released:
+    get:
+      parameters:
+      - description: ID контента
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "101":
+          description: WebSocket connection is established
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Проверить, вышел ли контент. Использует WebSocket
+      tags:
+      - ongoing_content
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID контента
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Секретный ключ
+        in: query
+        name: secret_key
+        required: true
+        type: string
+      - description: Вышел ли контент
+        in: query
+        name: is_released
+        required: true
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      security:
+      - _csrf: []
+      summary: Установить состояние релиза
+      tags:
+      - ongoing_content
+  /api/ongoing/{id}/subscribe:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID контента
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      security:
+      - _csrf: []
+      summary: Отписаться от выхода контента
+      tags:
+      - ongoing_content
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID контента
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      security:
+      - _csrf: []
+      summary: Подписаться на выход контента
+      tags:
+      - ongoing_content
+  /api/ongoing/{year}/{month}:
+    get:
+      parameters:
+      - description: Месяц
+        in: path
+        name: month
+        required: true
+        type: integer
+      - description: Год
+        in: path
+        name: year
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PreviewContent'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Получить релизы по месяцу и году
+      tags:
+      - ongoing_content
+  /api/ongoing/nearest:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PreviewContent'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Получить ближайшие релизы
+      tags:
+      - ongoing_content
+  /api/ongoing/subscriptions:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SubscriptionsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Получить ID контентов, на которые подписан пользователь
+      tags:
+      - ongoing_content
+  /api/ongoing/years:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: integer
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Получить все года релизов
+      tags:
+      - ongoing_content
+  /api/playground/ping:
     get:
       description: Проверка соединения через классический ping pong
       responses:
@@ -716,7 +1229,7 @@ paths:
             type: string
       tags:
       - Playground
-  /review:
+  /api/review:
     post:
       consumes:
       - application/json
@@ -741,6 +1254,10 @@ paths:
             $ref: '#/definitions/echo.HTTPError'
         "401":
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
           schema:
             $ref: '#/definitions/echo.HTTPError'
         "409":
@@ -799,7 +1316,7 @@ paths:
       summary: Обновить рецензию
       tags:
       - review
-  /review/{id}:
+  /api/review/{id}:
     delete:
       consumes:
       - application/json
@@ -870,42 +1387,7 @@ paths:
       summary: Получить рецензию
       tags:
       - review
-  /review/{id}/dislike:
-    put:
-      consumes:
-      - application/json
-      description: Поставить дизлайк рецензии
-      parameters:
-      - description: ID рецензии
-        in: path
-        name: id
-        required: true
-        type: integer
-      responses:
-        "200":
-          description: OK
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/echo.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/echo.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/echo.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/echo.HTTPError'
-      security:
-      - _csrf: []
-      summary: Поставить дизлайк рецензии
-      tags:
-      - review
-  /review/{id}/like:
+  /api/review/{id}/vote:
     delete:
       consumes:
       - application/json
@@ -941,15 +1423,18 @@ paths:
       tags:
       - review
     put:
-      consumes:
-      - application/json
-      description: Поставить лайк рецензии
+      description: Поставить оценку на рецензию
       parameters:
       - description: ID рецензии
         in: path
         name: id
         required: true
         type: integer
+      - description: Лайк или дизлайк
+        in: query
+        name: vote
+        required: true
+        type: boolean
       responses:
         "200":
           description: OK
@@ -971,10 +1456,10 @@ paths:
             $ref: '#/definitions/echo.HTTPError'
       security:
       - _csrf: []
-      summary: Поставить лайк рецензии
+      summary: Поставить оценку на рецензию
       tags:
       - review
-  /review/content/{id}/{page}:
+  /api/review/content/{id}/{page}:
     get:
       description: Получить рецензии контента
       parameters:
@@ -1006,7 +1491,7 @@ paths:
       summary: Получить рецензии контента
       tags:
       - review
-  /review/myReview:
+  /api/review/myReview:
     get:
       description: Получить рецензию пользователя к контенту
       parameters:
@@ -1026,6 +1511,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/echo.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
         "404":
           description: Not Found
           schema:
@@ -1037,7 +1526,7 @@ paths:
       summary: Получить рецензию пользователя к контенту
       tags:
       - review
-  /review/recent:
+  /api/review/recent:
     get:
       description: Получить последние рецензии
       produces:
@@ -1054,7 +1543,7 @@ paths:
       summary: Получить последние рецензии
       tags:
       - review
-  /review/user/{id}/{page}:
+  /api/review/user/{id}/{page}:
     get:
       description: Получить рецензии пользователя
       parameters:
@@ -1086,7 +1575,7 @@ paths:
       summary: Получить рецензии пользователя
       tags:
       - review
-  /review/user/{id}/recent:
+  /api/review/user/{id}/recent:
     get:
       description: Получить последние рецензии пользователя
       parameters:
@@ -1113,7 +1602,33 @@ paths:
       summary: Получить последние рецензии пользователя
       tags:
       - review
-  /static/{id}:
+  /api/search:
+    get:
+      consumes:
+      - application/json
+      description: Поиск фильмов, сериалов и персон
+      parameters:
+      - description: Поисковый запрос
+        in: query
+        name: query
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SearchResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      tags:
+      - Search
+  /api/static/{id}:
     get:
       consumes:
       - application/json
@@ -1142,10 +1657,8 @@ paths:
             $ref: '#/definitions/echo.HTTPError'
       tags:
       - Static
-  /user/avatar:
+  /api/user/avatar:
     put:
-      consumes:
-      - application/json
       description: Позволяет загрузить аватарку пользователя. Необходимо быть авторизованным
       parameters:
       - default: session=xxx
@@ -1178,7 +1691,7 @@ paths:
       - _csrf: []
       tags:
       - User
-  /user/login:
+  /api/user/login:
     post:
       consumes:
       - application/json
@@ -1214,7 +1727,7 @@ paths:
       - _csrf: []
       tags:
       - User
-  /user/me:
+  /api/user/me:
     get:
       consumes:
       - application/json
@@ -1239,7 +1752,7 @@ paths:
             $ref: '#/definitions/echo.HTTPError'
       tags:
       - User
-  /user/password:
+  /api/user/password:
     put:
       consumes:
       - application/json
@@ -1277,7 +1790,7 @@ paths:
       - _csrf: []
       tags:
       - User
-  /user/profile:
+  /api/user/profile:
     get:
       consumes:
       - application/json
@@ -1346,7 +1859,7 @@ paths:
       - _csrf: []
       tags:
       - User
-  /user/register:
+  /api/user/register:
     post:
       consumes:
       - application/json
@@ -1377,6 +1890,35 @@ paths:
       - _csrf: []
       tags:
       - User
+  /static/{path}:
+    get:
+      consumes:
+      - application/json
+      description: Получение статического файла по относительному пути. Возвращает
+        файл в виде байтов.
+      parameters:
+      - description: Путь до статики
+        in: path
+        name: path
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: невалидный путь до статики
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: файл не найден
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: ошибка сервера
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      tags:
+      - Static
 securityDefinitions:
   _csrf:
     in: header

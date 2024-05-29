@@ -2,6 +2,7 @@ package entity
 
 import (
 	"bytes"
+	"errors"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/random"
 	"golang.org/x/crypto/argon2"
 	"regexp"
@@ -22,10 +23,7 @@ type User struct {
 	PasswordHash   []byte // Хэш пароля пользователя
 	PasswordSalt   []byte // Соль для генерации хэша пароля
 	AvatarUploadID int    `json:"avatar_upload_id"` // Ссылка на аватар
-}
-
-func NewUserEmpty() *User {
-	return new(User)
+	Rating         int    `json:"rating"`           // Рейтинг пользователя
 }
 
 // ValidatePassword проверяет валидность пароля.
@@ -34,25 +32,15 @@ func NewUserEmpty() *User {
 //
 // 1) пароль содержит от 8 до 32 символов включительно
 //
-// 2) пароль не содержит ничего, кроме латинских букв, цифр и символов !@#$%^&*
-//
-// 3) пароль содержит как минимум одну заглавную, одну строчную букву, одну цифру и один из символов !@#$%^&*
+// 2) пароль не содержит ничего, кроме латинских букв, цифр и символов !@#$%^&*_
 func ValidatePassword(password string) error {
 	switch {
 	case len(password) < 8:
-		return NewClientError("пароль должен содержать не менее 8 символов", ErrBadRequest)
+		return errors.New("пароль должен содержать не менее 8 символов")
 	case len(password) > 32:
-		return NewClientError("пароль должен содержать не более 32 символов", ErrBadRequest)
-	case !regexp.MustCompile(`^[!@#$%^&*\w]+$`).MatchString(password):
-		return NewClientError("пароль должен состоять из латинских букв, цифр и специальных символов !@#$%^&*", ErrBadRequest)
-	case !regexp.MustCompile(`[A-Z]`).MatchString(password):
-		return NewClientError("пароль должен содержать как минимум одну заглавную букву", ErrBadRequest)
-	case !regexp.MustCompile(`[a-z]`).MatchString(password):
-		return NewClientError("пароль должен содержать как минимум одну строчную букву", ErrBadRequest)
-	case !regexp.MustCompile(`\d`).MatchString(password):
-		return NewClientError("пароль должен содержать как минимум одну цифру", ErrBadRequest)
-	case !regexp.MustCompile(`[!@#$%^&*]`).MatchString(password):
-		return NewClientError("пароль должен содержать как минимум один из специальных символов !@#$%^&*", ErrBadRequest)
+		return errors.New("пароль должен содержать не более 32 символов")
+	case !regexp.MustCompile(`^[!@#$%^&*_\w]+$`).MatchString(password):
+		return errors.New("пароль может состоять только из латинских букв, цифр и специальных символов !@#$%^&*_")
 	default:
 		return nil
 	}
@@ -74,10 +62,10 @@ func ValidateEmail(email string) error {
 	re := regexp.MustCompile("^([a-z0-9!#$%&'*+\\\\/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+\\\\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)$") // nolint: lll
 	// т.к. почта состоит из ascii символов, то можно использовать len()
 	if !re.MatchString(email) {
-		return NewClientError("невалидная почта", ErrBadRequest)
+		return errors.New("невалидная почта")
 	}
 	if len(email) > 256 {
-		return NewClientError("почта не может быть длиннее 256 символов", ErrBadRequest)
+		return errors.New("почта не может быть длиннее 256 символов")
 	}
 	return nil
 }
@@ -87,7 +75,7 @@ func ValidateEmail(email string) error {
 func HashPassword(password string) (salt []byte, hash []byte, err error) {
 	salt, err = random.Bytes(8)
 	if err != nil {
-		return nil, nil, NewClientError("произошла непредвиденная ошибка", ErrInternal)
+		return nil, nil, errors.New("произошла непредвиденная ошибка")
 	}
 	hash = argon2.IDKey(
 		[]byte(password),
@@ -121,7 +109,7 @@ func (u *User) CheckPassword(password string) bool {
 // но не более 30 символов
 func ValidateName(name string) error {
 	if utf8.RuneCountInString(name) > 30 {
-		return NewClientError("имя не может быть длиннее 30 символов", ErrBadRequest)
+		return errors.New("имя не может быть длиннее 30 символов")
 	}
 	return nil
 }

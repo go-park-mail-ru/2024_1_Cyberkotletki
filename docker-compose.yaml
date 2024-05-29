@@ -1,12 +1,119 @@
 version: "3.6"
 services:
-  goservice:
-    build: "."
+  # ----------------------------------------------
+  # БД: Postgres, Redis, миграции
+  # ----------------------------------------------
+  postgres:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: kinoskop
     ports:
-      - "8080"
-  nginx:
-    build: "./nginx"
+      - "5432:5432"
+  redis:
+    image: redis:latest
+    restart: always
     ports:
-      - "80:80"
+      - "6379:6379"
+  migrations:
+    restart: on-failure
+    build:
+      context: .
+      dockerfile: ./docker/migrations.dockerfile
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     depends_on:
-      - "goservice"
+      - postgres
+  # ----------------------------------------------
+  # Микросервисы: Auth, Core, Static, Profanity
+  # ----------------------------------------------
+  profanity:
+    restart: always
+    build:
+      context: .
+      dockerfile: ./docker/profanity.dockerfile
+    ports:
+      - "8085:8085"
+  auth:
+    restart: always
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    build:
+      context: .
+      dockerfile: ./docker/auth.dockerfile
+    volumes:
+      - ./config_auth.yaml:/app/config_auth.yaml
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+  static:
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
+    build:
+      context: .
+      dockerfile: ./docker/static.dockerfile
+    volumes:
+      - ./config_static.yaml:/app/config_static.yaml
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres
+  core:
+    restart: always
+    build:
+      context: .
+      dockerfile: ./docker/core.dockerfile
+    volumes:
+      - ./config.yaml:/app/config.yaml
+    environment:
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        CONTENT_SECRET_KEY: ${CONTENT_SECRET_KEY}
+    ports:
+      - "8080:8080"
+    depends_on:
+      - profanity
+      - auth
+      - static
+      - postgres
+      - redis
+  # ----------------------------------------------
+  # Метрики: Prometheus, Grafana
+  # ----------------------------------------------
+  node_exporter:
+    image: prom/node-exporter:latest
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+    ports:
+      - "9100:9100"
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - "9090:9090"
+    depends_on:
+      - core
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus

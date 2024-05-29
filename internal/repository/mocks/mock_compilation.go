@@ -54,6 +54,21 @@ func (mr *MockCompilationMockRecorder) GetAllCompilationTypes() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllCompilationTypes", reflect.TypeOf((*MockCompilation)(nil).GetAllCompilationTypes))
 }
 
+// GetCompilation mocks base method.
+func (m *MockCompilation) GetCompilation(id int) (*entity.Compilation, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCompilation", id)
+	ret0, _ := ret[0].(*entity.Compilation)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCompilation indicates an expected call of GetCompilation.
+func (mr *MockCompilationMockRecorder) GetCompilation(id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCompilation", reflect.TypeOf((*MockCompilation)(nil).GetCompilation), id)
+}
+
 // GetCompilationContent mocks base method.
 func (m *MockCompilation) GetCompilationContent(id, page, limit int) ([]int, error) {
 	m.ctrl.T.Helper()
@@ -85,10 +100,10 @@ func (mr *MockCompilationMockRecorder) GetCompilationContentLength(id any) *gomo
 }
 
 // GetCompilationsByTypeID mocks base method.
-func (m *MockCompilation) GetCompilationsByTypeID(compilationTypeID int) ([]entity.Compilation, error) {
+func (m *MockCompilation) GetCompilationsByTypeID(compilationTypeID int) ([]*entity.Compilation, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCompilationsByTypeID", compilationTypeID)
-	ret0, _ := ret[0].([]entity.Compilation)
+	ret0, _ := ret[0].([]*entity.Compilation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

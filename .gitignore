@@ -3,3 +3,6 @@ go.sum
 config.yaml
 /test.coverage
 /test.coverage.tmp
+/assets/static/
+/config_auth.yaml
+/config_static.yaml

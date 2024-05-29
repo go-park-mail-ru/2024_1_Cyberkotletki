@@ -1,16 +1,19 @@
 package service
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	mockrepo "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/mocks"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
+	"io"
 	"os"
 	"testing"
 )
 
-func TestStaticService_GetAvatar(t *testing.T) {
+func TestStaticService_GetStatic(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -24,15 +27,15 @@ func TestStaticService_GetAvatar(t *testing.T) {
 			Input:       1,
 			ExpectedErr: nil,
 			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {
-				repo.EXPECT().GetStatic(1).Return("path", nil)
+				repo.EXPECT().GetStaticURL(1).Return("path", nil)
 			},
 		},
 		{
 			Name:        "Не существующий аватар",
 			Input:       2,
-			ExpectedErr: fmt.Errorf("не удалось получить аватар"),
+			ExpectedErr: entity.UsecaseWrap(fmt.Errorf("не удалось получить аватар"), fmt.Errorf("ошибка при получении статики")),
 			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {
-				repo.EXPECT().GetStatic(2).Return("", fmt.Errorf("не удалось получить аватар"))
+				repo.EXPECT().GetStaticURL(2).Return("", fmt.Errorf("не удалось получить аватар"))
 			},
 		},
 	}
@@ -44,55 +47,9 @@ func TestStaticService_GetAvatar(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockStaticRepo := mockrepo.NewMockStatic(ctrl)
-			staticService := StaticService{
-				staticRepo: mockStaticRepo,
-			}
+			staticService := NewStaticService(mockStaticRepo)
 			tc.SetupStaticRepoMock(mockStaticRepo)
-			_, err := staticService.GetAvatar(tc.Input)
-			require.EqualValues(t, tc.ExpectedErr, err)
-		})
-	}
-}
-
-func TestStaticService_GetStaticUrl(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		Name                string
-		Input               int
-		ExpectedErr         error
-		SetupStaticRepoMock func(repo *mockrepo.MockStatic)
-	}{
-		{
-			Name:        "Существующий файл",
-			Input:       1,
-			ExpectedErr: nil,
-			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {
-				repo.EXPECT().GetStatic(1).Return("path", nil)
-			},
-		},
-		{
-			Name:        "Не существующий файл",
-			Input:       2,
-			ExpectedErr: fmt.Errorf("не удалось получить файл"),
-			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {
-				repo.EXPECT().GetStatic(2).Return("", fmt.Errorf("не удалось получить файл"))
-			},
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.Name, func(t *testing.T) {
-			t.Parallel()
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-			mockStaticRepo := mockrepo.NewMockStatic(ctrl)
-			staticService := StaticService{
-				staticRepo: mockStaticRepo,
-			}
-			tc.SetupStaticRepoMock(mockStaticRepo)
-			_, err := staticService.GetStaticURL(tc.Input)
+			_, err := staticService.GetStatic(tc.Input)
 			require.EqualValues(t, tc.ExpectedErr, err)
 		})
 	}
@@ -103,45 +60,84 @@ func TestStaticService_UploadAvatar(t *testing.T) {
 
 	testCases := []struct {
 		Name                string
-		Input               func() []byte
+		Input               func() io.ReadSeeker
 		ExpectedErr         error
 		SetupStaticRepoMock func(repo *mockrepo.MockStatic)
 	}{
 		{
 			Name: "Валидный файл",
-			Input: func() []byte {
+			Input: func() io.ReadSeeker {
 				// открываем изображение valid_picture.png и читаем его в байты
 				data, err := os.ReadFile("../../../assets/tests/valid_picture.png")
 				if err != nil {
 					t.Fatal(err)
 				}
-				return data
+				// преобразуем data в io.Reader
+				return bytes.NewReader(data)
 			},
 			ExpectedErr: nil,
 			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {
+				repo.EXPECT().GetMaxSize().Return(1000000).AnyTimes()
 				repo.EXPECT().UploadStatic(gomock.Any(), gomock.Any(), gomock.Any()).Return(1, nil)
 			},
 		},
 		{
 			Name: "Невалидный файл",
-			Input: func() []byte {
-				return []byte("data")
+			Input: func() io.ReadSeeker {
+				// возвращаем невалидные данные
+				return bytes.NewReader([]byte("invalid data"))
 			},
-			ExpectedErr:         entity.NewClientError("файл не является изображением", entity.ErrBadRequest),
-			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {},
+			ExpectedErr: usecase.ErrStaticNotImage,
+			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {
+				repo.EXPECT().GetMaxSize().Return(1000000).AnyTimes()
+			},
+		},
+		{
+			Name: "Слишком большой файл",
+			Input: func() io.ReadSeeker {
+				// возвращаем слишком большой файл
+				return bytes.NewReader(bytes.Repeat([]byte("a"), 1000001))
+			},
+			ExpectedErr: usecase.ErrStaticTooBigFile,
+			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {
+				repo.EXPECT().GetMaxSize().Return(1000000).AnyTimes()
+			},
 		},
 		{
 			Name: "Неподходящий размер изображения",
-			Input: func() []byte {
+			Input: func() io.ReadSeeker {
 				// открываем изображение small_picture.png и читаем его в байты
 				data, err := os.ReadFile("../../../assets/tests/invalid_size.png")
 				if err != nil {
 					t.Fatal(err)
 				}
-				return data
+				// преобразуем data в io.Reader
+				return bytes.NewReader(data)
 			},
-			ExpectedErr:         entity.NewClientError("размеры изображения меньше 100 x 100", entity.ErrBadRequest),
-			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {},
+			ExpectedErr: entity.UsecaseWrap(
+				usecase.ErrStaticImageDimensions,
+				fmt.Errorf("изображение имеет размеры 62x55, а должно быть как минимум 100x100"),
+			),
+			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {
+				repo.EXPECT().GetMaxSize().Return(1000000).AnyTimes()
+			},
+		},
+		{
+			Name: "Ошибка при создании записи в БД",
+			Input: func() io.ReadSeeker {
+				// открываем изображение valid_picture.png и читаем его в байты
+				data, err := os.ReadFile("../../../assets/tests/valid_picture.png")
+				if err != nil {
+					t.Fatal(err)
+				}
+				// преобразуем data в io.Reader
+				return bytes.NewReader(data)
+			},
+			ExpectedErr: fmt.Errorf("ошибка при создании записи в БД"),
+			SetupStaticRepoMock: func(repo *mockrepo.MockStatic) {
+				repo.EXPECT().GetMaxSize().Return(1000000).AnyTimes()
+				repo.EXPECT().UploadStatic(gomock.Any(), gomock.Any(), gomock.Any()).Return(-1, fmt.Errorf("ошибка при создании записи в БД"))
+			},
 		},
 	}
 
@@ -152,9 +148,7 @@ func TestStaticService_UploadAvatar(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockStaticRepo := mockrepo.NewMockStatic(ctrl)
-			staticService := StaticService{
-				staticRepo: mockStaticRepo,
-			}
+			staticService := NewStaticService(mockStaticRepo)
 			tc.SetupStaticRepoMock(mockStaticRepo)
 			_, err := staticService.UploadAvatar(tc.Input())
 			require.EqualValues(t, tc.ExpectedErr, err)

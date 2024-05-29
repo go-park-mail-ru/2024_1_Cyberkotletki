@@ -40,18 +40,18 @@ func (m *MockCompilation) EXPECT() *MockCompilationMockRecorder {
 }
 
 // GetCompilationContent mocks base method.
-func (m *MockCompilation) GetCompilationContent(compID, page, limit int) ([]*dto.PreviewContentCard, error) {
+func (m *MockCompilation) GetCompilationContent(compID, page int) (*dto.CompilationResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCompilationContent", compID, page, limit)
-	ret0, _ := ret[0].([]*dto.PreviewContentCard)
+	ret := m.ctrl.Call(m, "GetCompilationContent", compID, page)
+	ret0, _ := ret[0].(*dto.CompilationResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetCompilationContent indicates an expected call of GetCompilationContent.
-func (mr *MockCompilationMockRecorder) GetCompilationContent(compID, page, limit any) *gomock.Call {
+func (mr *MockCompilationMockRecorder) GetCompilationContent(compID, page any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCompilationContent", reflect.TypeOf((*MockCompilation)(nil).GetCompilationContent), compID, page, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCompilationContent", reflect.TypeOf((*MockCompilation)(nil).GetCompilationContent), compID, page)
 }
 
 // GetCompilationTypes mocks base method.
