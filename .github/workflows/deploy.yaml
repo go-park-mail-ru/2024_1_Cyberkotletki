@@ -1,0 +1,72 @@
+name: Deploy
+on:
+  push:
+    branches: [ "deploy" ]
+  workflow_run:
+    workflows: [ "Tests" ]
+    types:
+      - completed
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Create environment file
+        run: |
+            touch .env
+            echo POSTGRES_USER=${{ secrets.POSTGRES_USER }} >> .env
+            echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env
+            echo REDIS_PASS=${{ secrets.REDIS_PASS }} >> .env
+            echo S3_ACCESS_KEY_ID= ${{ secrets.S3_ACCESS_KEY_ID }} >> .env
+            echo S3_SECRET_ACCESS_KEY= ${{ secrets.S3_SECRET_ACCESS_KEY }} >> .env
+            echo CONTENT_SECRET_KEY= ${{ secrets.CONTENT_SECRET_KEY }} >> .env
+
+      - name: Create config files
+        run: |
+          touch config.yaml
+          echo "${{ secrets.CONFIG_MAIN }}" > config.yaml
+          touch config_auth.yaml
+          echo "${{ secrets.CONFIG_AUTH }}" > config_auth.yaml
+          touch config_static.yaml
+          echo "${{ secrets.CONFIG_STATIC }}" > config_static.yaml
+
+      - name: Upload source code
+        uses: actions/upload-artifact@v4
+        with:
+          name: kinoskop-artifact
+          path: .
+
+  deploy:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Download source
+        uses: actions/download-artifact@v4
+        with:
+          name: kinoskop-artifact
+          path: .
+
+      - name: Upload sources
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST_IP }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "./*"
+          target: "/home/ubuntu/backend/deploy/"
+
+      - name: Reload app
+        uses: appleboy/ssh-action@master
+        with:
+          command_timeout: 40m
+          host: ${{ secrets.HOST_IP }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /home/ubuntu/backend/deploy
+            sudo docker compose build --parallel --no-cache
+            sudo docker compose up -d

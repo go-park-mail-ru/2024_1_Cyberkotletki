@@ -23,9 +23,7 @@ run-dev:
 
 .PHONY: run-docker-deploy
 run-docker-deploy:
-	docker-compose up --build -d
-	sleep 5
-	make run-migrations
+	docker compose up --build -d
 
 .PHONY: gen-example-config
 gen-example-config:
