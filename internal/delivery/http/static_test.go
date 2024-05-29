@@ -1,6 +1,7 @@
 package http
 
 import (
+	"bytes"
 	"errors"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
 	mockusecase "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/mocks"
@@ -70,6 +71,63 @@ func TestStaticEndpoints_GetStatic(t *testing.T) {
 			c.SetParamNames("id")
 			c.SetParamValues(tc.StaticId)
 			err := staticEndpoints.GetStaticURL(c)
+			require.Equal(t, tc.ExpectedErr, err)
+		})
+	}
+}
+
+func TestStaticEndpoints_GetStaticFile(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		Name                   string
+		StaticPath             string
+		ExpectedErr            error
+		SetupStaticUsecaseMock func(usecase *mockusecase.MockStatic)
+	}{
+		{
+			Name:        "Получение файла",
+			StaticPath:  "path",
+			ExpectedErr: nil,
+			SetupStaticUsecaseMock: func(usecase *mockusecase.MockStatic) {
+				usecase.EXPECT().GetStaticFile("path").Return(bytes.NewReader([]byte{1}), nil)
+			},
+		},
+		{
+			Name:        "Статики с таким путем нет",
+			StaticPath:  "path",
+			ExpectedErr: &echo.HTTPError{Code: 404, Message: "Статика не найдена"},
+			SetupStaticUsecaseMock: func(uc *mockusecase.MockStatic) {
+				uc.EXPECT().GetStaticFile("path").Return(nil, usecase.ErrStaticNotFound)
+			},
+		},
+		{
+			Name:        "Внутренняя ошибка сервера",
+			StaticPath:  "path",
+			ExpectedErr: &echo.HTTPError{Code: 500, Message: "Внутренняя ошибка сервера", Internal: errors.New("123")},
+			SetupStaticUsecaseMock: func(uc *mockusecase.MockStatic) {
+				uc.EXPECT().GetStaticFile("path").Return(nil, errors.New("123"))
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+			e := echo.New()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			mockStaticUsecase := mockusecase.NewMockStatic(ctrl)
+			staticEndpoints := NewStaticEndpoints(mockStaticUsecase)
+			tc.SetupStaticUsecaseMock(mockStaticUsecase)
+			req := httptest.NewRequest(http.MethodGet, "/static/", nil)
+			rec := httptest.NewRecorder()
+			c := e.NewContext(req, rec)
+			c.SetPath("/static/:path")
+			c.SetParamNames("path")
+			c.SetParamValues(tc.StaticPath)
+			err := staticEndpoints.GetStaticFile(c)
 			require.Equal(t, tc.ExpectedErr, err)
 		})
 	}
