@@ -68,5 +68,5 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             cd /home/ubuntu/backend/deploy
-            sudo docker-compose build --parallel --no-cache
-            sudo docker-compose up -d
+            sudo docker compose build --parallel --no-cache
+            sudo docker compose up -d
