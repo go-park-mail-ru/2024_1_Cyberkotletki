@@ -17,7 +17,7 @@ func TestValidatePassword(t *testing.T) {
 	}{
 		{
 			Name:   "Валидный пароль",
-			Input:  "AmazingPassword1!",
+			Input:  "Amazing1!@#$%^&*()_+-=.,",
 			Output: nil,
 		},
 		{
@@ -33,27 +33,7 @@ func TestValidatePassword(t *testing.T) {
 		{
 			Name:   "Недопустимые символы",
 			Input:  "КириллицаВПароле1!",
-			Output: fmt.Errorf("пароль должен состоять из латинских букв, цифр и специальных символов !@#$%%^&*"),
-		},
-		{
-			Name:   "Нет заглавных букв",
-			Input:  "amazing*password1!",
-			Output: fmt.Errorf("пароль должен содержать как минимум одну заглавную букву"),
-		},
-		{
-			Name:   "Нет строчных букв",
-			Input:  "AMAZING*PASSWORD1!",
-			Output: fmt.Errorf("пароль должен содержать как минимум одну строчную букву"),
-		},
-		{
-			Name:   "Нет цифры",
-			Input:  "AmazingPassword!",
-			Output: fmt.Errorf("пароль должен содержать как минимум одну цифру"),
-		},
-		{
-			Name:   "Нет специального символа",
-			Input:  "AmazingPassword1",
-			Output: fmt.Errorf("пароль должен содержать как минимум один из специальных символов !@#$%%^&*"),
+			Output: fmt.Errorf("пароль может состоять из латинских букв, цифр и специальных символов !@#$%%^&*()_+\\-="),
 		},
 	}
 
@@ -62,9 +42,7 @@ func TestValidatePassword(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			err := ValidatePassword(tc.Input)
-			if err != nil {
-				require.EqualError(t, err, err.Error())
-			}
+			require.Equal(t, tc.Output, err)
 		})
 	}
 }
