@@ -28,7 +28,7 @@ services:
     depends_on:
       - postgres
   # ----------------------------------------------
-  # Микросервисы: Auth, Core, Static, Profanity
+  # Микросервисы: Core, Profanity
   # ----------------------------------------------
   profanity:
     restart: always
@@ -37,35 +37,6 @@ services:
       dockerfile: ./docker/profanity.dockerfile
     ports:
       - "8085:8085"
-  auth:
-    restart: always
-    environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-    build:
-      context: .
-      dockerfile: ./docker/auth.dockerfile
-    volumes:
-      - ./config_auth.yaml:/app/config_auth.yaml
-    ports:
-      - "8081:8081"
-    depends_on:
-      - redis
-  static:
-    restart: always
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
-      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
-    build:
-      context: .
-      dockerfile: ./docker/static.dockerfile
-    volumes:
-      - ./config_static.yaml:/app/config_static.yaml
-    ports:
-      - "8082:8082"
-    depends_on:
-      - postgres
   core:
     restart: always
     build:
@@ -73,6 +44,8 @@ services:
       dockerfile: ./docker/core.dockerfile
     volumes:
       - ./config.yaml:/app/config.yaml
+      - ./config_auth.yaml:/app/config_auth.yaml
+      - ./config_static.yaml:/app/config_static.yaml
     environment:
         POSTGRES_USER: ${POSTGRES_USER}
         POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -81,39 +54,5 @@ services:
       - "8080:8080"
     depends_on:
       - profanity
-      - auth
-      - static
       - postgres
       - redis
-  # ----------------------------------------------
-  # Метрики: Prometheus, Grafana
-  # ----------------------------------------------
-  node_exporter:
-    image: prom/node-exporter:latest
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
-    command:
-      - '--path.procfs=/host/proc'
-      - '--path.sysfs=/host/sys'
-      - '--path.rootfs=/rootfs'
-      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
-    ports:
-      - "9100:9100"
-  prometheus:
-    image: prom/prometheus:latest
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-    ports:
-      - "9090:9090"
-    depends_on:
-      - core
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
-    depends_on:
-      - prometheus
