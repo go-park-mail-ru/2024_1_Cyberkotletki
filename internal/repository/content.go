@@ -10,4 +10,7 @@ type Content interface {
 	GetPreviewContent(id int) (*entity.Content, error)
 	GetPerson(id int) (*entity.Person, error)
 	GetPersonRoles(id int) ([]entity.Content, error)
+	AddContent(content *entity.Content) (*entity.Content, error)
+	GetGenreByName(name string) (*entity.Genre, error)
+	GetCountryByName(name string) (*entity.Country, error)
 }

@@ -1,12 +1,15 @@
 package http
 
 import (
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http/utils"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
-	"github.com/labstack/echo/v4"
+	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http/utils"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
+	"github.com/labstack/echo/v4"
 )
 
 type ContentEndpoints struct {
@@ -20,6 +23,44 @@ func NewContentEndpoints(useCase usecase.Content) ContentEndpoints {
 func (h *ContentEndpoints) Configure(server *echo.Group) {
 	server.GET("/:id", h.GetContent)
 	server.GET("/person/:id", h.GetPerson)
+	server.POST("", h.CreateContent)
+}
+
+// CreateContent
+// @Summary Создание контента
+// @Tags content
+// @Description Создание контента
+// @Accept json
+// @Produce json
+// @Param content body dto.Content true "Контент"
+// @Success 200 {object} dto.Content
+// @Failure 400 {object} echo.HTTPError
+// @Failure 409 {object} echo.HTTPError
+// @Failure 500 {object} echo.HTTPError
+// @Router /content [post]
+// @Security _csrf
+func (h *ContentEndpoints) CreateContent(ctx echo.Context) error {
+	log.Println("CreateContent")
+	var contentCreate dto.Content
+	err := ctx.Bind(&contentCreate)
+	if err != nil {
+		log.Println("Bind error", err)
+		return utils.NewError(ctx, http.StatusBadRequest, entity.NewClientError("невалидный контент"))
+	}
+
+	contentDTO, err := h.useCase.CreateContent(contentCreate)
+	if err != nil {
+		switch {
+		case entity.Contains(err, entity.ErrBadRequest):
+			return utils.NewError(ctx, http.StatusBadRequest, err)
+		case entity.Contains(err, entity.ErrAlreadyExists):
+			return utils.NewError(ctx, http.StatusConflict, err)
+		default:
+			return utils.NewError(ctx, http.StatusInternalServerError, err)
+		}
+	}
+	return utils.WriteJSON(ctx, contentDTO)
+
 }
 
 // GetContent
@@ -34,6 +75,8 @@ func (h *ContentEndpoints) Configure(server *echo.Group) {
 // @Failure 500 {object} echo.HTTPError
 // @Router /content/{id} [get]
 func (h *ContentEndpoints) GetContent(ctx echo.Context) error {
+	log.Println("GetContent")
+
 	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
 		return utils.NewError(ctx, http.StatusBadRequest, entity.NewClientError("невалидный id контента"))

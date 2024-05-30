@@ -61,6 +61,21 @@ func (s StaticDB) GetStatic(staticID int) (string, error) {
 	return fmt.Sprintf("%s/%s", path, name), nil
 }
 
+func (s StaticDB) AddStaticToDB(path, name string) (int, error) {
+	// no-lint
+	query, args, _ := sq.
+		Insert("static").
+		Columns("path", "name").
+		Values(path, name).
+		Suffix("RETURNING id").
+		PlaceholderFormat(sq.Dollar).ToSql()
+	var id int
+	if err := s.DB.QueryRow(query, args...).Scan(&id); err != nil {
+		return -1, entity.NewClientError("Неизвестный тип контента, не найден", entity.ErrBadRequest)
+	}
+	return id, nil
+}
+
 // UploadStatic загружает статику на сервер
 func (s StaticDB) UploadStatic(path, filename string, data []byte) (int, error) {
 	if len(data) > s.maxSize {

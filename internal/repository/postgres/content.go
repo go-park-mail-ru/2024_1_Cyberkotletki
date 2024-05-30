@@ -4,12 +4,14 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/config"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
+	"github.com/lib/pq"
 )
 
 type ContentDB struct {
@@ -66,8 +68,8 @@ func NewContentRepository(database config.PostgresDatabase) (repository.Content,
 	}, nil
 }
 
-// getMovieData возвращает информацию о фильме по его ID
-func (c *ContentDB) getMovieData(id int) (*entity.Movie, error) {
+// GetMovieDataByID возвращает информацию о фильме по его ID
+func (c *ContentDB) GetMovieDataByID(id int) (*entity.Movie, error) {
 	// no-lint
 	query, args, _ := sq.Select("premiere", "release", "duration").
 		From("movie").
@@ -82,8 +84,8 @@ func (c *ContentDB) getMovieData(id int) (*entity.Movie, error) {
 	return &movie, nil
 }
 
-// getSeriesData возвращает информацию о сериале по его ID
-func (c *ContentDB) getSeriesData(id int) (*entity.Series, error) {
+// GetSeriesDataByID возвращает информацию о сериале по его ID
+func (c *ContentDB) GetSeriesDataByID(id int) (*entity.Series, error) {
 	// no-lint
 	query, args, _ := sq.Select("year_start", "year_end").
 		From("series").
@@ -199,8 +201,8 @@ func (c *ContentDB) getSeasonsByContentID(contentID int) ([]entity.Season, error
 	return seasons, nil
 }
 
-// getRoleIDByName возвращает айди роли по ее названию
-func (c *ContentDB) getRoleIDByName(role string) (int, error) {
+// GetRoleIDByName возвращает айди роли по ее названию
+func (c *ContentDB) GetRoleIDByName(role string) (int, error) {
 	// no-lint
 	query, args, _ := sq.Select("id").
 		From("role").
@@ -217,7 +219,7 @@ func (c *ContentDB) getRoleIDByName(role string) (int, error) {
 
 // getPersonsByRoleAndContentID возвращает персон контента по его ID и роли
 func (c *ContentDB) getPersonsByRoleAndContentID(role string, contentID int) ([]entity.Person, error) {
-	roleID, err := c.getRoleIDByName(role)
+	roleID, err := c.GetRoleIDByName(role)
 	if err != nil {
 		return nil, err
 	}
@@ -248,8 +250,8 @@ func (c *ContentDB) getPersonsByRoleAndContentID(role string, contentID int) ([]
 	return persons, nil
 }
 
-// getGenreByID возвращает жанр по его ID
-func (c *ContentDB) getGenreByID(id int) (*entity.Genre, error) {
+// GetGenreByID возвращает жанр по его ID
+func (c *ContentDB) GetGenreByID(id int) (*entity.Genre, error) {
 	query, args, _ := sq.Select("name").
 		From("genre").
 		Where(sq.Eq{"id": id}).
@@ -258,6 +260,22 @@ func (c *ContentDB) getGenreByID(id int) (*entity.Genre, error) {
 	var genre entity.Genre
 	err := c.DB.QueryRow(query, args...).Scan(&genre.Name)
 	genre.ID = id
+	if err != nil {
+		return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при получении жанра контента"))
+	}
+	return &genre, nil
+}
+
+// GetGenreByName возвращает жанр по его названию
+func (c *ContentDB) GetGenreByName(name string) (*entity.Genre, error) {
+	query, args, _ := sq.Select("id").
+		From("genre").
+		Where(sq.Eq{"name": name}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	var genre entity.Genre
+	err := c.DB.QueryRow(query, args...).Scan(&genre.ID)
+	genre.Name = name
 	if err != nil {
 		return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при получении жанра контента"))
 	}
@@ -285,7 +303,7 @@ func (c *ContentDB) getContentGenres(id int) ([]entity.Genre, error) {
 		if err != nil {
 			return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при получении жанров контента"))
 		}
-		genre, err := c.getGenreByID(genreID)
+		genre, err := c.GetGenreByID(genreID)
 		if err != nil {
 			return nil, err
 		}
@@ -295,8 +313,8 @@ func (c *ContentDB) getContentGenres(id int) ([]entity.Genre, error) {
 
 }
 
-// getCountryByID возвращает страну по ее ID
-func (c *ContentDB) getCountryByID(id int) (*entity.Country, error) {
+// GetCountryByID возвращает страну по ее ID
+func (c *ContentDB) GetCountryByID(id int) (*entity.Country, error) {
 	// no-lint
 	query, args, _ := sq.Select("name").
 		From("country").
@@ -306,6 +324,22 @@ func (c *ContentDB) getCountryByID(id int) (*entity.Country, error) {
 	var country entity.Country
 	err := c.DB.QueryRow(query, args...).Scan(&country.Name)
 	country.ID = id
+	if err != nil {
+		return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при получении страны производства контента"))
+	}
+	return &country, nil
+}
+
+// GetCountryByName возвращает страну по ее названию
+func (c *ContentDB) GetCountryByName(name string) (*entity.Country, error) {
+	query, args, _ := sq.Select("id").
+		From("country").
+		Where(sq.Eq{"name": name}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	var country entity.Country
+	err := c.DB.QueryRow(query, args...).Scan(&country.ID)
+	country.Name = name
 	if err != nil {
 		return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при получении страны производства контента"))
 	}
@@ -333,7 +367,7 @@ func (c *ContentDB) getContentProductionCountries(id int) ([]entity.Country, err
 		if err != nil {
 			return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при получении стран производства контента"))
 		}
-		country, err := c.getCountryByID(countryID)
+		country, err := c.GetCountryByID(countryID)
 		if err != nil {
 			return nil, err
 		}
@@ -359,6 +393,152 @@ func (c *ContentDB) getContentType(id int) (string, error) {
 		return "", entity.PSQLWrap(err, fmt.Errorf("ошибка при получении типа контента"))
 	}
 	return contentType, nil
+}
+
+func (c *ContentDB) addPersonToContent(role string, contentID, personID int) error {
+	role_ID, err := c.GetRoleIDByName(role)
+	if err != nil {
+		return err
+	}
+	query, args, _ := sq.Insert("person_role").
+		Columns("role_id", "content_id", "person_id").
+		Values(role_ID, contentID, personID).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+
+	_, err = c.DB.Exec(query, args...)
+	if err != nil {
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) {
+			switch pqErr.Code {
+			case entity.PSQLForeignKeyViolation:
+				return entity.NewClientError("Контента или персоны с таким id нет Не найден", entity.ErrNotFound)
+			case entity.PSQLUniqueViolation:
+				return entity.NewClientError("Такая роль уже добавлена", entity.ErrAlreadyExists)
+			default:
+				return entity.PSQLWrap(err, fmt.Errorf("ошибка при добавлении персоны к контенту"))
+			}
+		}
+		return entity.PSQLWrap(err, errors.New("ошибка при добавлении персоны к контенту"))
+	}
+	return err
+}
+
+func (c *ContentDB) addMovieData(id int, movie *entity.Movie) error {
+	query, args, _ := sq.Insert("movie").
+		Columns("content_id", "premiere", "release", "duration").
+		Values(id, movie.Premiere, movie.Release, movie.Duration).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+
+	_, err := c.DB.Exec(query, args...)
+	if err != nil {
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) {
+			switch pqErr.Code {
+			case entity.PSQLCheckViolation:
+				return entity.NewClientError("Некорректные данные фильма", entity.ErrBadRequest)
+			default:
+				return entity.PSQLWrap(err, fmt.Errorf("ошибка при добавлении информации о фильме"))
+			}
+		}
+		return entity.PSQLWrap(err, errors.New("ошибка при добавлении информации о фильме"))
+	}
+
+	return nil
+}
+
+// addSeriesData добавляет информацию о сериале
+func (c *ContentDB) addSeriesData(id int, series *entity.Series) error {
+	query, args, _ := sq.Insert("series").
+		Columns("content_id", "year_start", "year_end").
+		Values(id, series.YearStart, series.YearEnd).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+
+	_, err := c.DB.Exec(query, args...)
+	if err != nil {
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) {
+			switch pqErr.Code {
+			case entity.PSQLCheckViolation:
+				return entity.NewClientError("Некорректные данные сериала", entity.ErrBadRequest)
+			default:
+				return entity.PSQLWrap(err, fmt.Errorf("ошибка при добавлении информации о сериале"))
+			}
+		}
+		return entity.PSQLWrap(err, errors.New("ошибка при добавлении информации о сериале"))
+	}
+
+	// Добавление сезонов сериала
+	for _, season := range series.Seasons {
+		err := c.addSeasonToSeries(id, &season)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// addSeasonToSeries добавляет сезон к сериалу по его ID
+func (c *ContentDB) addSeasonToSeries(seriesID int, season *entity.Season) error {
+	// no-lint
+	query, args, _ := sq.Insert("season").
+		Columns("id", "year_start", "year_end", "content_id").
+		Values(season.ID, season.YearStart, season.YearEnd, seriesID).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+
+	_, err := c.DB.Exec(query, args...)
+	if err != nil {
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) {
+			switch pqErr.Code {
+			case entity.PSQLCheckViolation:
+				return entity.NewClientError("Некорректные данные сезона", entity.ErrBadRequest)
+			default:
+				return entity.PSQLWrap(err, fmt.Errorf("ошибка при добавлении сезона к сериалу"))
+			}
+		}
+		return entity.PSQLWrap(err, errors.New("ошибка при добавлении сезона к сериалу"))
+	}
+
+	for _, episode := range season.Episodes {
+		err = c.addEpisodeToSeason(season.ID, &episode)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// addEpisodeToSeason добавляет эпизод к сезону по его ID
+func (c *ContentDB) addEpisodeToSeason(seasonID int, episode *entity.Episode) error {
+	// no-lint
+	query, args, _ := sq.Insert("episode").
+		Columns("id", "episode_number", "title", "season_id").
+		Values(episode.ID, episode.EpisodeNumber, episode.Title, seasonID).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+
+	_, err := c.DB.Exec(query, args...)
+	if err != nil {
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) {
+			switch pqErr.Code {
+			case entity.PSQLForeignKeyViolation:
+				return entity.NewClientError("Сезона с таким id нет", entity.ErrNotFound)
+			case entity.PSQLCheckViolation:
+				return entity.NewClientError("Некорректные данные эпизода", entity.ErrBadRequest)
+			default:
+				return entity.PSQLWrap(err, fmt.Errorf("ошибка при добавлении эпизода к сезону"))
+			}
+		}
+		return entity.PSQLWrap(err, errors.New("ошибка при добавлении эпизода к сезону"))
+	}
+
+	return nil
 }
 
 func (c *ContentDB) GetContent(id int) (*entity.Content, error) {
@@ -456,19 +636,20 @@ func (c *ContentDB) GetContent(id int) (*entity.Content, error) {
 
 	switch contentType {
 	case entity.ContentTypeMovie:
-		movie, err := c.getMovieData(id)
+		movie, err := c.GetMovieDataByID(id)
 		if err != nil {
 			return nil, err
 		}
 		content.Movie = movie
 	case entity.ContentTypeSeries:
-		series, err := c.getSeriesData(id)
+		series, err := c.GetSeriesDataByID(id)
 		if err != nil {
+			log.Printf("Rep GetCont 647 Ошибка при получении сериала %v", err)
 			return nil, err
 		}
 		content.Series = series
 	default:
-		return nil, entity.NewClientError("Неизвестный тип контента", entity.ErrNotFound)
+		return nil, entity.NewClientError("Неизвестный тип контента, не", entity.ErrNotFound)
 	}
 	return &content, nil
 }
@@ -534,21 +715,169 @@ func (c *ContentDB) GetPreviewContent(id int) (*entity.Content, error) {
 	}
 	switch contentType {
 	case entity.ContentTypeMovie:
-		movie, err := c.getMovieData(id)
+		movie, err := c.GetMovieDataByID(id)
 		if err != nil {
 			return nil, err
 		}
 		content.Movie = movie
 	case entity.ContentTypeSeries:
-		series, err := c.getSeriesData(id)
+		series, err := c.GetSeriesDataByID(id)
 		if err != nil {
 			return nil, err
 		}
 		content.Series = series
 	default:
-		return nil, entity.NewClientError("Неизвестный тип контента", entity.ErrNotFound)
+		return nil, entity.NewClientError("Неизвестный тип контента, не найден", entity.ErrNotFound)
 	}
 	return &content, nil
+}
+
+func (c *ContentDB) AddContent(content *entity.Content) (*entity.Content, error) {
+	log.Printf("Добавление контента AddContent")
+	// вставка контента
+	query, args, _ := sq.Insert("content").
+		Columns("title",
+			"original_title",
+			"slogan",
+			"budget",
+			"age_restriction",
+			"audience",
+			"imdb",
+			"description",
+			"poster_upload_id",
+			"box_office",
+			"marketing_budget").
+		Values(
+			content.Title,
+			content.OriginalTitle,
+			content.Slogan,
+			content.Budget,
+			content.AgeRestriction,
+			content.Audience,
+			content.IMDBRating,
+			content.Description,
+			content.PosterStaticID,
+			content.BoxOffice,
+			content.Marketing,
+		).
+		Suffix("RETURNING id").
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+
+	err := c.DB.QueryRow(query, args...).Scan(&content.ID)
+	if err != nil {
+		log.Printf("Ошибка при добавлении контента %v", err)
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) {
+			switch pqErr.Code {
+			case entity.PSQLCheckViolation:
+				return nil, entity.NewClientError("Некорректные данные контента", entity.ErrBadRequest)
+			case entity.PSQLForeignKeyViolation:
+				return nil, entity.NewClientError("Постера с таким id нет, не найден", entity.ErrNotFound)
+			case entity.PSQLUniqueViolation:
+				return nil, entity.NewClientError("Контент с таким id уже существует", entity.ErrAlreadyExists)
+			default:
+				return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при добавлении контента"))
+			}
+		}
+		return nil, entity.PSQLWrap(err, errors.New("ошибка при добавлении контента"))
+	}
+
+	// вставка страны производства контента
+	for _, country := range content.Country {
+		query, args, _ = sq.Insert("country_content").
+			Columns("content_id", "country_id").
+			Values(content.ID, country.ID).
+			PlaceholderFormat(sq.Dollar).
+			ToSql()
+
+		_, err = c.DB.Exec(query, args...)
+		if err != nil {
+			log.Printf("Ошибка при добавлении страны производства контента %v", err)
+			var pqErr *pq.Error
+			if errors.As(err, &pqErr) {
+				switch pqErr.Code {
+				case entity.PSQLForeignKeyViolation:
+					return nil, entity.NewClientError("Контента или страны с таким id нет,не найден", entity.ErrNotFound)
+				case entity.PSQLCheckViolation:
+					return nil, entity.NewClientError("Некорректные данные страны производства контента", entity.ErrBadRequest)
+				default:
+					return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при добавлении страны производства контента"))
+				}
+			}
+			return nil, entity.PSQLWrap(err, errors.New("ошибка при добавлении страны производства контента"))
+		}
+	}
+
+	// вставка жанра контента
+	for _, genre := range content.Genres {
+		query, args, _ = sq.Insert("genre_content").
+			Columns("content_id", "genre_id").
+			Values(content.ID, genre.ID).
+			PlaceholderFormat(sq.Dollar).
+			ToSql()
+
+		_, err = c.DB.Exec(query, args...)
+		if err != nil {
+			log.Printf("Ошибка при добавлении жанра контента %v", err)
+			var pqErr *pq.Error
+			if errors.As(err, &pqErr) {
+				switch pqErr.Code {
+				case entity.PSQLForeignKeyViolation:
+					return nil, entity.NewClientError("Контента или жанра с таким id нет, не найден", entity.ErrNotFound)
+				case entity.PSQLCheckViolation:
+					return nil, entity.NewClientError("Некорректные данные жанра контента", entity.ErrBadRequest)
+				default:
+					return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при добавлении жанра контента"))
+				}
+			}
+			return nil, entity.PSQLWrap(err, errors.New("ошибка при добавлении жанра контента"))
+		}
+	}
+
+	// Вставка данных о людях, связанных с контентом
+	roles := []struct {
+		Role    string
+		Persons []entity.Person
+	}{
+		{Role: entity.RoleActor, Persons: content.Actors},
+		{Role: entity.RoleDirector, Persons: content.Directors},
+		{Role: entity.RoleProducer, Persons: content.Producers},
+		{Role: entity.RoleWriter, Persons: content.Writers},
+		{Role: entity.RoleOperator, Persons: content.Operators},
+		{Role: entity.RoleComposer, Persons: content.Composers},
+		{Role: entity.RoleEditor, Persons: content.Editors},
+	}
+	for _, rolePersons := range roles {
+		for _, person := range rolePersons.Persons {
+			err := c.addPersonToContent(rolePersons.Role, content.ID, person.ID)
+			if err != nil {
+				log.Printf("Ошибка при добавлении персоны к контенту %v", err)
+				return nil, err
+			}
+		}
+	}
+
+	// Вставка специфических данных для фильмов и сериалов
+	switch content.Type {
+	case entity.ContentTypeMovie:
+		err := c.addMovieData(content.ID, content.Movie)
+		if err != nil {
+			log.Printf("Ошибка при добавлении информации о фильме %v", err)
+			return nil, err
+		}
+	case entity.ContentTypeSeries:
+		err := c.addSeriesData(content.ID, content.Series)
+		if err != nil {
+			log.Printf("Ошибка при добавлении информации о сериале %v", err)
+			return nil, err
+		}
+	default:
+		return nil, entity.NewClientError("Неизвестный тип контента, не найден", entity.ErrNotFound)
+	}
+
+	return nil, err
+
 }
 
 func (c *ContentDB) GetPerson(id int) (*entity.Person, error) {

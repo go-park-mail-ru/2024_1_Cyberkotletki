@@ -6,4 +6,5 @@ import "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 type Content interface {
 	GetContentByID(id int) (*dto.Content, error)
 	GetPersonByID(id int) (*dto.Person, error)
+	CreateContent(content dto.Content) (*dto.Content, error)
 }

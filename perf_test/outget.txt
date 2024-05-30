@@ -1,0 +1,8 @@
+Running 60m test @ http://127.0.0.1:8080/api/review/50000
+  5 threads and 10 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   266.32ms   65.82ms 758.23ms   68.88%
+    Req/Sec     8.14      2.96    20.00     67.14%
+  135188 requests in 60.00m, 112.94MB read
+Requests/sec:     37.55
+Transfer/sec:     32.12KB

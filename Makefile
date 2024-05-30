@@ -92,3 +92,17 @@ run-linter:
 .PHONY: before-push
 before-push: run-linter run-tests
 	@echo "\033[0;32mВсе проверки прошли успешно. Можно делать git push.\033[0m"
+
+.PHONY: gen-wrk-report
+gen-wrk-report:
+	# Тест на создание отзыва
+	#
+	wrk -t5 -c10 -d60m -s perf_test/post.lua http://127.0.0.1:8080/api/review > perf_test/outpost.txt  
+	#
+	cat perf_test/outpost.txt
+	#
+	# Тест на получение отзыва
+	#
+	wrk -t5 -c10 -d60m -s perf_test/get_after_post.lua http://127.0.0.1:8080/api/review/50000 > perf_test/outget.txt
+	#
+	cat perf_test/outget.txt

@@ -234,13 +234,13 @@ definitions:
   dto.PersonPreview:
     properties:
       firstName:
-        example: Киану
+        example: Том
         type: string
       id:
         example: 1
         type: integer
       lastName:
-        example: Ривз
+        example: Хэнкс
         type: string
     type: object
   dto.PreviewContentCard:
@@ -644,6 +644,42 @@ paths:
       summary: Получение списка подборок
       tags:
       - compilation
+  /content:
+    post:
+      consumes:
+      - application/json
+      description: Создание контента
+      parameters:
+      - description: Контент
+        in: body
+        name: content
+        required: true
+        schema:
+          $ref: '#/definitions/dto.Content'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.Content'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      security:
+      - _csrf: []
+      summary: Создание контента
+      tags:
+      - content
   /content/{id}:
     get:
       description: Получение контента по id

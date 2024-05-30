@@ -1,6 +1,11 @@
 package entity
 
-import "time"
+import (
+	"log"
+	"strings"
+	"time"
+	"unicode/utf8"
+)
 
 // Content представляет основную структуру для хранения информации о контенте.
 // В зависимости от типа контента, некоторые поля могут быть пустыми.
@@ -66,3 +71,52 @@ const (
 	ContentTypeMovie  = "movie"
 	ContentTypeSeries = "series"
 )
+
+func ValidateAllContent(title, originalTitle, slogan, description string,
+	budget, ageRestriction, audience, boxOffice, marketing int, imdbRating float64,
+	typeContent string) error {
+	if utf8.RuneCountInString(strings.TrimSpace(title)) > 150 || utf8.RuneCountInString(strings.TrimSpace(title)) < 1 {
+		return NewClientError("Чило символов в названии фильма не должно превышать 150 символов", ErrBadRequest)
+	}
+	if utf8.RuneCountInString(strings.TrimSpace(originalTitle)) > 150 {
+		return NewClientError("Чило символов в оригинальном названии фильма не должно превышать 150 символов", ErrBadRequest)
+	}
+	if utf8.RuneCountInString(strings.TrimSpace(slogan)) > 150 {
+		return NewClientError("Чило символов в слогане не должно превышать 150 символов", ErrBadRequest)
+	}
+	if utf8.RuneCountInString(strings.TrimSpace(description)) > 10000 {
+		return NewClientError("Чило символов в описании не должно превышать 10000 символов", ErrBadRequest)
+	}
+	if typeContent != ContentTypeMovie && typeContent != ContentTypeSeries {
+		return NewClientError("Тип контента должен быть либо movie, либо series", ErrBadRequest)
+	}
+	if budget < 0 {
+		return NewClientError("Бюджет не может быть отрицательным", ErrBadRequest)
+	}
+	if ageRestriction < 0 {
+		return NewClientError("Возрастное ограничение не может быть отрицательным", ErrBadRequest)
+	}
+	if audience < 0 {
+		return NewClientError("Аудитория не может быть отрицательной", ErrBadRequest)
+	}
+	if imdbRating < 0 || imdbRating > 10 {
+		return NewClientError("Рейтинг IMDB не может быть отрицательным или больше 10", ErrBadRequest)
+	}
+	if boxOffice < 0 {
+		return NewClientError("Кассовые сборы не могут быть отрицательными", ErrBadRequest)
+	}
+	if marketing < 0 {
+		return NewClientError("Маркетинговые затраты не могут быть отрицательными", ErrBadRequest)
+	}
+	return nil
+}
+
+func ValidateContent(title, originalTitle, slogan, description string,
+	budget, ageRestriction, audience, boxOffice, marketing int, imdbRating float64,
+	typeContent string) error {
+	if err := ValidateAllContent(title, originalTitle, slogan, description, budget, ageRestriction, audience, boxOffice, marketing, imdbRating, typeContent); err != nil {
+		log.Println("Valid Error entity", err)
+		return err
+	}
+	return nil
+}

@@ -260,6 +260,63 @@ const docTemplate = `{
                 }
             }
         },
+        "/content": {
+            "post": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
+                "description": "Создание контента",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "content"
+                ],
+                "summary": "Создание контента",
+                "parameters": [
+                    {
+                        "description": "Контент",
+                        "name": "content",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.Content"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Content"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/content/person/{id}": {
             "get": {
                 "description": "Получение персоны по id",
@@ -1718,7 +1775,7 @@ const docTemplate = `{
             "properties": {
                 "firstName": {
                     "type": "string",
-                    "example": "Киану"
+                    "example": "Том"
                 },
                 "id": {
                     "type": "integer",
@@ -1726,7 +1783,7 @@ const docTemplate = `{
                 },
                 "lastName": {
                     "type": "string",
-                    "example": "Ривз"
+                    "example": "Хэнкс"
                 }
             }
         },

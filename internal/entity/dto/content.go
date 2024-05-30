@@ -50,8 +50,8 @@ type Episode struct {
 
 type PersonPreview struct {
 	ID        int    `json:"id"        example:"1"`
-	FirstName string `json:"firstName" example:"Киану"`
-	LastName  string `json:"lastName"  example:"Ривз"`
+	FirstName string `json:"firstName" example:"Том"`
+	LastName  string `json:"lastName"  example:"Хэнкс"`
 }
 
 type Person struct {
@@ -97,4 +97,33 @@ type Content struct {
 	Type           string          `json:"type"                example:"movie"`
 	Movie          MovieContent    `json:"movie,omitempty"`
 	Series         SeriesContent   `json:"series,omitempty"`
+}
+
+type ContentCreateRequest struct {
+	Title          string  `json:"title"          example:"Бэтмен"`
+	OriginalTitle  string  `json:"originalTitle"  example:"Batman"`
+	Slogan         string  `json:"slogan,omitempty"   example:"I'm Batman"`
+	Budget         int     `json:"budget,omitempty"   example:"1000000"`
+	AgeRestriction int     `json:"ageRestriction"     example:"18"`
+	Audience       int     `json:"audience,omitempty" example:"1000000"`
+	Rating         float64 `json:"rating"             example:"9.1"`
+	IMDBRating     float64 `json:"imdbRating"         example:"9.1"`
+	Description    string  `json:"description"        example:"Описание фильма или сериала"`
+	PosterURL      string  `json:"posterURL"          example:"/static/poster.jpg"`
+	BoxOffice      int     `json:"boxOffice,omitempty" example:"1000000"`
+	Marketing      int     `json:"marketing,omitempty" example:"1000000"`
+	Type           string  `json:"type"               example:"movie"`
+}
+
+type ContentCreate struct {
+	ContentCreateRequest
+	Contries  []string `json:"countries" example:"Россия,США"`
+	Genres    []string `json:"genres"    example:"Боевик,Драма"`
+	Actors    []int    `json:"actors"`
+	Directors []int    `json:"directors"`
+	Producers []int    `json:"producers"`
+	Writers   []int    `json:"writers"`
+	Operators []int    `json:"operators"`
+	Composers []int    `json:"composers"`
+	Editors   []int    `json:"editors"`
 }
