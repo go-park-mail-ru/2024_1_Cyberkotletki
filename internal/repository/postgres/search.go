@@ -23,7 +23,7 @@ func NewSearchRepository(db *sqlx.DB, contentDB repository.Content) repository.S
 
 // SearchContent ищет контент по запросу
 // nolint: dupl
-func (s SearchDB) SearchContent(query string) ([]entity.Content, error) {
+func (s SearchDB) SearchContent(query string) ([]int, error) {
 	sqlQuery, args, err := sq.
 		Select("id").
 		From("content").
@@ -47,26 +47,22 @@ THEN similarity(title, '%s') ELSE similarity(original_title, '%s') END DESC`, qu
 	}
 	defer rows.Close()
 
-	var contents []entity.Content
+	var contentIDs []int
 	for rows.Next() {
 		var contentID int
 		err = rows.Scan(&contentID)
 		if err != nil {
 			return nil, entity.PSQLWrap(err, errors.New("ошибка при сканировании строк в SearchContent"))
 		}
-		content, err := s.ContentDB.GetPreviewContent(contentID)
-		if err != nil {
-			return nil, entity.PSQLWrap(err, errors.New("ошибка при получении контента из SearchContent"))
-		}
-		contents = append(contents, *content)
+		contentIDs = append(contentIDs, contentID)
 	}
 
-	return contents, nil
+	return contentIDs, nil
 }
 
 // SearchPerson ищет персону по запросу
 // nolint: dupl
-func (s SearchDB) SearchPerson(query string) ([]entity.Person, error) {
+func (s SearchDB) SearchPerson(query string) ([]int, error) {
 	sqlQuery, args, err := sq.
 		Select("id").
 		From("person").
@@ -90,19 +86,15 @@ THEN similarity(Name, '%s') ELSE similarity(en_name, '%s') END DESC`, query, que
 	}
 	defer rows.Close()
 
-	var persons []entity.Person
+	var personIDs []int
 	for rows.Next() {
 		var personID int
 		err = rows.Scan(&personID)
 		if err != nil {
 			return nil, entity.PSQLWrap(err, errors.New("ошибка при сканировании строк в SearchPerson"))
 		}
-		person, err := s.ContentDB.GetPerson(personID)
-		if err != nil {
-			return nil, entity.PSQLWrap(err, errors.New("ошибка при получении персоны из SearchPerson"))
-		}
-		persons = append(persons, *person)
+		personIDs = append(personIDs, personID)
 	}
 
-	return persons, nil
+	return personIDs, nil
 }

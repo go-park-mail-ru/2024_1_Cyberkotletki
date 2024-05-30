@@ -9,6 +9,7 @@ import (
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -30,6 +31,8 @@ type ScanContent struct {
 	PosterStaticID   sql.NullInt64
 	TrailerURL       sql.NullString
 	BackdropStaticID sql.NullInt64
+	Ongoing          bool
+	OngoingDate      sql.NullTime
 }
 
 func NewContentRepository(db *sqlx.DB) repository.Content {
@@ -416,6 +419,8 @@ func (c *ContentDB) getContentInfo(id int) (*entity.Content, error) {
 		"poster_upload_id",
 		"trailer_url",
 		"backdrop_upload_id",
+		"ongoing",
+		"ongoing_date",
 	).
 		From("content").
 		Where(sq.Eq{"id": id}).
@@ -440,6 +445,8 @@ func (c *ContentDB) getContentInfo(id int) (*entity.Content, error) {
 		&scanContent.PosterStaticID,
 		&scanContent.TrailerURL,
 		&scanContent.BackdropStaticID,
+		&content.Ongoing,
+		&scanContent.OngoingDate,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -460,6 +467,9 @@ func (c *ContentDB) getContentInfo(id int) (*entity.Content, error) {
 	content.TrailerLink = scanContent.TrailerURL.String
 	content.BackdropStaticID = int(scanContent.BackdropStaticID.Int64)
 	content.Type = scanContent.ContentType
+	if scanContent.OngoingDate.Valid {
+		content.OngoingDate = &scanContent.OngoingDate.Time
+	}
 	return &content, nil
 }
 
@@ -605,6 +615,8 @@ func (c *ContentDB) getPreviewContentInfo(id int) (*entity.Content, error) {
 		"original_title",
 		"rating",
 		"poster_upload_id",
+		"ongoing",
+		"ongoing_date",
 	).
 		From("content").
 		Where(sq.Eq{"id": id}).
@@ -622,6 +634,8 @@ func (c *ContentDB) getPreviewContentInfo(id int) (*entity.Content, error) {
 		&scanContent.OriginalTitle,
 		&scanContent.Rating,
 		&scanContent.PosterStaticID,
+		&scanContent.Ongoing,
+		&scanContent.OngoingDate,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -635,6 +649,10 @@ func (c *ContentDB) getPreviewContentInfo(id int) (*entity.Content, error) {
 	content.OriginalTitle = scanContent.OriginalTitle.String
 	content.Rating = scanContent.Rating
 	content.PosterStaticID = int(scanContent.PosterStaticID.Int64)
+	content.Ongoing = scanContent.Ongoing
+	if scanContent.OngoingDate.Valid {
+		content.OngoingDate = &scanContent.OngoingDate.Time
+	}
 	return &content, nil
 }
 
@@ -795,4 +813,263 @@ func (c *ContentDB) GetPersonRoles(personID int) ([]entity.PersonRole, error) {
 		rows.Close()
 	}
 	return personRoles, nil
+}
+
+func (c *ContentDB) GetSimilarContent(id int) ([]entity.Content, error) {
+	// ну тут уж придётся обойтись без squirrel :)
+	query := `
+    WITH target_persons AS (
+        SELECT pr.person_id
+        FROM person_role pr
+        WHERE pr.content_id = $1
+    ),
+    target_genres AS (
+        SELECT gc.genre_id
+        FROM genre_content gc
+        WHERE gc.content_id = $1
+    ),
+    matched_contents AS (
+        SELECT pr.content_id, COUNT(*) AS person_match_count
+        FROM person_role pr
+        JOIN target_persons tp ON pr.person_id = tp.person_id
+        WHERE pr.content_id != $1
+        GROUP BY pr.content_id
+    ),
+    genre_matched_contents AS (
+        SELECT gc.content_id, COUNT(*) AS genre_match_count
+        FROM genre_content gc
+        JOIN target_genres tg ON gc.genre_id = tg.genre_id
+        WHERE gc.content_id != $1
+        GROUP BY gc.content_id
+    )
+    SELECT mc.content_id
+    FROM matched_contents mc
+    JOIN genre_matched_contents gmc ON mc.content_id = gmc.content_id
+    ORDER BY (mc.person_match_count + gmc.genre_match_count) DESC
+    LIMIT 10;
+    `
+
+	rows, err := c.DB.Query(query, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Собираем результаты
+	var contents []entity.Content
+	for rows.Next() {
+		var contentID int
+		err := rows.Scan(&contentID)
+		if err != nil {
+			return nil, err
+		}
+		content, err := c.GetPreviewContent(contentID)
+		if err != nil {
+			return nil, err
+		}
+		contents = append(contents, *content)
+	}
+
+	return contents, nil
+}
+
+func (c *ContentDB) GetNearestOngoings(limit int) ([]int, error) {
+	query, args, err := sq.Select("id").
+		From("content").
+		Where(sq.Eq{"ongoing": true}).
+		OrderBy("ongoing_date ASC").
+		Limit(uint64(limit)).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при формировании запроса GetNearestOngoings"))
+	}
+
+	rows, err := c.DB.Query(query, args...)
+	if err != nil {
+		return nil, entity.PSQLQueryErr("GetNearestOngoings", err)
+	}
+	defer rows.Close()
+
+	var contentIDs []int
+	for rows.Next() {
+		var contentID int
+		err := rows.Scan(&contentID)
+		if err != nil {
+			return nil, entity.PSQLQueryErr("GetNearestOngoings при сканировании", err)
+		}
+		contentIDs = append(contentIDs, contentID)
+	}
+
+	return contentIDs, nil
+}
+
+func (c *ContentDB) GetOngoingContentByMonthAndYear(month, year int) ([]int, error) {
+	query, args, err := sq.Select("id").
+		From("content").
+		Where(sq.Eq{"ongoing": true}).
+		Where(sq.Expr("EXTRACT(MONTH FROM ongoing_date) = ?", month)).
+		Where(sq.Expr("EXTRACT(YEAR FROM ongoing_date) = ?", year)).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при формировании запроса GetOngoingContentByMonthAndYear"))
+	}
+
+	rows, err := c.DB.Query(query, args...)
+	if err != nil {
+		return nil, entity.PSQLQueryErr("GetOngoingContentByMonthAndYear", err)
+	}
+	defer rows.Close()
+
+	var contentIDs []int
+	for rows.Next() {
+		var contentID int
+		err := rows.Scan(&contentID)
+		if err != nil {
+			return nil, entity.PSQLQueryErr("GetOngoingContentByMonthAndYear при сканировании", err)
+		}
+		contentIDs = append(contentIDs, contentID)
+	}
+
+	return contentIDs, nil
+}
+
+func (c *ContentDB) GetAllOngoingsYears() ([]int, error) {
+	query, args, err := sq.Select("EXTRACT(YEAR FROM ongoing_date)").
+		From("content").
+		Where(sq.Eq{"ongoing": true}).
+		GroupBy("EXTRACT(YEAR FROM ongoing_date)").
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при формировании запроса GetAllOngoingsYears"))
+	}
+
+	rows, err := c.DB.Query(query, args...)
+	if err != nil {
+		return nil, entity.PSQLQueryErr("GetAllOngoingsYears", err)
+	}
+	defer rows.Close()
+
+	var years []int
+	for rows.Next() {
+		var year int
+		err := rows.Scan(&year)
+		if err != nil {
+			return nil, entity.PSQLQueryErr("GetAllOngoingsYears при сканировании", err)
+		}
+		years = append(years, year)
+	}
+
+	return years, nil
+}
+
+func (c *ContentDB) IsOngoingContentReleased(contentID int) (bool, error) {
+	query, args, err := sq.Select("ongoing").
+		From("content").
+		Where(sq.Eq{"id": contentID}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return false, entity.PSQLWrap(err, fmt.Errorf("ошибка при формировании запроса IsOngoingContentReleased"))
+	}
+
+	var finished bool
+	err = c.DB.QueryRow(query, args...).Scan(&finished)
+	if err != nil {
+		return false, entity.PSQLQueryErr("IsOngoingContentReleased", err)
+	}
+
+	return !finished, nil
+}
+
+func (c *ContentDB) SetReleasedState(contentID int, released bool) error {
+	query, args, err := sq.Update("content").
+		Set("ongoing", !released).
+		Where(sq.Eq{"id": contentID}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return entity.PSQLWrap(err, fmt.Errorf("ошибка при формировании запроса SetReleasedState"))
+	}
+
+	rowsAffected, err := c.DB.Exec(query, args...)
+	if err != nil {
+		return entity.PSQLQueryErr("SetReleasedState", err)
+	}
+	if totalAffected, err := rowsAffected.RowsAffected(); err != nil || totalAffected == 0 {
+		return repository.ErrContentNotFound
+	}
+
+	return nil
+}
+
+func (c *ContentDB) SubscribeOnContent(userID, contentID int) error {
+	query, args, err := sq.Insert("ongoing_subscribe").
+		Columns("user_id", "content_id").
+		Values(userID, contentID).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return entity.PSQLWrap(err, fmt.Errorf("ошибка при формировании запроса SubscribeOnContent"))
+	}
+
+	_, err = c.DB.Exec(query, args...)
+	var pqErr *pq.Error
+	if errors.As(err, &pqErr) && pqErr.Code == entity.PSQLUniqueViolation {
+		return nil
+	}
+	if err != nil {
+		return entity.PSQLQueryErr("SubscribeOnContent", err)
+	}
+
+	return nil
+}
+
+func (c *ContentDB) UnsubscribeFromContent(userID, contentID int) error {
+	query, args, err := sq.Delete("ongoing_subscribe").
+		Where(sq.Eq{"user_id": userID, "content_id": contentID}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return entity.PSQLWrap(err, fmt.Errorf("ошибка при формировании запроса UnsubscribeFromContent"))
+	}
+
+	// Неважно сколько rows affected, т.к. пользователь может не быть подписан на контент
+	_, err = c.DB.Exec(query, args...)
+	if err != nil {
+		return entity.PSQLQueryErr("UnsubscribeFromContent", err)
+	}
+
+	return nil
+}
+
+func (c *ContentDB) GetSubscribedContentIDs(userID int) ([]int, error) {
+	query, args, err := sq.Select("content_id").
+		From("ongoing_subscribe").
+		Where(sq.Eq{"user_id": userID}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при формировании запроса GetSubscribedContentIDs"))
+	}
+
+	rows, err := c.DB.Query(query, args...)
+	if err != nil {
+		return nil, entity.PSQLQueryErr("GetSubscribedContentIDs", err)
+	}
+	defer rows.Close()
+
+	contentIDs := make([]int, 0)
+	for rows.Next() {
+		var contentID int
+		err := rows.Scan(&contentID)
+		if err != nil {
+			return nil, entity.PSQLQueryErr("GetSubscribedContentIDs при сканировании", err)
+		}
+		contentIDs = append(contentIDs, contentID)
+	}
+
+	return contentIDs, nil
 }

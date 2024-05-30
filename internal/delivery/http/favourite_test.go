@@ -221,8 +221,10 @@ func TestReviewEndpoints_GetFavourites(t *testing.T) {
 			ExpectedOutput: &dto.FavouritesResponse{
 				Favourites: []dto.Favourite{
 					{
-						ContentID: 1,
-						Category:  "favourite",
+						Content: dto.PreviewContent{
+							ID: 1,
+						},
+						Category: "favourite",
 					},
 				},
 			},
@@ -231,8 +233,10 @@ func TestReviewEndpoints_GetFavourites(t *testing.T) {
 				usecase.EXPECT().GetFavourites(1).Return(&dto.FavouritesResponse{
 					Favourites: []dto.Favourite{
 						{
-							ContentID: 1,
-							Category:  "favourite",
+							Content: dto.PreviewContent{
+								ID: 1,
+							},
+							Category: "favourite",
 						},
 					},
 				}, nil)
@@ -300,6 +304,278 @@ func TestReviewEndpoints_GetFavourites(t *testing.T) {
 			require.Equal(t, tc.ExpectedErr, err)
 			if tc.ExpectedErr == nil {
 				var reviews dto.FavouritesResponse
+				err = json.NewDecoder(rec.Body).Decode(&reviews)
+				require.NoError(t, err)
+				require.Equal(t, *tc.ExpectedOutput, reviews)
+			}
+		})
+	}
+}
+
+func TestReviewEndpoints_GetMyFavourites(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		Name                      string
+		Cookies                   *http.Cookie
+		ExpectedErr               error
+		ExpectedOutput            *dto.FavouritesResponse
+		SetupFavouriteUsecaseMock func(usecase *mockusecase.MockFavourite)
+		SetupAuthUsecaseMock      func(usecase *mockusecase.MockAuth)
+	}{
+		{
+			Name: "Успешное получение",
+			Cookies: &http.Cookie{
+				Name:  "session",
+				Value: "xxx",
+			},
+			ExpectedErr: nil,
+			ExpectedOutput: &dto.FavouritesResponse{
+				Favourites: []dto.Favourite{
+					{
+						Content: dto.PreviewContent{
+							ID: 1,
+						},
+						Category: "favourite",
+					},
+				},
+			},
+			SetupFavouriteUsecaseMock: func(usecase *mockusecase.MockFavourite) {
+				usecase.EXPECT().GetFavourites(1).Return(&dto.FavouritesResponse{
+					Favourites: []dto.Favourite{
+						{
+							Content: dto.PreviewContent{
+								ID: 1,
+							},
+							Category: "favourite",
+						},
+					},
+				}, nil)
+			},
+			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
+				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
+			},
+		},
+		{
+			Name: "Неожиданная ошибка",
+			Cookies: &http.Cookie{
+				Name:  "session",
+				Value: "xxx",
+			},
+			ExpectedErr: &echo.HTTPError{
+				Code:     500,
+				Message:  "Внутренняя ошибка сервера",
+				Internal: errors.New("123"),
+			},
+			ExpectedOutput: nil,
+			SetupFavouriteUsecaseMock: func(usecase *mockusecase.MockFavourite) {
+				usecase.EXPECT().GetFavourites(1).Return(nil, errors.New("123"))
+			},
+			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
+				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
+			},
+		},
+		{
+			Name: "Пользователь не авторизован",
+			ExpectedErr: &echo.HTTPError{
+				Code:    401,
+				Message: "Не авторизован",
+			},
+			ExpectedOutput:            nil,
+			SetupFavouriteUsecaseMock: func(usecase *mockusecase.MockFavourite) {},
+			SetupAuthUsecaseMock:      func(usecase *mockusecase.MockAuth) {},
+		},
+		{
+			Name: "Пользователь не найден",
+			Cookies: &http.Cookie{
+				Name:  "session",
+				Value: "xxx",
+			},
+			ExpectedErr: &echo.HTTPError{
+				Code:    404,
+				Message: "Пользователь не найден",
+			},
+			ExpectedOutput: nil,
+			SetupFavouriteUsecaseMock: func(uc *mockusecase.MockFavourite) {
+				uc.EXPECT().GetFavourites(1).Return(nil, usecase.ErrFavouriteUserNotFound)
+			},
+			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
+				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+			e := echo.New()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			mockFavouriteUsecase := mockusecase.NewMockFavourite(ctrl)
+			mockAuthUsecase := mockusecase.NewMockAuth(ctrl)
+			tc.SetupFavouriteUsecaseMock(mockFavouriteUsecase)
+			tc.SetupAuthUsecaseMock(mockAuthUsecase)
+
+			favouriteHandler := NewFavouriteEndpoints(mockFavouriteUsecase, mockAuthUsecase)
+			req := httptest.NewRequest(http.MethodDelete, "/favourite/", nil)
+			rec := httptest.NewRecorder()
+			c := e.NewContext(req, rec)
+			c.SetPath("/favourite/my")
+			c.Request().Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+			if tc.Cookies != nil {
+				req.AddCookie(tc.Cookies)
+			}
+			err := favouriteHandler.GetMyFavourites(c)
+			require.Equal(t, tc.ExpectedErr, err)
+		})
+	}
+}
+
+func TestReviewEndpoints_GetStatus(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		Name                      string
+		Cookies                   *http.Cookie
+		ContentID                 string
+		ExpectedErr               error
+		ExpectedOutput            *dto.FavouriteStatusResponse
+		SetupFavouriteUsecaseMock func(usecase *mockusecase.MockFavourite)
+		SetupAuthUsecaseMock      func(usecase *mockusecase.MockAuth)
+	}{
+		{
+			Name: "Успешное получение",
+			Cookies: &http.Cookie{
+				Name:  "session",
+				Value: "xxx",
+			},
+			ContentID:   "1",
+			ExpectedErr: nil,
+			ExpectedOutput: &dto.FavouriteStatusResponse{
+				Status: "favourite",
+			},
+			SetupFavouriteUsecaseMock: func(usecase *mockusecase.MockFavourite) {
+				usecase.EXPECT().GetStatus(1, 1).Return(&dto.FavouriteStatusResponse{Status: "favourite"}, nil)
+			},
+			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
+				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
+			},
+		},
+		{
+			Name: "Не найден",
+			Cookies: &http.Cookie{
+				Name:  "session",
+				Value: "xxx",
+			},
+			ContentID: "1",
+			ExpectedErr: &echo.HTTPError{
+				Code:    404,
+				Message: "Не добавлено в избранное",
+			},
+			ExpectedOutput: nil,
+			SetupFavouriteUsecaseMock: func(uc *mockusecase.MockFavourite) {
+				uc.EXPECT().GetStatus(1, 1).Return(nil, usecase.ErrFavouriteNotFound)
+			},
+			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
+				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
+			},
+		},
+		{
+			Name:      "Пользователь не авторизован",
+			ContentID: "1",
+			ExpectedErr: &echo.HTTPError{
+				Code:    401,
+				Message: "Не авторизован",
+			},
+			ExpectedOutput:            nil,
+			SetupFavouriteUsecaseMock: func(usecase *mockusecase.MockFavourite) {},
+			SetupAuthUsecaseMock:      func(usecase *mockusecase.MockAuth) {},
+		},
+		{
+			Name: "Внутренняя ошибка сервера",
+			Cookies: &http.Cookie{
+				Name:  "session",
+				Value: "xxx",
+			},
+			ContentID: "1",
+			ExpectedErr: &echo.HTTPError{
+				Code:     500,
+				Message:  "Внутренняя ошибка сервера",
+				Internal: errors.New("123"),
+			},
+			ExpectedOutput: nil,
+			SetupFavouriteUsecaseMock: func(usecase *mockusecase.MockFavourite) {
+				usecase.EXPECT().GetStatus(1, 1).Return(nil, errors.New("123"))
+			},
+			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
+				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
+			},
+		},
+		{
+			Name: "Невалидный айди",
+			Cookies: &http.Cookie{
+				Name:  "session",
+				Value: "xxx",
+			},
+			ContentID: "ogo!",
+			ExpectedErr: &echo.HTTPError{
+				Code:    400,
+				Message: "Невалидный ID",
+			},
+			ExpectedOutput:            nil,
+			SetupFavouriteUsecaseMock: func(usecase *mockusecase.MockFavourite) {},
+			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
+				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
+			},
+		},
+		{
+			Name: "Неожиданная ошибка",
+			Cookies: &http.Cookie{
+				Name:  "session",
+				Value: "xxx",
+			},
+			ContentID: "1",
+			ExpectedErr: &echo.HTTPError{
+				Code:     500,
+				Message:  "Внутренняя ошибка сервера",
+				Internal: errors.New("123"),
+			},
+			ExpectedOutput: nil,
+			SetupFavouriteUsecaseMock: func(usecase *mockusecase.MockFavourite) {
+				usecase.EXPECT().GetStatus(1, 1).Return(nil, errors.New("123"))
+			},
+			SetupAuthUsecaseMock: func(usecase *mockusecase.MockAuth) {
+				usecase.EXPECT().GetUserIDBySession("xxx").Return(1, nil)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+			e := echo.New()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			mockFavouriteUsecase := mockusecase.NewMockFavourite(ctrl)
+			mockAuthUsecase := mockusecase.NewMockAuth(ctrl)
+			tc.SetupFavouriteUsecaseMock(mockFavouriteUsecase)
+			tc.SetupAuthUsecaseMock(mockAuthUsecase)
+			favouriteHandler := NewFavouriteEndpoints(mockFavouriteUsecase, mockAuthUsecase)
+			req := httptest.NewRequest(http.MethodDelete, "/favourite/", nil)
+			rec := httptest.NewRecorder()
+			if tc.Cookies != nil {
+				req.AddCookie(tc.Cookies)
+			}
+			c := e.NewContext(req, rec)
+			c.SetPath("/favourite/status/:id")
+			c.SetParamNames("id")
+			c.SetParamValues(tc.ContentID)
+			err := favouriteHandler.GetStatus(c)
+			require.Equal(t, tc.ExpectedErr, err)
+			if tc.ExpectedErr == nil {
+				var reviews dto.FavouriteStatusResponse
 				err = json.NewDecoder(rec.Body).Decode(&reviews)
 				require.NoError(t, err)
 				require.Equal(t, *tc.ExpectedOutput, reviews)

@@ -447,6 +447,8 @@ func easyjson344736e9DecodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 			out.Poster = string(in.String())
 		case "rating":
 			out.Rating = float64(in.Float64())
+		case "ongoing":
+			out.Ongoing = bool(in.Bool())
 		case "type":
 			out.Type = string(in.String())
 		case "duration":
@@ -459,6 +461,18 @@ func easyjson344736e9DecodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 			out.YearStart = int(in.Int())
 		case "yearEnd":
 			out.YearEnd = int(in.Int())
+		case "ongoingDate":
+			if in.IsNull() {
+				in.Skip()
+				out.OngoingDate = nil
+			} else {
+				if out.OngoingDate == nil {
+					out.OngoingDate = new(time.Time)
+				}
+				if data := in.Raw(); in.Ok() {
+					in.AddError((*out.OngoingDate).UnmarshalJSON(data))
+				}
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -530,6 +544,11 @@ func easyjson344736e9EncodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 		out.Float64(float64(in.Rating))
 	}
 	{
+		const prefix string = ",\"ongoing\":"
+		out.RawString(prefix)
+		out.Bool(bool(in.Ongoing))
+	}
+	{
 		const prefix string = ",\"type\":"
 		out.RawString(prefix)
 		out.String(string(in.Type))
@@ -558,6 +577,11 @@ func easyjson344736e9EncodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 		const prefix string = ",\"yearEnd\":"
 		out.RawString(prefix)
 		out.Int(int(in.YearEnd))
+	}
+	if in.OngoingDate != nil {
+		const prefix string = ",\"ongoingDate\":"
+		out.RawString(prefix)
+		out.Raw((*in.OngoingDate).MarshalJSON())
 	}
 	out.RawByte('}')
 }
@@ -1434,6 +1458,43 @@ func easyjson344736e9DecodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 			(out.Movie).UnmarshalEasyJSON(in)
 		case "series":
 			(out.Series).UnmarshalEasyJSON(in)
+		case "similarContent":
+			if in.IsNull() {
+				in.Skip()
+				out.SimilarContent = nil
+			} else {
+				in.Delim('[')
+				if out.SimilarContent == nil {
+					if !in.IsDelim(']') {
+						out.SimilarContent = make([]PreviewContentCardVertical, 0, 0)
+					} else {
+						out.SimilarContent = []PreviewContentCardVertical{}
+					}
+				} else {
+					out.SimilarContent = (out.SimilarContent)[:0]
+				}
+				for !in.IsDelim(']') {
+					var v29 PreviewContentCardVertical
+					(v29).UnmarshalEasyJSON(in)
+					out.SimilarContent = append(out.SimilarContent, v29)
+					in.WantComma()
+				}
+				in.Delim(']')
+			}
+		case "ongoing":
+			out.Ongoing = bool(in.Bool())
+		case "ongoingDate":
+			if in.IsNull() {
+				in.Skip()
+				out.OngoingDate = nil
+			} else {
+				if out.OngoingDate == nil {
+					out.OngoingDate = new(time.Time)
+				}
+				if data := in.Raw(); in.Ok() {
+					in.AddError((*out.OngoingDate).UnmarshalJSON(data))
+				}
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -1500,11 +1561,11 @@ func easyjson344736e9EncodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v29, v30 := range in.Facts {
-				if v29 > 0 {
+			for v30, v31 := range in.Facts {
+				if v30 > 0 {
 					out.RawByte(',')
 				}
-				out.String(string(v30))
+				out.String(string(v31))
 			}
 			out.RawByte(']')
 		}
@@ -1526,11 +1587,11 @@ func easyjson344736e9EncodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v31, v32 := range in.PicturesURL {
-				if v31 > 0 {
+			for v32, v33 := range in.PicturesURL {
+				if v32 > 0 {
 					out.RawByte(',')
 				}
-				out.String(string(v32))
+				out.String(string(v33))
 			}
 			out.RawByte(']')
 		}
@@ -1547,11 +1608,11 @@ func easyjson344736e9EncodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v33, v34 := range in.Countries {
-				if v33 > 0 {
+			for v34, v35 := range in.Countries {
+				if v34 > 0 {
 					out.RawByte(',')
 				}
-				out.String(string(v34))
+				out.String(string(v35))
 			}
 			out.RawByte(']')
 		}
@@ -1563,11 +1624,11 @@ func easyjson344736e9EncodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v35, v36 := range in.Genres {
-				if v35 > 0 {
+			for v36, v37 := range in.Genres {
+				if v36 > 0 {
 					out.RawByte(',')
 				}
-				out.String(string(v36))
+				out.String(string(v37))
 			}
 			out.RawByte(']')
 		}
@@ -1579,11 +1640,11 @@ func easyjson344736e9EncodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v37, v38 := range in.Actors {
-				if v37 > 0 {
+			for v38, v39 := range in.Actors {
+				if v38 > 0 {
 					out.RawByte(',')
 				}
-				(v38).MarshalEasyJSON(out)
+				(v39).MarshalEasyJSON(out)
 			}
 			out.RawByte(']')
 		}
@@ -1595,11 +1656,11 @@ func easyjson344736e9EncodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v39, v40 := range in.Directors {
-				if v39 > 0 {
+			for v40, v41 := range in.Directors {
+				if v40 > 0 {
 					out.RawByte(',')
 				}
-				(v40).MarshalEasyJSON(out)
+				(v41).MarshalEasyJSON(out)
 			}
 			out.RawByte(']')
 		}
@@ -1611,11 +1672,11 @@ func easyjson344736e9EncodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v41, v42 := range in.Producers {
-				if v41 > 0 {
+			for v42, v43 := range in.Producers {
+				if v42 > 0 {
 					out.RawByte(',')
 				}
-				(v42).MarshalEasyJSON(out)
+				(v43).MarshalEasyJSON(out)
 			}
 			out.RawByte(']')
 		}
@@ -1627,11 +1688,11 @@ func easyjson344736e9EncodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v43, v44 := range in.Writers {
-				if v43 > 0 {
+			for v44, v45 := range in.Writers {
+				if v44 > 0 {
 					out.RawByte(',')
 				}
-				(v44).MarshalEasyJSON(out)
+				(v45).MarshalEasyJSON(out)
 			}
 			out.RawByte(']')
 		}
@@ -1643,11 +1704,11 @@ func easyjson344736e9EncodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v45, v46 := range in.Operators {
-				if v45 > 0 {
+			for v46, v47 := range in.Operators {
+				if v46 > 0 {
 					out.RawByte(',')
 				}
-				(v46).MarshalEasyJSON(out)
+				(v47).MarshalEasyJSON(out)
 			}
 			out.RawByte(']')
 		}
@@ -1659,11 +1720,11 @@ func easyjson344736e9EncodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v47, v48 := range in.Composers {
-				if v47 > 0 {
+			for v48, v49 := range in.Composers {
+				if v48 > 0 {
 					out.RawByte(',')
 				}
-				(v48).MarshalEasyJSON(out)
+				(v49).MarshalEasyJSON(out)
 			}
 			out.RawByte(']')
 		}
@@ -1675,11 +1736,11 @@ func easyjson344736e9EncodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v49, v50 := range in.Editors {
-				if v49 > 0 {
+			for v50, v51 := range in.Editors {
+				if v50 > 0 {
 					out.RawByte(',')
 				}
-				(v50).MarshalEasyJSON(out)
+				(v51).MarshalEasyJSON(out)
 			}
 			out.RawByte(']')
 		}
@@ -1698,6 +1759,30 @@ func easyjson344736e9EncodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 		const prefix string = ",\"series\":"
 		out.RawString(prefix)
 		(in.Series).MarshalEasyJSON(out)
+	}
+	if len(in.SimilarContent) != 0 {
+		const prefix string = ",\"similarContent\":"
+		out.RawString(prefix)
+		{
+			out.RawByte('[')
+			for v52, v53 := range in.SimilarContent {
+				if v52 > 0 {
+					out.RawByte(',')
+				}
+				(v53).MarshalEasyJSON(out)
+			}
+			out.RawByte(']')
+		}
+	}
+	{
+		const prefix string = ",\"ongoing\":"
+		out.RawString(prefix)
+		out.Bool(bool(in.Ongoing))
+	}
+	if in.OngoingDate != nil {
+		const prefix string = ",\"ongoingDate\":"
+		out.RawString(prefix)
+		out.Raw((*in.OngoingDate).MarshalJSON())
 	}
 	out.RawByte('}')
 }

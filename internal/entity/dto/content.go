@@ -12,6 +12,7 @@ type PreviewContent struct {
 	Actors        []string `json:"actors"                  example:"Том Хэнкс,Сергей Бодров"`
 	Poster        string   `json:"poster"                  example:"/static/poster.jpg"`
 	Rating        float64  `json:"rating"                  example:"9.1"`
+	Ongoing       bool     `json:"ongoing"                 example:"true"`
 
 	Type string `json:"type" example:"movie"`
 	// Поля, которые есть только у фильмов
@@ -21,6 +22,9 @@ type PreviewContent struct {
 	SeasonsNumber int `json:"seasonsNumber,omitempty" example:"1"`
 	YearStart     int `json:"yearStart,omitempty"     example:"2020"`
 	YearEnd       int `json:"yearEnd,omitempty"       example:"2021"`
+
+	// Поля, которые есть только у онгоингов
+	OngoingDate *time.Time `json:"ongoingDate,omitempty" example:"2022-01-02T15:04:05Z"`
 }
 
 type PreviewContentCardVertical struct {
@@ -114,4 +118,9 @@ type Content struct {
 	Type           string          `json:"type"             example:"movie"`
 	Movie          MovieContent    `json:"movie,omitempty"`
 	Series         SeriesContent   `json:"series,omitempty"`
+
+	SimilarContent []PreviewContentCardVertical `json:"similarContent,omitempty"`
+
+	Ongoing     bool       `json:"ongoing"               example:"true"`
+	OngoingDate *time.Time `json:"ongoingDate,omitempty" example:"2022-01-02T15:04:05Z"`
 }

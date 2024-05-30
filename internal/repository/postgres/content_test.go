@@ -2,8 +2,6 @@ package postgres
 
 import (
 	"database/sql/driver"
-	"errors"
-	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
@@ -37,6 +35,8 @@ func setupGetContentSuccess(mock sqlmock.Sqlmock, contentID int, contentType str
 		"poster_upload_id",
 		"trailer_url",
 		"backdrop_upload_id",
+		"ongoing",
+		"ongoing_date",
 	).
 		From("content").
 		Where(sq.Eq{"id": contentID}).
@@ -57,6 +57,8 @@ func setupGetContentSuccess(mock sqlmock.Sqlmock, contentID int, contentType str
 			"poster_upload_id",
 			"trailer_url",
 			"backdrop_upload_id",
+			"ongoing",
+			"ongoing_date",
 		}).AddRow(
 			contentID,
 			contentType,
@@ -71,6 +73,8 @@ func setupGetContentSuccess(mock sqlmock.Sqlmock, contentID int, contentType str
 			501,
 			"trailer",
 			500,
+			false,
+			nil,
 		))
 }
 
@@ -486,9 +490,7 @@ func TestContentDB_GetContent(t *testing.T) {
 			repo := NewContentRepository(dbx)
 			tc.SetupMock(mock)
 			output, err := repo.GetContent(tc.Request)
-			if !errors.Is(err, tc.ExpectedErr) {
-				require.Fail(t, fmt.Errorf("unexpected error, expected: %v, got: %v", tc.ExpectedErr, err).Error())
-			}
+			require.Equal(t, tc.ExpectedErr, err)
 			require.Equal(t, tc.ExpectedOut, output)
 		})
 	}

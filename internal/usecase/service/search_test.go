@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 	mockrepo "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/mocks"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
 	mockusecase "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/mocks"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -84,18 +84,19 @@ func TestSearchService_Search(t *testing.T) {
 		Input               string
 		ExpectedErr         error
 		SetupSearchRepoMock func(repo *mockrepo.MockSearch)
-		SetupStaticUCMock   func(uc *mockusecase.MockStatic)
+		SetupContentUCMock  func(uc *mockusecase.MockContent)
 	}{
 		{
 			Name:        "Успешный поиск фильма",
 			Input:       "query",
 			ExpectedErr: nil,
 			SetupSearchRepoMock: func(repo *mockrepo.MockSearch) {
-				repo.EXPECT().SearchContent(gomock.Any()).Return(defaultEntityContentMovie, nil)
-				repo.EXPECT().SearchPerson(gomock.Any()).Return(defaultEntityPerson, nil)
+				repo.EXPECT().SearchContent(gomock.Any()).Return([]int{1}, nil)
+				repo.EXPECT().SearchPerson(gomock.Any()).Return([]int{1}, nil)
 			},
-			SetupStaticUCMock: func(uc *mockusecase.MockStatic) {
-				uc.EXPECT().GetStatic(gomock.Any()).Return("posterURL", nil).AnyTimes()
+			SetupContentUCMock: func(uc *mockusecase.MockContent) {
+				uc.EXPECT().GetPreviewContentByID(1).Return(&dto.PreviewContent{}, nil)
+				uc.EXPECT().GetPreviewPersonByID(1).Return(&dto.PersonPreviewWithPhoto{}, nil)
 			},
 		},
 		{
@@ -103,11 +104,12 @@ func TestSearchService_Search(t *testing.T) {
 			Input:       "query",
 			ExpectedErr: nil,
 			SetupSearchRepoMock: func(repo *mockrepo.MockSearch) {
-				repo.EXPECT().SearchContent(gomock.Any()).Return(defaultEntityContentSeries, nil)
-				repo.EXPECT().SearchPerson(gomock.Any()).Return(defaultEntityPerson, nil)
+				repo.EXPECT().SearchContent(gomock.Any()).Return([]int{1}, nil)
+				repo.EXPECT().SearchPerson(gomock.Any()).Return([]int{1}, nil)
 			},
-			SetupStaticUCMock: func(uc *mockusecase.MockStatic) {
-				uc.EXPECT().GetStatic(gomock.Any()).Return("posterURL", nil).AnyTimes()
+			SetupContentUCMock: func(uc *mockusecase.MockContent) {
+				uc.EXPECT().GetPreviewContentByID(1).Return(&dto.PreviewContent{}, nil)
+				uc.EXPECT().GetPreviewPersonByID(1).Return(&dto.PersonPreviewWithPhoto{}, nil)
 			},
 		},
 		{
@@ -117,7 +119,7 @@ func TestSearchService_Search(t *testing.T) {
 			SetupSearchRepoMock: func(repo *mockrepo.MockSearch) {
 				repo.EXPECT().SearchContent(gomock.Any()).Return(nil, errors.New("ошибка при поиске контента в SearchService"))
 			},
-			SetupStaticUCMock: func(uc *mockusecase.MockStatic) {
+			SetupContentUCMock: func(uc *mockusecase.MockContent) {
 
 			},
 		},
@@ -126,48 +128,11 @@ func TestSearchService_Search(t *testing.T) {
 			Input:       "query",
 			ExpectedErr: entity.UsecaseWrap(errors.New("ошибка при поиске персон в SearchService"), errors.New("ошибка при поиске персон в SearchService")),
 			SetupSearchRepoMock: func(repo *mockrepo.MockSearch) {
-				repo.EXPECT().SearchContent(gomock.Any()).Return([]entity.Content{}, nil)
+				repo.EXPECT().SearchContent(gomock.Any()).Return([]int{1}, nil)
 				repo.EXPECT().SearchPerson(gomock.Any()).Return(nil, errors.New("ошибка при поиске персон в SearchService"))
 			},
-			SetupStaticUCMock: func(uc *mockusecase.MockStatic) {
+			SetupContentUCMock: func(uc *mockusecase.MockContent) {
 
-			},
-		},
-		{
-			Name:        "Ошибка поиска статики",
-			Input:       "query",
-			ExpectedErr: entity.UsecaseWrap(errors.New("123"), errors.New("ошибка при получении статики контента из Search")),
-			SetupSearchRepoMock: func(repo *mockrepo.MockSearch) {
-				repo.EXPECT().SearchContent(gomock.Any()).Return(defaultEntityContentMovie, nil)
-				repo.EXPECT().SearchPerson(gomock.Any()).Return(defaultEntityPerson, nil)
-			},
-			SetupStaticUCMock: func(uc *mockusecase.MockStatic) {
-				uc.EXPECT().GetStatic(gomock.Any()).Return("", errors.New("123")).AnyTimes()
-			},
-		},
-		{
-			Name:        "Ошибка поиска статики контента",
-			Input:       "query",
-			ExpectedErr: nil,
-			SetupSearchRepoMock: func(repo *mockrepo.MockSearch) {
-				repo.EXPECT().SearchContent(gomock.Any()).Return(defaultEntityContentMovie, nil)
-				repo.EXPECT().SearchPerson(gomock.Any()).Return(defaultEntityPerson, nil)
-			},
-			SetupStaticUCMock: func(uc *mockusecase.MockStatic) {
-				uc.EXPECT().GetStatic(gomock.Any()).Return("", usecase.ErrStaticNotFound).AnyTimes()
-			},
-		},
-		{
-			Name:        "Ошибка поиска статики персоны",
-			Input:       "query",
-			ExpectedErr: entity.UsecaseWrap(errors.New("123"), errors.New("ошибка при получении статики персоны из Search")),
-			SetupSearchRepoMock: func(repo *mockrepo.MockSearch) {
-				repo.EXPECT().SearchContent(gomock.Any()).Return(defaultEntityContentMovie, nil)
-				repo.EXPECT().SearchPerson(gomock.Any()).Return(defaultEntityPerson, nil)
-			},
-			SetupStaticUCMock: func(uc *mockusecase.MockStatic) {
-				uc.EXPECT().GetStatic(1).Return("", nil)
-				uc.EXPECT().GetStatic(gomock.Any()).Return("", errors.New("123")).AnyTimes()
 			},
 		},
 	}
@@ -179,10 +144,10 @@ func TestSearchService_Search(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockSearchRepo := mockrepo.NewMockSearch(ctrl)
-			mockStaticUC := mockusecase.NewMockStatic(ctrl)
-			searchService := NewSearchService(mockSearchRepo, mockStaticUC)
+			mockContentUC := mockusecase.NewMockContent(ctrl)
+			searchService := NewSearchService(mockSearchRepo, mockContentUC)
 			tc.SetupSearchRepoMock(mockSearchRepo)
-			tc.SetupStaticUCMock(mockStaticUC)
+			tc.SetupContentUCMock(mockContentUC)
 			_, err := searchService.Search(tc.Input)
 			require.Equal(t, tc.ExpectedErr, err)
 		})

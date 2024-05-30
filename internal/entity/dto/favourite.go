@@ -7,7 +7,7 @@ type CreateFavouriteRequest struct {
 }
 
 type Favourite struct {
-	ContentID int `json:"contentID" example:"1" format:"int" description:"идентификатор контента"`
+	Content PreviewContent `json:"content" description:"контент"`
 	// nolint:lll
 	Category string `json:"category" example:"favourite" format:"string" description:"может быть favourite/watching/watched/planned/rewatching/abandoned"`
 }

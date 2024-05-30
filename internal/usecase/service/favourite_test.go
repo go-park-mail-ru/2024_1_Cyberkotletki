@@ -3,6 +3,7 @@ package service
 import (
 	//"database/sql"
 	"errors"
+	mock_usecase "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/mocks"
 	"testing"
 
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
@@ -61,7 +62,8 @@ func TestFavouriteService_DeleteFavourite(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockFavouriteRepo := mockrepo.NewMockFavourite(ctrl)
-			favService := NewFavouriteService(mockFavouriteRepo)
+			mockContentUC := mock_usecase.NewMockContent(ctrl)
+			favService := NewFavouriteService(mockFavouriteRepo, mockContentUC)
 			tc.SetupFavouriteRepoMock(mockFavouriteRepo)
 			err := favService.DeleteFavourite(tc.UserID, tc.ContentID)
 			require.Equal(t, tc.ExpectedErr, err)
@@ -78,6 +80,7 @@ func TestFavouriteService_GetFavourites(t *testing.T) {
 		ExpectedErr            error
 		ExpectedFavourites     *dto.FavouritesResponse
 		SetupFavouriteRepoMock func(repo *mockrepo.MockFavourite)
+		SetupContentUCMock     func(uc *mock_usecase.MockContent)
 	}{
 		{
 			Name:        "Успех",
@@ -85,13 +88,16 @@ func TestFavouriteService_GetFavourites(t *testing.T) {
 			ExpectedErr: nil,
 			ExpectedFavourites: &dto.FavouritesResponse{
 				Favourites: []dto.Favourite{
-					{ContentID: 1, Category: "favourite"},
+					{Content: dto.PreviewContent{ID: 1}, Category: "favourite"},
 				},
 			},
 			SetupFavouriteRepoMock: func(repo *mockrepo.MockFavourite) {
 				repo.EXPECT().GetFavourites(1).Return([]*entity.Favourite{
 					{ContentID: 1, Category: "favourite"},
 				}, nil).AnyTimes()
+			},
+			SetupContentUCMock: func(uc *mock_usecase.MockContent) {
+				uc.EXPECT().GetPreviewContentByID(1).Return(&dto.PreviewContent{ID: 1}, nil).AnyTimes()
 			},
 		},
 		{
@@ -101,6 +107,22 @@ func TestFavouriteService_GetFavourites(t *testing.T) {
 			SetupFavouriteRepoMock: func(repo *mockrepo.MockFavourite) {
 				repo.EXPECT().GetFavourites(1).Return(nil, errors.New("database error"))
 			},
+			SetupContentUCMock: func(uc *mock_usecase.MockContent) {
+
+			},
+		},
+		{
+			Name:        "Ошибка при получении контента в избранном",
+			UserID:      1,
+			ExpectedErr: entity.UsecaseWrap(errors.New("database error"), errors.New("ошибка при получении контента из избранного в FavouriteService")),
+			SetupFavouriteRepoMock: func(repo *mockrepo.MockFavourite) {
+				repo.EXPECT().GetFavourites(1).Return([]*entity.Favourite{
+					{ContentID: 1, Category: "favourite"},
+				}, nil).AnyTimes()
+			},
+			SetupContentUCMock: func(uc *mock_usecase.MockContent) {
+				uc.EXPECT().GetPreviewContentByID(1).Return(nil, errors.New("database error"))
+			},
 		},
 		{
 			Name:        "Пользователь не найден",
@@ -108,6 +130,9 @@ func TestFavouriteService_GetFavourites(t *testing.T) {
 			ExpectedErr: repository.ErrFavouriteUserNotFound,
 			SetupFavouriteRepoMock: func(repo *mockrepo.MockFavourite) {
 				repo.EXPECT().GetFavourites(1).Return(nil, repository.ErrFavouriteUserNotFound)
+			},
+			SetupContentUCMock: func(uc *mock_usecase.MockContent) {
+
 			},
 		},
 	}
@@ -119,8 +144,10 @@ func TestFavouriteService_GetFavourites(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockFavouriteRepo := mockrepo.NewMockFavourite(ctrl)
-			favService := NewFavouriteService(mockFavouriteRepo)
+			mockContentUC := mock_usecase.NewMockContent(ctrl)
+			favService := NewFavouriteService(mockFavouriteRepo, mockContentUC)
 			tc.SetupFavouriteRepoMock(mockFavouriteRepo)
+			tc.SetupContentUCMock(mockContentUC)
 			response, err := favService.GetFavourites(tc.UserID)
 			require.Equal(t, tc.ExpectedErr, err)
 			require.Equal(t, tc.ExpectedFavourites, response)
@@ -180,7 +207,8 @@ func TestFavouriteService_GetStatus(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockFavouriteRepo := mockrepo.NewMockFavourite(ctrl)
-			favService := NewFavouriteService(mockFavouriteRepo)
+			mockContentUC := mock_usecase.NewMockContent(ctrl)
+			favService := NewFavouriteService(mockFavouriteRepo, mockContentUC)
 			tc.SetupFavouriteRepoMock(mockFavouriteRepo)
 			response, err := favService.GetStatus(tc.UserID, tc.ContentID)
 			require.Equal(t, tc.ExpectedErr, err)
@@ -247,7 +275,8 @@ func TestFavouriteService_CreateFavourite(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockFavouriteRepo := mockrepo.NewMockFavourite(ctrl)
-			favService := NewFavouriteService(mockFavouriteRepo)
+			mockContentUC := mock_usecase.NewMockContent(ctrl)
+			favService := NewFavouriteService(mockFavouriteRepo, mockContentUC)
 			tc.SetupFavouriteRepoMock(mockFavouriteRepo)
 			err := favService.CreateFavourite(tc.UserID, tc.ContentID, tc.Category)
 			require.Equal(t, tc.ExpectedErr, err)

@@ -12,7 +12,6 @@ package mock_repository
 import (
 	reflect "reflect"
 
-	entity "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -40,10 +39,10 @@ func (m *MockSearch) EXPECT() *MockSearchMockRecorder {
 }
 
 // SearchContent mocks base method.
-func (m *MockSearch) SearchContent(query string) ([]entity.Content, error) {
+func (m *MockSearch) SearchContent(query string) ([]int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SearchContent", query)
-	ret0, _ := ret[0].([]entity.Content)
+	ret0, _ := ret[0].([]int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -55,10 +54,10 @@ func (mr *MockSearchMockRecorder) SearchContent(query any) *gomock.Call {
 }
 
 // SearchPerson mocks base method.
-func (m *MockSearch) SearchPerson(query string) ([]entity.Person, error) {
+func (m *MockSearch) SearchPerson(query string) ([]int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SearchPerson", query)
-	ret0, _ := ret[0].([]entity.Person)
+	ret0, _ := ret[0].([]int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

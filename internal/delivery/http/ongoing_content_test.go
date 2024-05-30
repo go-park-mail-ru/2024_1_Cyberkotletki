@@ -2,11 +2,10 @@ package http
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"time"
 
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity/dto"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase"
@@ -16,113 +15,49 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestOngoingContentEndpoints_GetOngoingContentByContentID(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		Name                           string
-		OngoingID                      string
-		ExpectedErr                    error
-		SetupOngoingContentUsecaseMock func(mock *mockusecase.MockOngoingContent)
-	}{
-		{
-			Name:        "Успех",
-			OngoingID:   "1",
-			ExpectedErr: nil,
-			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockOngoingContent) {
-				mock.EXPECT().GetOngoingContentByContentID(1).Return(nil, nil)
-			},
-		},
-		{
-			Name:                           "Ошибка валидации",
-			OngoingID:                      "abc",
-			ExpectedErr:                    &echo.HTTPError{Code: 400, Message: "невалидный id контента календаря релизов"},
-			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockOngoingContent) {},
-		},
-		{
-			Name:        "Контент не найден",
-			OngoingID:   "1",
-			ExpectedErr: &echo.HTTPError{Code: 404, Message: "контент календаря релизов не найден"},
-			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockOngoingContent) {
-				mock.EXPECT().GetOngoingContentByContentID(1).Return(nil, usecase.ErrOngoingContentNotFound)
-			},
-		},
-		{
-			Name:        "Неожиданная ошибка",
-			OngoingID:   "1",
-			ExpectedErr: &echo.HTTPError{Code: 500, Message: "ошибка при получении контента календаря релизов", Internal: errors.New("123")},
-			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockOngoingContent) {
-				mock.EXPECT().GetOngoingContentByContentID(1).Return(nil, errors.New("123"))
-			},
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			t.Parallel()
-			e := echo.New()
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-			mockOngoingContentUsecase := mockusecase.NewMockOngoingContent(ctrl)
-			ongoingContentEndpoints := NewOngoingContentEndpoints(mockOngoingContentUsecase)
-			tc.SetupOngoingContentUsecaseMock(mockOngoingContentUsecase)
-			req := httptest.NewRequest(http.MethodGet, "/ongoing/", nil)
-			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
-			c.SetPath("/ongoing/:id")
-			c.SetParamNames("id")
-			c.SetParamValues(tc.OngoingID)
-			err := ongoingContentEndpoints.GetOngoingContentByContentID(c)
-			require.Equal(t, tc.ExpectedErr, err)
-		})
-	}
-}
-
 func TestOngoingContentEndpoints_GetNearestOngoings(t *testing.T) {
 	t.Parallel()
-	releaseTime := time.Now().Add(time.Hour)
+	releaseYear := 2022
 
 	testCases := []struct {
 		Name                           string
-		Limit                          string
 		ExpectedErr                    error
 		ExpectedOutput                 *dto.PreviewOngoingContentList
-		SetupOngoingContentUsecaseMock func(mock *mockusecase.MockOngoingContent)
+		SetupOngoingContentUsecaseMock func(mock *mockusecase.MockContent)
 	}{
 		{
 			Name:        "Успех",
-			Limit:       "1",
 			ExpectedErr: nil,
 			// несколько примеров, из которых будет 1 ближайший
 			ExpectedOutput: &dto.PreviewOngoingContentList{
-				OnGoingContentList: []*dto.PreviewOngoingContent{
+				OnGoingContentList: []*dto.PreviewContent{
 					{
 						ID:          1,
 						Title:       "Бэтмен",
-						Genres:      []string{"Боевик"},
+						Genre:       "Боевик",
 						Poster:      "/static/poster.jpg",
-						ReleaseDate: releaseTime,
+						ReleaseYear: releaseYear,
 						Type:        "movie",
 					},
 					{
 						ID:          2,
 						Title:       "Супермен",
-						Genres:      []string{"Боевик"},
+						Genre:       "Боевик",
 						Poster:      "/static/poster.jpg",
-						ReleaseDate: releaseTime.Add(time.Hour),
+						ReleaseYear: releaseYear,
 						Type:        "movie",
 					},
 				},
 			},
-			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockOngoingContent) {
-				mock.EXPECT().GetNearestOngoings(1).Return(&dto.PreviewOngoingContentList{
-					OnGoingContentList: []*dto.PreviewOngoingContent{
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {
+				mock.EXPECT().GetNearestOngoings().Return(&dto.PreviewOngoingContentList{
+					OnGoingContentList: []*dto.PreviewContent{
 						{
 							ID:          1,
 							Title:       "Бэтмен",
-							Genres:      []string{"Боевик"},
+							Genre:       "Боевик",
 							Poster:      "/static/poster.jpg",
-							ReleaseDate: releaseTime,
+							ReleaseYear: releaseYear,
 							Type:        "movie",
 						},
 					},
@@ -130,28 +65,17 @@ func TestOngoingContentEndpoints_GetNearestOngoings(t *testing.T) {
 			},
 		},
 		{
-			Name:  "Ошибка валидации",
-			Limit: "abc",
-			ExpectedErr: &echo.HTTPError{
-				Code:    400,
-				Message: "невалидное количество релизов",
-			},
-			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockOngoingContent) {},
-		},
-		{
 			Name:        "Контент не найден",
-			Limit:       "1",
 			ExpectedErr: &echo.HTTPError{Code: 404, Message: "контент календаря релизов не найден"},
-			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockOngoingContent) {
-				mock.EXPECT().GetNearestOngoings(1).Return(nil, usecase.ErrOngoingContentNotFound)
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {
+				mock.EXPECT().GetNearestOngoings().Return(nil, usecase.ErrContentNotFound)
 			},
 		},
 		{
 			Name:        "Неожиданная ошибка",
-			Limit:       "1",
 			ExpectedErr: &echo.HTTPError{Code: 500, Message: "ошибка при получении ближайших релизов", Internal: errors.New("123")},
-			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockOngoingContent) {
-				mock.EXPECT().GetNearestOngoings(1).Return(nil, errors.New("123"))
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {
+				mock.EXPECT().GetNearestOngoings().Return(nil, errors.New("123"))
 			},
 		},
 	}
@@ -162,14 +86,14 @@ func TestOngoingContentEndpoints_GetNearestOngoings(t *testing.T) {
 			e := echo.New()
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
-			mockOngoingContentUsecase := mockusecase.NewMockOngoingContent(ctrl)
-			ongoingContentEndpoints := NewOngoingContentEndpoints(mockOngoingContentUsecase)
+			mockOngoingContentUsecase := mockusecase.NewMockContent(ctrl)
+			mockAuthUseCase := mockusecase.NewMockAuth(ctrl)
+			ongoingContentEndpoints := NewOngoingContentEndpoints(mockOngoingContentUsecase, mockAuthUseCase)
 			tc.SetupOngoingContentUsecaseMock(mockOngoingContentUsecase)
 			req := httptest.NewRequest(http.MethodGet, "/ongoing/nearest", nil)
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
 			c.SetPath("/ongoing/nearest")
-			c.QueryParams().Add("limit", tc.Limit)
 			err := ongoingContentEndpoints.GetNearestOngoings(c)
 			require.Equal(t, tc.ExpectedErr, err)
 		})
@@ -180,7 +104,6 @@ func TestOngoingContentEndpoints_GetOngoingContentByMonthAndYear(t *testing.T) {
 	t.Parallel()
 	releaseMonth := 5
 	releaseYear := 2025
-	releaseTime := time.Date(releaseYear, time.Month(releaseMonth), 1, 0, 0, 0, 0, time.UTC)
 
 	testCases := []struct {
 		Name                           string
@@ -188,7 +111,7 @@ func TestOngoingContentEndpoints_GetOngoingContentByMonthAndYear(t *testing.T) {
 		Year                           string
 		ExpectedErr                    error
 		ExpectedOutput                 *dto.PreviewOngoingContentList
-		SetupOngoingContentUsecaseMock func(mock *mockusecase.MockOngoingContent)
+		SetupOngoingContentUsecaseMock func(mock *mockusecase.MockContent)
 	}{
 		{
 			Name:        "Успех",
@@ -197,26 +120,26 @@ func TestOngoingContentEndpoints_GetOngoingContentByMonthAndYear(t *testing.T) {
 			ExpectedErr: nil,
 			// несколько примеров, из которых будет 1 ближайший
 			ExpectedOutput: &dto.PreviewOngoingContentList{
-				OnGoingContentList: []*dto.PreviewOngoingContent{
+				OnGoingContentList: []*dto.PreviewContent{
 					{
 						ID:          1,
 						Title:       "Бэтмен",
-						Genres:      []string{"Боевик"},
+						Genre:       "Боевик",
 						Poster:      "/static/poster.jpg",
-						ReleaseDate: releaseTime,
+						ReleaseYear: releaseYear,
 						Type:        "movie",
 					},
 				},
 			},
-			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockOngoingContent) {
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {
 				mock.EXPECT().GetOngoingContentByMonthAndYear(releaseMonth, releaseYear).Return(&dto.PreviewOngoingContentList{
-					OnGoingContentList: []*dto.PreviewOngoingContent{
+					OnGoingContentList: []*dto.PreviewContent{
 						{
 							ID:          1,
 							Title:       "Бэтмен",
-							Genres:      []string{"Боевик"},
+							Genre:       "Боевик",
 							Poster:      "/static/poster.jpg",
-							ReleaseDate: releaseTime,
+							ReleaseYear: releaseYear,
 							Type:        "movie",
 						},
 					},
@@ -231,7 +154,7 @@ func TestOngoingContentEndpoints_GetOngoingContentByMonthAndYear(t *testing.T) {
 				Code:    400,
 				Message: "невалидный месяц",
 			},
-			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockOngoingContent) {},
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {},
 		},
 		{
 			Name:  "Ошибка валидации",
@@ -241,7 +164,7 @@ func TestOngoingContentEndpoints_GetOngoingContentByMonthAndYear(t *testing.T) {
 				Code:    400,
 				Message: "невалидный год",
 			},
-			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockOngoingContent) {},
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {},
 		},
 		{
 			Name:  "Контент не найден",
@@ -251,8 +174,8 @@ func TestOngoingContentEndpoints_GetOngoingContentByMonthAndYear(t *testing.T) {
 				Code:    404,
 				Message: "контент календаря релизов не найден",
 			},
-			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockOngoingContent) {
-				mock.EXPECT().GetOngoingContentByMonthAndYear(1, 2025).Return(nil, usecase.ErrOngoingContentNotFound)
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {
+				mock.EXPECT().GetOngoingContentByMonthAndYear(1, 2025).Return(nil, usecase.ErrContentNotFound)
 			},
 		},
 		{
@@ -264,7 +187,7 @@ func TestOngoingContentEndpoints_GetOngoingContentByMonthAndYear(t *testing.T) {
 				Message:  "ошибка при получении релизов по месяцу и году",
 				Internal: errors.New("123"),
 			},
-			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockOngoingContent) {
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {
 				mock.EXPECT().GetOngoingContentByMonthAndYear(1, 2025).Return(nil, errors.New("123"))
 			},
 		},
@@ -276,8 +199,9 @@ func TestOngoingContentEndpoints_GetOngoingContentByMonthAndYear(t *testing.T) {
 			e := echo.New()
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
-			mockOngoingContentUsecase := mockusecase.NewMockOngoingContent(ctrl)
-			ongoingContentEndpoints := NewOngoingContentEndpoints(mockOngoingContentUsecase)
+			mockOngoingContentUsecase := mockusecase.NewMockContent(ctrl)
+			mockAuthUseCase := mockusecase.NewMockAuth(ctrl)
+			ongoingContentEndpoints := NewOngoingContentEndpoints(mockOngoingContentUsecase, mockAuthUseCase)
 			tc.SetupOngoingContentUsecaseMock(mockOngoingContentUsecase)
 			req := httptest.NewRequest(http.MethodGet, "/ongoing/", nil)
 			rec := httptest.NewRecorder()
@@ -298,7 +222,7 @@ func TestOngoingContentEndpoints_GetAllReleaseYears(t *testing.T) {
 		Name                           string
 		ExpectedErr                    error
 		ExpectedOutput                 *dto.ReleaseYearsResponse
-		SetupOngoingContentUsecaseMock func(mock *mockusecase.MockOngoingContent)
+		SetupOngoingContentUsecaseMock func(mock *mockusecase.MockContent)
 	}{
 		{
 			Name:        "Успех",
@@ -306,8 +230,8 @@ func TestOngoingContentEndpoints_GetAllReleaseYears(t *testing.T) {
 			ExpectedOutput: &dto.ReleaseYearsResponse{
 				Years: []int{2022, 2023, 2024},
 			},
-			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockOngoingContent) {
-				mock.EXPECT().GetAllReleaseYears().Return(&dto.ReleaseYearsResponse{
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {
+				mock.EXPECT().GetAllOngoingsYears().Return(&dto.ReleaseYearsResponse{
 					Years: []int{2022, 2023, 2024},
 				}, nil)
 			},
@@ -318,8 +242,8 @@ func TestOngoingContentEndpoints_GetAllReleaseYears(t *testing.T) {
 				Code:    404,
 				Message: "года релизов не найдены",
 			},
-			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockOngoingContent) {
-				mock.EXPECT().GetAllReleaseYears().Return(nil, usecase.ErrOngoingContentYearsNotFound)
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {
+				mock.EXPECT().GetAllOngoingsYears().Return(nil, usecase.ErrContentNotFound)
 			},
 		},
 		{
@@ -329,8 +253,8 @@ func TestOngoingContentEndpoints_GetAllReleaseYears(t *testing.T) {
 				Message:  "ошибка при получении годов релизов",
 				Internal: errors.New("123"),
 			},
-			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockOngoingContent) {
-				mock.EXPECT().GetAllReleaseYears().Return(nil, errors.New("123"))
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {
+				mock.EXPECT().GetAllOngoingsYears().Return(nil, errors.New("123"))
 			},
 		},
 	}
@@ -341,14 +265,358 @@ func TestOngoingContentEndpoints_GetAllReleaseYears(t *testing.T) {
 			e := echo.New()
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
-			mockOngoingContentUsecase := mockusecase.NewMockOngoingContent(ctrl)
-			ongoingContentEndpoints := NewOngoingContentEndpoints(mockOngoingContentUsecase)
+			mockOngoingContentUsecase := mockusecase.NewMockContent(ctrl)
+			mockAuthUseCase := mockusecase.NewMockAuth(ctrl)
+			ongoingContentEndpoints := NewOngoingContentEndpoints(mockOngoingContentUsecase, mockAuthUseCase)
 			tc.SetupOngoingContentUsecaseMock(mockOngoingContentUsecase)
 			req := httptest.NewRequest(http.MethodGet, "/ongoing/years", nil)
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
 			c.SetPath("/ongoing/years")
 			err := ongoingContentEndpoints.GetAllReleaseYears(c)
+			require.Equal(t, tc.ExpectedErr, err)
+		})
+	}
+}
+
+func TestOngoingContentEndpoints_SetReleasedState(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		Name                           string
+		ExpectedErr                    error
+		ID                             string
+		SecretKey                      string
+		IsReleased                     string
+		SetupOngoingContentUsecaseMock func(mock *mockusecase.MockContent)
+	}{
+		{
+			Name:        "Успех",
+			ExpectedErr: nil,
+			ID:          "1",
+			SecretKey:   "123",
+			IsReleased:  "true",
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {
+				mock.EXPECT().SetReleasedState("123", 1, true).Return(nil)
+			},
+		},
+		{
+			Name: "Неожиданная ошибка",
+			ExpectedErr: &echo.HTTPError{
+				Code:     500,
+				Message:  "ошибка при установке состояния релиза",
+				Internal: errors.New("123"),
+			},
+			ID:         "1",
+			SecretKey:  "123",
+			IsReleased: "true",
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {
+				mock.EXPECT().SetReleasedState("123", 1, true).Return(errors.New("123"))
+			},
+		},
+		{
+			Name: "Ошибка валидации id",
+			ExpectedErr: &echo.HTTPError{
+				Code:    400,
+				Message: "невалидный ID",
+			},
+			ID:                             "dd0",
+			SecretKey:                      "123",
+			IsReleased:                     "true",
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {},
+		},
+		{
+			Name: "Ошибка валидации is_released",
+			ExpectedErr: &echo.HTTPError{
+				Code:    400,
+				Message: "невалидное значение is_released",
+			},
+			ID:                             "1",
+			SecretKey:                      "123",
+			IsReleased:                     "abc",
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {},
+		},
+		{
+			Name: "неверный секретный ключ",
+			ExpectedErr: &echo.HTTPError{
+				Code:    403,
+				Message: "неверный секретный ключ",
+			},
+			ID:         "1",
+			SecretKey:  "1234",
+			IsReleased: "true",
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {
+				mock.EXPECT().SetReleasedState("1234", 1, true).Return(usecase.ErrContentInvalidSecretKey)
+			},
+		},
+		{
+			Name: "контент не найден",
+			ExpectedErr: &echo.HTTPError{
+				Code:    404,
+				Message: "контент календаря релизов не найден",
+			},
+			ID:         "1",
+			SecretKey:  "123",
+			IsReleased: "true",
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {
+				mock.EXPECT().SetReleasedState("123", 1, true).Return(usecase.ErrContentNotFound)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+			e := echo.New()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			mockOngoingContentUsecase := mockusecase.NewMockContent(ctrl)
+			mockAuthUseCase := mockusecase.NewMockAuth(ctrl)
+			ongoingContentEndpoints := NewOngoingContentEndpoints(mockOngoingContentUsecase, mockAuthUseCase)
+			tc.SetupOngoingContentUsecaseMock(mockOngoingContentUsecase)
+			req := httptest.NewRequest(
+				http.MethodPut,
+				fmt.Sprintf("/ongoing/1/is_released?is_released=%v&secret_key=%v", tc.IsReleased, tc.SecretKey),
+				nil)
+			rec := httptest.NewRecorder()
+			c := e.NewContext(req, rec)
+			c.SetPath("/ongoing/:id/is_released")
+			c.SetParamNames("id")
+			c.SetParamValues(tc.ID)
+			err := ongoingContentEndpoints.SetReleasedState(c)
+			require.Equal(t, tc.ExpectedErr, err)
+		})
+	}
+}
+
+func TestOngoingContentEndpoints_SubscribeOnContent(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		Name                           string
+		ID                             string
+		ExpectedErr                    error
+		Cookies                        *http.Cookie
+		SetupOngoingContentUsecaseMock func(mock *mockusecase.MockContent)
+	}{
+		{
+			Name:        "Успех",
+			ExpectedErr: nil,
+			ID:          "1",
+			Cookies:     &http.Cookie{Name: "session", Value: "123"},
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {
+				mock.EXPECT().SubscribeOnContent(1, 1).Return(nil)
+			},
+		},
+		{
+			Name: "Неожиданная ошибка",
+			ExpectedErr: &echo.HTTPError{
+				Code:     500,
+				Message:  "ошибка при подписке на контент",
+				Internal: errors.New("123"),
+			},
+			ID:      "1",
+			Cookies: &http.Cookie{Name: "session", Value: "123"},
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {
+				mock.EXPECT().SubscribeOnContent(1, 1).Return(errors.New("123"))
+			},
+		},
+		{
+			Name: "контент не найден",
+			ExpectedErr: &echo.HTTPError{
+				Code:    404,
+				Message: "контент не найден",
+			},
+			ID:      "1",
+			Cookies: &http.Cookie{Name: "session", Value: "123"},
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {
+				mock.EXPECT().SubscribeOnContent(1, 1).Return(usecase.ErrContentNotFound)
+			},
+		},
+		{
+			Name: "Пользователь не найден",
+			ExpectedErr: &echo.HTTPError{
+				Code:    401,
+				Message: "не авторизован",
+			},
+			ID:      "1",
+			Cookies: &http.Cookie{Name: "session", Value: "123"},
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {
+				mock.EXPECT().SubscribeOnContent(1, 1).Return(usecase.ErrUserNotFound)
+			},
+		},
+		{
+			Name:        "Не авторизован",
+			ExpectedErr: &echo.HTTPError{Code: 401, Message: "Не авторизован"},
+			ID:          "1",
+			Cookies:     nil,
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {
+				mock.EXPECT().SubscribeOnContent(1, 1).Times(0)
+			},
+		},
+		{
+			Name:        "Невалидный ID",
+			ExpectedErr: &echo.HTTPError{Code: 400, Message: "невалидный ID"},
+			ID:          "abc",
+			Cookies:     &http.Cookie{Name: "session", Value: "123"},
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {
+				mock.EXPECT().SubscribeOnContent(1, 1).Times(0)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+			e := echo.New()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			mockOngoingContentUsecase := mockusecase.NewMockContent(ctrl)
+			mockAuthUseCase := mockusecase.NewMockAuth(ctrl)
+			ongoingContentEndpoints := NewOngoingContentEndpoints(mockOngoingContentUsecase, mockAuthUseCase)
+			tc.SetupOngoingContentUsecaseMock(mockOngoingContentUsecase)
+			req := httptest.NewRequest(http.MethodPost, "/ongoing/1/subscribe", nil)
+			if tc.Cookies != nil {
+				req.AddCookie(tc.Cookies)
+			}
+			rec := httptest.NewRecorder()
+			c := e.NewContext(req, rec)
+			c.SetPath("/ongoing/:id/subscribe")
+			c.SetParamNames("id")
+			c.SetParamValues(tc.ID)
+			mockAuthUseCase.EXPECT().GetUserIDBySession("123").Return(1, nil).AnyTimes()
+			err := ongoingContentEndpoints.SubscribeOnContent(c)
+			require.Equal(t, tc.ExpectedErr, err)
+		})
+	}
+}
+
+func TestOngoingContentEndpoints_UnsubscribeFromContent(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		Name                           string
+		ID                             string
+		ExpectedErr                    error
+		Cookies                        *http.Cookie
+		SetupOngoingContentUsecaseMock func(mock *mockusecase.MockContent)
+	}{
+		{
+			Name:        "Успех",
+			ExpectedErr: nil,
+			ID:          "1",
+			Cookies:     &http.Cookie{Name: "session", Value: "123"},
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {
+				mock.EXPECT().UnsubscribeFromContent(1, 1).Return(nil)
+			},
+		},
+		{
+			Name: "Невалидный ID",
+			ExpectedErr: &echo.HTTPError{
+				Code:    400,
+				Message: "невалидный ID",
+			},
+			ID:                             "abc",
+			Cookies:                        &http.Cookie{Name: "session", Value: "123"},
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {},
+		},
+		{
+			Name: "Не авторизован",
+			ExpectedErr: &echo.HTTPError{
+				Code:    401,
+				Message: "Не авторизован",
+			},
+			ID:                             "1",
+			Cookies:                        nil,
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+			e := echo.New()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			mockOngoingContentUsecase := mockusecase.NewMockContent(ctrl)
+			mockAuthUseCase := mockusecase.NewMockAuth(ctrl)
+			ongoingContentEndpoints := NewOngoingContentEndpoints(mockOngoingContentUsecase, mockAuthUseCase)
+			tc.SetupOngoingContentUsecaseMock(mockOngoingContentUsecase)
+			req := httptest.NewRequest(http.MethodDelete, "/ongoing/1/subscribe", nil)
+			if tc.Cookies != nil {
+				req.AddCookie(tc.Cookies)
+			}
+			rec := httptest.NewRecorder()
+			c := e.NewContext(req, rec)
+			c.SetPath("/ongoing/:id/subscribe")
+			c.SetParamNames("id")
+			c.SetParamValues(tc.ID)
+			mockAuthUseCase.EXPECT().GetUserIDBySession("123").Return(1, nil).AnyTimes()
+			err := ongoingContentEndpoints.UnsubscribeFromContent(c)
+			require.Equal(t, tc.ExpectedErr, err)
+		})
+	}
+}
+
+func TestOngoingContentEndpoints_GetSubscribedContentIDs(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		Name                           string
+		ExpectedErr                    error
+		Cookies                        *http.Cookie
+		SetupOngoingContentUsecaseMock func(mock *mockusecase.MockContent)
+	}{
+		{
+			Name:        "Успех",
+			ExpectedErr: nil,
+			Cookies:     &http.Cookie{Name: "session", Value: "123"},
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {
+				mock.EXPECT().GetSubscribedContentIDs(1).Return(&dto.SubscriptionsResponse{Subscriptions: []int{1}}, nil)
+			},
+		},
+		{
+			Name: "Не авторизован",
+			ExpectedErr: &echo.HTTPError{
+				Code:    401,
+				Message: "Не авторизован",
+			},
+			Cookies:                        nil,
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {},
+		},
+		{
+			Name: "Неожиданная ошибка",
+			ExpectedErr: &echo.HTTPError{
+				Code:     500,
+				Message:  "ошибка при получении подписок",
+				Internal: errors.New("123"),
+			},
+			Cookies: &http.Cookie{Name: "session", Value: "123"},
+			SetupOngoingContentUsecaseMock: func(mock *mockusecase.MockContent) {
+				mock.EXPECT().GetSubscribedContentIDs(1).Return(nil, errors.New("123"))
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+			e := echo.New()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			mockOngoingContentUsecase := mockusecase.NewMockContent(ctrl)
+			mockAuthUseCase := mockusecase.NewMockAuth(ctrl)
+			ongoingContentEndpoints := NewOngoingContentEndpoints(mockOngoingContentUsecase, mockAuthUseCase)
+			tc.SetupOngoingContentUsecaseMock(mockOngoingContentUsecase)
+			req := httptest.NewRequest(http.MethodGet, "/ongoing/subscribed", nil)
+			if tc.Cookies != nil {
+				req.AddCookie(tc.Cookies)
+			}
+			rec := httptest.NewRecorder()
+			c := e.NewContext(req, rec)
+			c.SetPath("/ongoing/subscribed")
+			mockAuthUseCase.EXPECT().GetUserIDBySession("123").Return(1, nil).AnyTimes()
+			err := ongoingContentEndpoints.GetSubscribedContentIDs(c)
 			require.Equal(t, tc.ExpectedErr, err)
 		})
 	}

@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option go_package = "./;profanity";
+
+package profanity;
+
+message Text {
+    string text = 1;
+}
+
+message Nothing {}
+
+service ProfanityFilter {
+    rpc FilterMessage(Text) returns (Text) {}
+    rpc Ping(Nothing) returns (Nothing) {}
+}

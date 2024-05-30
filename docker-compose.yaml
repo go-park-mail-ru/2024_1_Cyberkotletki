@@ -28,8 +28,15 @@ services:
     depends_on:
       - postgres
   # ----------------------------------------------
-  # Микросервисы: Auth, Core, Static
+  # Микросервисы: Auth, Core, Static, Profanity
   # ----------------------------------------------
+  profanity:
+    restart: always
+    build:
+      context: .
+      dockerfile: ./docker/profanity.dockerfile
+    ports:
+      - "8085:8085"
   auth:
     restart: always
     environment:
@@ -69,9 +76,11 @@ services:
     environment:
         POSTGRES_USER: ${POSTGRES_USER}
         POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        CONTENT_SECRET_KEY: ${CONTENT_SECRET_KEY}
     ports:
       - "8080:8080"
     depends_on:
+      - profanity
       - auth
       - static
       - postgres

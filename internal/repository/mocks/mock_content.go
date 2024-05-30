@@ -39,6 +39,21 @@ func (m *MockContent) EXPECT() *MockContentMockRecorder {
 	return m.recorder
 }
 
+// GetAllOngoingsYears mocks base method.
+func (m *MockContent) GetAllOngoingsYears() ([]int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllOngoingsYears")
+	ret0, _ := ret[0].([]int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllOngoingsYears indicates an expected call of GetAllOngoingsYears.
+func (mr *MockContentMockRecorder) GetAllOngoingsYears() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllOngoingsYears", reflect.TypeOf((*MockContent)(nil).GetAllOngoingsYears))
+}
+
 // GetContent mocks base method.
 func (m *MockContent) GetContent(id int) (*entity.Content, error) {
 	m.ctrl.T.Helper()
@@ -52,6 +67,36 @@ func (m *MockContent) GetContent(id int) (*entity.Content, error) {
 func (mr *MockContentMockRecorder) GetContent(id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContent", reflect.TypeOf((*MockContent)(nil).GetContent), id)
+}
+
+// GetNearestOngoings mocks base method.
+func (m *MockContent) GetNearestOngoings(limit int) ([]int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetNearestOngoings", limit)
+	ret0, _ := ret[0].([]int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNearestOngoings indicates an expected call of GetNearestOngoings.
+func (mr *MockContentMockRecorder) GetNearestOngoings(limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNearestOngoings", reflect.TypeOf((*MockContent)(nil).GetNearestOngoings), limit)
+}
+
+// GetOngoingContentByMonthAndYear mocks base method.
+func (m *MockContent) GetOngoingContentByMonthAndYear(month, year int) ([]int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOngoingContentByMonthAndYear", month, year)
+	ret0, _ := ret[0].([]int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOngoingContentByMonthAndYear indicates an expected call of GetOngoingContentByMonthAndYear.
+func (mr *MockContentMockRecorder) GetOngoingContentByMonthAndYear(month, year any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOngoingContentByMonthAndYear", reflect.TypeOf((*MockContent)(nil).GetOngoingContentByMonthAndYear), month, year)
 }
 
 // GetPerson mocks base method.
@@ -97,4 +142,91 @@ func (m *MockContent) GetPreviewContent(id int) (*entity.Content, error) {
 func (mr *MockContentMockRecorder) GetPreviewContent(id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPreviewContent", reflect.TypeOf((*MockContent)(nil).GetPreviewContent), id)
+}
+
+// GetSimilarContent mocks base method.
+func (m *MockContent) GetSimilarContent(id int) ([]entity.Content, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSimilarContent", id)
+	ret0, _ := ret[0].([]entity.Content)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSimilarContent indicates an expected call of GetSimilarContent.
+func (mr *MockContentMockRecorder) GetSimilarContent(id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSimilarContent", reflect.TypeOf((*MockContent)(nil).GetSimilarContent), id)
+}
+
+// GetSubscribedContentIDs mocks base method.
+func (m *MockContent) GetSubscribedContentIDs(userID int) ([]int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSubscribedContentIDs", userID)
+	ret0, _ := ret[0].([]int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSubscribedContentIDs indicates an expected call of GetSubscribedContentIDs.
+func (mr *MockContentMockRecorder) GetSubscribedContentIDs(userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSubscribedContentIDs", reflect.TypeOf((*MockContent)(nil).GetSubscribedContentIDs), userID)
+}
+
+// IsOngoingContentReleased mocks base method.
+func (m *MockContent) IsOngoingContentReleased(contentID int) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsOngoingContentReleased", contentID)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsOngoingContentReleased indicates an expected call of IsOngoingContentReleased.
+func (mr *MockContentMockRecorder) IsOngoingContentReleased(contentID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsOngoingContentReleased", reflect.TypeOf((*MockContent)(nil).IsOngoingContentReleased), contentID)
+}
+
+// SetReleasedState mocks base method.
+func (m *MockContent) SetReleasedState(contentID int, isReleased bool) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetReleasedState", contentID, isReleased)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetReleasedState indicates an expected call of SetReleasedState.
+func (mr *MockContentMockRecorder) SetReleasedState(contentID, isReleased any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetReleasedState", reflect.TypeOf((*MockContent)(nil).SetReleasedState), contentID, isReleased)
+}
+
+// SubscribeOnContent mocks base method.
+func (m *MockContent) SubscribeOnContent(userID, contentID int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SubscribeOnContent", userID, contentID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SubscribeOnContent indicates an expected call of SubscribeOnContent.
+func (mr *MockContentMockRecorder) SubscribeOnContent(userID, contentID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubscribeOnContent", reflect.TypeOf((*MockContent)(nil).SubscribeOnContent), userID, contentID)
+}
+
+// UnsubscribeFromContent mocks base method.
+func (m *MockContent) UnsubscribeFromContent(userID, contentID int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UnsubscribeFromContent", userID, contentID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UnsubscribeFromContent indicates an expected call of UnsubscribeFromContent.
+func (mr *MockContentMockRecorder) UnsubscribeFromContent(userID, contentID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnsubscribeFromContent", reflect.TypeOf((*MockContent)(nil).UnsubscribeFromContent), userID, contentID)
 }

@@ -41,8 +41,12 @@ type Config struct {
 			Addr        string `yaml:"static_addr"   default:"static:8082"`
 			MaxFileSize int    `yaml:"max_file_size" default:"10485760"`
 		} `yaml:"static_service"`
+		ProfanityFilter struct {
+			Addr string `yaml:"profanity_filter_addr" default:"profanity:8050"`
+		} `yaml:"profanity_filter_service"`
 	} `yaml:"microservices"`
-	Postgres PostgresDatabase `yaml:"postgres"`
+	ContentSecretKey string           `yaml:"-"`
+	Postgres         PostgresDatabase `yaml:"postgres"`
 }
 
 type AuthConfig struct {

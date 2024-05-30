@@ -570,26 +570,49 @@ const docTemplate = `{
                     "ongoing_content"
                 ],
                 "summary": "Получить ближайшие релизы",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Количество релизов",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.PreviewOngoingContentCardVertical"
+                                "$ref": "#/definitions/dto.PreviewContent"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/ongoing/subscriptions": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ongoing_content"
+                ],
+                "summary": "Получить ID контентов, на которые подписан пользователь",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SubscriptionsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/echo.HTTPError"
                         }
@@ -637,19 +660,142 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/ongoing/{id}": {
+        "/api/ongoing/{id}/is_released": {
             "get": {
+                "tags": [
+                    "ongoing_content"
+                ],
+                "summary": "Проверить, вышел ли контент. Использует WebSocket",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID контента",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "101": {
+                        "description": "WebSocket connection is established",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "ongoing_content"
                 ],
-                "summary": "Получить контент календаря релизов по id контента",
+                "summary": "Установить состояние релиза",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID контента календаря релизов",
+                        "description": "ID контента",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Секретный ключ",
+                        "name": "secret_key",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Вышел ли контент",
+                        "name": "is_released",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/ongoing/{id}/subscribe": {
+            "post": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ongoing_content"
+                ],
+                "summary": "Подписаться на выход контента",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID контента",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -659,11 +805,75 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PreviewOngoingContentCardVertical"
+                            "type": "string"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "_csrf": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ongoing_content"
+                ],
+                "summary": "Отписаться от выхода контента",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID контента",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/echo.HTTPError"
                         }
@@ -714,7 +924,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.PreviewOngoingContentCardVertical"
+                                "$ref": "#/definitions/dto.PreviewContent"
                             }
                         }
                     },
@@ -1224,9 +1434,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Поставить оценку на рецензию",
-                "consumes": [
-                    "application/json"
-                ],
                 "tags": [
                     "review"
                 ],
@@ -1422,9 +1629,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Позволяет загрузить аватарку пользователя. Необходимо быть авторизованным",
-                "consumes": [
-                    "application/json"
-                ],
                 "tags": [
                     "User"
                 ],
@@ -1967,6 +2171,14 @@ const docTemplate = `{
                 "movie": {
                     "$ref": "#/definitions/dto.MovieContent"
                 },
+                "ongoing": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "ongoingDate": {
+                    "type": "string",
+                    "example": "2022-01-02T15:04:05Z"
+                },
                 "operators": {
                     "type": "array",
                     "items": {
@@ -2003,6 +2215,12 @@ const docTemplate = `{
                 },
                 "series": {
                     "$ref": "#/definitions/dto.SeriesContent"
+                },
+                "similarContent": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PreviewContentCardVertical"
+                    }
                 },
                 "slogan": {
                     "type": "string",
@@ -2074,10 +2292,8 @@ const docTemplate = `{
                     "format": "string",
                     "example": "favourite"
                 },
-                "contentID": {
-                    "type": "integer",
-                    "format": "int",
-                    "example": 1
+                "content": {
+                    "$ref": "#/definitions/dto.PreviewContent"
                 }
             }
         },
@@ -2215,7 +2431,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.PreviewContentCard": {
+        "dto.PreviewContent": {
             "type": "object",
             "properties": {
                 "actors": {
@@ -2249,6 +2465,15 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 1
                 },
+                "ongoing": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "ongoingDate": {
+                    "description": "Поля, которые есть только у онгоингов",
+                    "type": "string",
+                    "example": "2022-01-02T15:04:05Z"
+                },
                 "originalTitle": {
                     "type": "string",
                     "example": "Batman"
@@ -2260,6 +2485,10 @@ const docTemplate = `{
                 "rating": {
                     "type": "number",
                     "example": 9.1
+                },
+                "release": {
+                    "type": "integer",
+                    "example": 2020
                 },
                 "seasonsNumber": {
                     "description": "Поля, которые есть только у сериалов",
@@ -2329,40 +2558,6 @@ const docTemplate = `{
                     "description": "Поля, которые есть только у сериалов",
                     "type": "integer",
                     "example": 2020
-                }
-            }
-        },
-        "dto.PreviewOngoingContentCardVertical": {
-            "type": "object",
-            "properties": {
-                "genre": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "Боевик"
-                    ]
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "poster": {
-                    "type": "string",
-                    "example": "/static/poster.jpg"
-                },
-                "releaseDate": {
-                    "type": "string",
-                    "example": "2022-01-02T15:04:05Z"
-                },
-                "title": {
-                    "type": "string",
-                    "example": "Бэтмен"
-                },
-                "type": {
-                    "type": "string",
-                    "example": "movie"
                 }
             }
         },
@@ -2533,7 +2728,7 @@ const docTemplate = `{
                 "content": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/dto.PreviewContentCard"
+                        "$ref": "#/definitions/dto.PreviewContent"
                     }
                 },
                 "persons": {
@@ -2575,6 +2770,17 @@ const docTemplate = `{
                 "yearStart": {
                     "type": "integer",
                     "example": 2020
+                }
+            }
+        },
+        "dto.SubscriptionsResponse": {
+            "type": "object",
+            "properties": {
+                "subscriptions": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },
