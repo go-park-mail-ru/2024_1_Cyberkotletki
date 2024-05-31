@@ -1,15 +1,17 @@
 package dto
 
+import "time"
+
 type Review struct {
-	ID        int    `json:"id"        example:"1"                    format:"int"`
-	AuthorID  int    `json:"authorID"  example:"1"                    format:"int"`
-	ContentID int    `json:"contentID" example:"1"                    format:"int"`
-	Rating    int    `json:"rating"    example:"5"                    format:"int"`
-	Title     string `json:"title"     example:"Title"                format:"string"`
-	Text      string `json:"text"      example:"i like it"            format:"string"`
-	CreatedAt string `json:"createdAt" example:"2022-01-02T15:04:05Z" format:"int"`
-	Likes     int    `json:"likes"     example:"5"                    format:"int"`
-	Dislikes  int    `json:"dislikes"  example:"5"                    format:"int"`
+	ID        int       `json:"id"        example:"1"                    format:"int"`
+	AuthorID  int       `json:"authorID"  example:"1"                    format:"int"`
+	ContentID int       `json:"contentID" example:"1"                    format:"int"`
+	Rating    int       `json:"rating"    example:"5"                    format:"int"`
+	Title     string    `json:"title"     example:"Title"                format:"string"`
+	Text      string    `json:"text"      example:"i like it"            format:"string"`
+	CreatedAt time.Time `json:"createdAt" example:"2022-01-02T15:04:05Z" format:"date-time"`
+	Likes     int       `json:"likes"     example:"5"                    format:"int"`
+	Dislikes  int       `json:"dislikes"  example:"5"                    format:"int"`
 }
 
 // ReviewResponse - структура для ответа на запросы
