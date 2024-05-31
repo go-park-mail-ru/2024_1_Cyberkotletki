@@ -70,3 +70,4 @@ jobs:
             cd /home/ubuntu/backend/deploy
             sudo docker compose build --parallel --no-cache
             sudo docker compose up -d
+            rm -rf ./*

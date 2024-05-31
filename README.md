@@ -23,5 +23,5 @@
 ## Ссылки
 
 - [Репозиторий фронтенда](https://github.com/frontend-park-mail-ru/2024_1_Cyberkotletki)
-- [Деплой]() <!-- Замените на URL вашего деплоя -->
-- [Swagger]() <!-- Замените на URL вашего Swagger -->
+- [Деплой](https://kinoskop.online)
+- [Swagger](https://kinoskop.online/api/docs)
