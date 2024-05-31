@@ -20,6 +20,7 @@ func NewContentEndpoints(useCase usecase.Content) ContentEndpoints {
 func (h *ContentEndpoints) Configure(server *echo.Group) {
 	server.GET("/:id", h.GetContent)
 	server.GET("/person/:id", h.GetPerson)
+	server.GET("/available", h.GetAvailableToWatch)
 }
 
 // GetContent
@@ -74,4 +75,26 @@ func (h *ContentEndpoints) GetPerson(ctx echo.Context) error {
 	default:
 		return utils.WriteJSON(ctx, person)
 	}
+}
+
+// GetAvailableToWatch
+// @Summary Получение контента, который доступен для просмотра
+// @Tags content
+// @Description Получение контента, который доступен для просмотра
+// @Produce json
+// @Param page query int true "Номер страницы"
+// @Success 200 {object} dto.ContentPreviewList
+// @Failure 400 {object} echo.HTTPError
+// @Failure 500 {object} echo.HTTPError
+// @Router /api/content/available [get]
+func (h *ContentEndpoints) GetAvailableToWatch(ctx echo.Context) error {
+	page, err := strconv.Atoi(ctx.QueryParam("page"))
+	if err != nil {
+		return utils.NewError(ctx, http.StatusBadRequest, "Невалидный номер страницы", nil)
+	}
+	content, err := h.useCase.GetAvailableToWatch(page, 10)
+	if err != nil {
+		return utils.NewError(ctx, http.StatusInternalServerError, "Внутренняя ошибка сервера", err)
+	}
+	return utils.WriteJSON(ctx, content)
 }

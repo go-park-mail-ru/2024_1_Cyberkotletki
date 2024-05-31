@@ -41,6 +41,8 @@ type Content interface {
 	// GetSubscribedContentIDs возвращает id контентов, на которые подписан пользователь
 	// Если пользователь не найден, возвращает ErrUserNotFound
 	GetSubscribedContentIDs(userID int) (*dto.SubscriptionsResponse, error)
+	// GetAvailableToWatch возвращает контент, который доступен для просмотра
+	GetAvailableToWatch(page, limit int) (*dto.ContentPreviewList, error)
 }
 
 var (

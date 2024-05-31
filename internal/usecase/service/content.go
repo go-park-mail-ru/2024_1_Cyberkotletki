@@ -177,6 +177,7 @@ func (c *ContentService) GetContentByID(id int) (*dto.Content, error) {
 		SimilarContent: similarContent,
 		Ongoing:        contentEntity.Ongoing,
 		OngoingDate:    contentEntity.OngoingDate,
+		StreamURL:      contentEntity.StreamURL,
 	}
 	switch contentEntity.Type {
 	case entity.ContentTypeMovie:
@@ -474,5 +475,26 @@ func (c *ContentService) GetSubscribedContentIDs(userID int) (*dto.Subscriptions
 	}
 	return &dto.SubscriptionsResponse{
 		Subscriptions: contentIDs,
+	}, nil
+}
+
+func (c *ContentService) GetAvailableToWatch(page, limit int) (*dto.ContentPreviewList, error) {
+	contentIDs, err := c.contentRepo.GetAvailableToWatch(page, limit)
+	if err != nil {
+		return nil, entity.UsecaseWrap(errors.New("ошибка при получении доступного для просмотра контента"), err)
+	}
+	previewContent := make([]dto.PreviewContent, len(contentIDs))
+	for index, contentID := range contentIDs {
+		preview, err := c.GetPreviewContentByID(contentID)
+		if err != nil {
+			return nil, errors.Join(
+				errors.New("ошибка при получении превью контента в GetAvailableToWatch"),
+				err,
+			)
+		}
+		previewContent[index] = *preview
+	}
+	return &dto.ContentPreviewList{
+		Content: previewContent,
 	}, nil
 }

@@ -33,6 +33,7 @@ type ScanContent struct {
 	BackdropStaticID sql.NullInt64
 	Ongoing          bool
 	OngoingDate      sql.NullTime
+	StreamURL        sql.NullString
 }
 
 func NewContentRepository(db *sqlx.DB) repository.Content {
@@ -421,6 +422,7 @@ func (c *ContentDB) getContentInfo(id int) (*entity.Content, error) {
 		"backdrop_upload_id",
 		"ongoing",
 		"ongoing_date",
+		"streaming_url",
 	).
 		From("content").
 		Where(sq.Eq{"id": id}).
@@ -447,6 +449,7 @@ func (c *ContentDB) getContentInfo(id int) (*entity.Content, error) {
 		&scanContent.BackdropStaticID,
 		&content.Ongoing,
 		&scanContent.OngoingDate,
+		&scanContent.StreamURL,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -469,6 +472,9 @@ func (c *ContentDB) getContentInfo(id int) (*entity.Content, error) {
 	content.Type = scanContent.ContentType
 	if scanContent.OngoingDate.Valid {
 		content.OngoingDate = &scanContent.OngoingDate.Time
+	}
+	if scanContent.StreamURL.Valid {
+		content.StreamURL = scanContent.StreamURL.String
 	}
 	return &content, nil
 }
@@ -1067,6 +1073,37 @@ func (c *ContentDB) GetSubscribedContentIDs(userID int) ([]int, error) {
 		err := rows.Scan(&contentID)
 		if err != nil {
 			return nil, entity.PSQLQueryErr("GetSubscribedContentIDs при сканировании", err)
+		}
+		contentIDs = append(contentIDs, contentID)
+	}
+
+	return contentIDs, nil
+}
+
+func (c *ContentDB) GetAvailableToWatch(page, limit int) ([]int, error) {
+	query, args, err := sq.Select("id").
+		From("content").
+		Where(sq.NotEq{"streaming_url": ""}).
+		Offset(uint64((page - 1) * limit)).
+		Limit(uint64(limit)).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return nil, entity.PSQLWrap(err, fmt.Errorf("ошибка при формировании запроса GetAvailableToWatch"))
+	}
+
+	rows, err := c.DB.Query(query, args...)
+	if err != nil {
+		return nil, entity.PSQLQueryErr("GetAvailableToWatch", err)
+	}
+	defer rows.Close()
+
+	contentIDs := make([]int, 0)
+	for rows.Next() {
+		var contentID int
+		err := rows.Scan(&contentID)
+		if err != nil {
+			return nil, entity.PSQLQueryErr("GetAvailableToWatch при сканировании", err)
 		}
 		contentIDs = append(contentIDs, contentID)
 	}
