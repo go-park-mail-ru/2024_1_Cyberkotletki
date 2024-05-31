@@ -35,12 +35,13 @@ type User struct {
 // 2) пароль не содержит ничего, кроме латинских букв, цифр и символов !@#$%^&*_
 func ValidatePassword(password string) error {
 	switch {
-	case len(password) < 8:
+	case utf8.RuneCountInString(password) < 8:
 		return errors.New("пароль должен содержать не менее 8 символов")
-	case len(password) > 32:
+	case utf8.RuneCountInString(password) > 32:
 		return errors.New("пароль должен содержать не более 32 символов")
-	case !regexp.MustCompile(`^[!@#$%^&*_\w]+$`).MatchString(password):
-		return errors.New("пароль может состоять только из латинских букв, цифр и специальных символов !@#$%^&*_")
+	case !regexp.MustCompile(`^[!@#$%^&*()_+\-=.,\w]+$`).MatchString(password):
+		return errors.New("пароль может состоять из латинских букв, цифр и " +
+			"специальных символов !@#$%^&*()_+\\-=")
 	default:
 		return nil
 	}

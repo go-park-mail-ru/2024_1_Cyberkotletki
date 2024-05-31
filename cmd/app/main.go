@@ -7,25 +7,20 @@ import (
 	"fmt"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/config"
 	_ "github.com/go-park-mail-ru/2024_1_Cyberkotletki/docs"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/grpc/auth"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/grpc/profanity"
-	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/grpc/static"
 	delivery "github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/delivery/http/utils"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/entity"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/postgres"
+	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/repository/redis"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/internal/usecase/service"
 	"github.com/go-park-mail-ru/2024_1_Cyberkotletki/pkg/connector"
 	"github.com/google/uuid"
-	"github.com/joho/godotenv"
-	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
-	"github.com/mcuadros/go-defaults"
 	_ "github.com/prometheus/client_golang/prometheus"
 	echoSwagger "github.com/swaggo/echo-swagger"
-	"gopkg.in/yaml.v3"
 	"net/http"
 	"os"
 	"os/signal"
@@ -33,57 +28,6 @@ import (
 	"strings"
 	"time"
 )
-
-func GenerateExampleConfig() {
-	// Создание экземпляра структуры с использованием значений по умолчанию из тегов default
-	var conf config.Config
-	defaults.SetDefaults(&conf)
-
-	yamlData, err := yaml.Marshal(&conf)
-	if err != nil {
-		fmt.Printf("Ошибка при маршализации YAML: %v\n", err)
-		return
-	}
-	file, err := os.Create("config.yaml")
-	if err != nil {
-		fmt.Printf("Ошибка при создании файла: %v\n", err)
-		return
-	}
-	_, err = file.Write(yamlData)
-	if err != nil {
-		fmt.Printf("Ошибка при записи в файл: %v\n", err)
-		return
-	}
-	err = file.Close()
-	if err != nil {
-		fmt.Printf("Ошибка при записи в файл: %v\n", err)
-		return
-	}
-
-	fmt.Println("Конфигурационный файл успешно создан.")
-}
-
-func ParseParams() config.Config {
-	var cfg config.Config
-	// читаем конфиг
-	yamlFile, err := os.ReadFile("config.yaml")
-	if err != nil {
-		log.Fatalf("Ошибка при чтении конфига сервера: %v", err)
-	}
-	err = yaml.Unmarshal(yamlFile, &cfg)
-	if err != nil {
-		log.Fatalf("Ошибка при парсинге конфига сервера: %v", err)
-	}
-	// читаем переменные окружения
-	err = godotenv.Load()
-	if err != nil {
-		fmt.Println("Ошибка загрузки .env файла")
-	}
-	cfg.Postgres.User = os.Getenv("POSTGRES_USER")
-	cfg.Postgres.Pass = os.Getenv("POSTGRES_PASSWORD")
-	cfg.ContentSecretKey = os.Getenv("CONTENT_SECRET_KEY")
-	return cfg
-}
 
 // @title API Киноскопа
 // @version 1.0
@@ -95,33 +39,50 @@ func main() {
 	genCfg := flag.Bool("generate-example-config", false, "Генерирует пример конфига, с которым умеет работать сервер")
 	flag.Parse()
 	if *genCfg {
-		GenerateExampleConfig()
+		config.GenerateExampleConfigs()
 		return
 	}
 
 	logger := log.New("server: ")
-	params := ParseParams()
-	logger.Printf("Параметры запуска сервера: %v \n", params)
+	coreParams := config.ParseCoreServiceParams()
+	authParams := config.ParseAuthServiceParams()
+	staticParams := config.ParseStaticServiceParams()
+	logger.Printf("Параметры запуска сервера: %v \n", coreParams)
 
-	echoServer := Init(logger, params)
+	echoServer := Init(logger, coreParams, authParams, staticParams)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
 	defer stop()
-	go Run(echoServer, params)
+	go Run(echoServer, coreParams)
 
 	<-ctx.Done()
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
-		time.Duration(params.HTTP.Server.GracefulShutdownTimeout)*time.Second,
+		time.Duration(coreParams.HTTP.Server.GracefulShutdownTimeout)*time.Second,
 	)
 	defer cancel()
 	Shutdown(ctx, echoServer)
 }
 
-func Init(logger echo.Logger, params config.Config) *echo.Echo {
+func Init(
+	logger echo.Logger,
+	coreParams config.Config,
+	authParams config.AuthConfig,
+	staticParams config.StaticConfig,
+) *echo.Echo {
 	// DBConn
-	psqlConn, err := connector.GetPostgresConnector(params.Postgres.GetConnectURL())
+	psqlConn, err := connector.GetPostgresConnector(coreParams.Postgres.GetConnectURL())
 	if err != nil {
 		logger.Fatalf("Ошибка при подключении к базе данных: %v", err)
+	}
+	s3conn, err := connector.GetS3Connector(
+		staticParams.S3.Endpoint, staticParams.S3.Region, staticParams.S3.AccessKeyID, staticParams.S3.SecretAccessKey,
+	)
+	if err != nil {
+		logger.Fatal("Ошибка при подключении к S3: ", err)
+	}
+	redisConn, err := connector.GetRedisConnector(authParams.Redis.Addr, authParams.Redis.Password, authParams.Redis.DB)
+	if err != nil {
+		logger.Fatal("Ошибка при подключении к Redis: ", err)
 	}
 
 	// Repositories
@@ -131,29 +92,26 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	compilationRepo := postgres.NewCompilationRepository(psqlConn)
 	searchRepo := postgres.NewSearchRepository(psqlConn, contentRepo)
 	favouriteRepo := postgres.NewFavouriteRepository(psqlConn)
+	staticRepo := postgres.NewStaticRepository(psqlConn, s3conn, staticParams.S3.BucketName, staticParams.MaxFileSize)
+	authRepository := redis.NewSessionRepository(redisConn, authParams.SessionAliveTime)
 
 	// Use Cases
-	staticUseCase, err := static.NewGateway(params.Microservices.Static.Addr)
-	if err != nil {
-		logger.Fatalf("Ошибка при подключении к сервису статики: %v", err)
-	}
-	authUseCase, err := auth.NewGateway(params.Microservices.Auth.Addr)
-	if err != nil {
-		logger.Fatalf("Ошибка при подключении к сервису авторизации: %v", err)
-	}
-	profanityUseCase, err := profanity.NewGateway(params.Microservices.ProfanityFilter.Addr)
+	profanityUseCase, err := profanity.NewGateway(coreParams.Microservices.ProfanityFilter.Addr)
 	if err != nil {
 		logger.Fatalf("Ошибка при подключении к сервису фильтрации сообщений: %v", err)
 	}
+
+	authUseCase := service.NewAuthService(authRepository)
+	staticUseCase := service.NewStaticService(staticRepo)
 	userUseCase := service.NewUserService(userRepo, staticUseCase)
-	contentUseCase := service.NewContentService(contentRepo, staticUseCase, params.ContentSecretKey)
+	contentUseCase := service.NewContentService(contentRepo, staticUseCase, coreParams.ContentSecretKey)
 	reviewUseCase := service.NewReviewService(reviewRepo, userRepo, contentRepo, staticUseCase, profanityUseCase)
 	compilationUseCase := service.NewCompilationService(compilationRepo, staticUseCase, contentUseCase)
 	searchUseCase := service.NewSearchService(searchRepo, contentUseCase)
 	favouriteUseCase := service.NewFavouriteService(favouriteRepo, contentUseCase)
 
 	sessionManager := utils.NewSessionManager(authUseCase,
-		params.Microservices.Auth.HTTPSessionAliveTime, params.HTTP.SecureCookies)
+		coreParams.Microservices.Auth.HTTPSessionAliveTime, coreParams.HTTP.SecureCookies)
 
 	// Delivery
 	staticDelivery := delivery.NewStaticEndpoints(staticUseCase)
@@ -169,10 +127,10 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 
 	// REST API
 	echoServer := echo.New()
-	echoServer.Server.ReadTimeout = time.Duration(params.HTTP.Server.ReadTimeout) * time.Second
-	echoServer.Server.ReadHeaderTimeout = time.Duration(params.HTTP.Server.ReadTimeout) * time.Second
-	echoServer.Server.WriteTimeout = time.Duration(params.HTTP.Server.WriteTimeout) * time.Second
-	echoServer.Server.IdleTimeout = time.Duration(params.HTTP.Server.ReadTimeout) * time.Second
+	echoServer.Server.ReadTimeout = time.Duration(coreParams.HTTP.Server.ReadTimeout) * time.Second
+	echoServer.Server.ReadHeaderTimeout = time.Duration(coreParams.HTTP.Server.ReadTimeout) * time.Second
+	echoServer.Server.WriteTimeout = time.Duration(coreParams.HTTP.Server.WriteTimeout) * time.Second
+	echoServer.Server.IdleTimeout = time.Duration(coreParams.HTTP.Server.ReadTimeout) * time.Second
 
 	// static
 	staticAPI := echoServer.Group("")
@@ -180,12 +138,12 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 
 	// middleware
 	// metrics
-	echoServer.Use(echoprometheus.NewMiddleware("Kinoskop"))
-	echoServer.GET("/metrics", echoprometheus.NewHandler())
+	// echoServer.Use(echoprometheus.NewMiddleware("Kinoskop"))
+	// echoServer.GET("/metrics", echoprometheus.NewHandler())
 	// config
 	echoServer.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
-			ctx.Set("params", params)
+			ctx.Set("params", coreParams)
 			return next(ctx)
 		}
 	})
@@ -201,7 +159,7 @@ func Init(logger echo.Logger, params config.Config) *echo.Echo {
 	// CORS
 	echoServer.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
-			ctx.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, params.HTTP.CORSAllowedOrigins)
+			ctx.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, coreParams.HTTP.CORSAllowedOrigins)
 			ctx.Response().Header().Set(echo.HeaderAccessControlAllowMethods, strings.Join([]string{
 				http.MethodGet,
 				http.MethodPut,
