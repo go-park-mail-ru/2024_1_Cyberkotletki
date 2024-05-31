@@ -42,10 +42,6 @@ services:
     build:
       context: .
       dockerfile: ./docker/core.dockerfile
-    volumes:
-      - ./config.yaml:/app/config.yaml
-      - ./config_auth.yaml:/app/config_auth.yaml
-      - ./config_static.yaml:/app/config_static.yaml
     environment:
         POSTGRES_USER: ${POSTGRES_USER}
         POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
