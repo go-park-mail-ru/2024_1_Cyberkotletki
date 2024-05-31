@@ -1,7 +1,7 @@
 name: Deploy
 on:
   push:
-    branches: [ "deploy" ]
+    branches: [ "main" ]
   workflow_run:
     workflows: [ "Tests" ]
     types:
