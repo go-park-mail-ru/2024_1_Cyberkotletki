@@ -242,6 +242,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/content/available": {
+            "get": {
+                "description": "Получение контента, который доступен для просмотра",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "content"
+                ],
+                "summary": "Получение контента, который доступен для просмотра",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Номер страницы",
+                        "name": "page",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ContentPreviewList"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/content/person/{id}": {
             "get": {
                 "description": "Получение персоны по id",
@@ -2226,6 +2267,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "I'm Batman"
                 },
+                "streamURL": {
+                    "type": "string",
+                    "example": "https://server.com/file.mp4"
+                },
                 "title": {
                     "type": "string",
                     "example": "Бэтмен"
@@ -2242,6 +2287,17 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.PersonPreview"
+                    }
+                }
+            }
+        },
+        "dto.ContentPreviewList": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PreviewContent"
                     }
                 }
             }

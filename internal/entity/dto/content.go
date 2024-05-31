@@ -123,4 +123,10 @@ type Content struct {
 
 	Ongoing     bool       `json:"ongoing"               example:"true"`
 	OngoingDate *time.Time `json:"ongoingDate,omitempty" example:"2022-01-02T15:04:05Z"`
+
+	StreamURL string `json:"streamURL,omitempty" example:"https://server.com/file.mp4"`
+}
+
+type ContentPreviewList struct {
+	Content []PreviewContent `json:"content"`
 }

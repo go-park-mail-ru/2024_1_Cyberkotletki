@@ -43,6 +43,8 @@ type Content interface {
 	// GetSubscribedContentIDs возвращает id контентов, на которые подписан пользователь
 	// Если пользователь не найден, возвращает ErrUserNotFound
 	GetSubscribedContentIDs(userID int) ([]int, error)
+	// GetAvailableToWatch возвращает id контентов, которые доступны для просмотра
+	GetAvailableToWatch(page, limit int) ([]int, error)
 }
 
 var (

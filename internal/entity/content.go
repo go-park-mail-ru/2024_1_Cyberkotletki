@@ -39,6 +39,8 @@ type Content struct {
 	Movie *Movie `json:"movie"`
 	// Поля, которые есть только у сериалов
 	Series *Series `json:"series"`
+
+	StreamURL string // Ссылка на фильм
 }
 
 type Movie struct {

@@ -54,6 +54,21 @@ func (mr *MockContentMockRecorder) GetAllOngoingsYears() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllOngoingsYears", reflect.TypeOf((*MockContent)(nil).GetAllOngoingsYears))
 }
 
+// GetAvailableToWatch mocks base method.
+func (m *MockContent) GetAvailableToWatch(page, limit int) (*dto.ContentPreviewList, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAvailableToWatch", page, limit)
+	ret0, _ := ret[0].(*dto.ContentPreviewList)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAvailableToWatch indicates an expected call of GetAvailableToWatch.
+func (mr *MockContentMockRecorder) GetAvailableToWatch(page, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAvailableToWatch", reflect.TypeOf((*MockContent)(nil).GetAvailableToWatch), page, limit)
+}
+
 // GetContentByID mocks base method.
 func (m *MockContent) GetContentByID(id int) (*dto.Content, error) {
 	m.ctrl.T.Helper()

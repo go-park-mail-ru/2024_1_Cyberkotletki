@@ -37,6 +37,7 @@ func setupGetContentSuccess(mock sqlmock.Sqlmock, contentID int, contentType str
 		"backdrop_upload_id",
 		"ongoing",
 		"ongoing_date",
+		"streaming_url",
 	).
 		From("content").
 		Where(sq.Eq{"id": contentID}).
@@ -59,6 +60,7 @@ func setupGetContentSuccess(mock sqlmock.Sqlmock, contentID int, contentType str
 			"backdrop_upload_id",
 			"ongoing",
 			"ongoing_date",
+			"streaming_url",
 		}).AddRow(
 			contentID,
 			contentType,
@@ -74,6 +76,7 @@ func setupGetContentSuccess(mock sqlmock.Sqlmock, contentID int, contentType str
 			"trailer",
 			500,
 			false,
+			nil,
 			nil,
 		))
 }
