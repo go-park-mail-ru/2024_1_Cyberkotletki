@@ -159,7 +159,7 @@ func ParseAuthServiceParams() AuthConfig {
 	// читаем переменные окружения
 	err = godotenv.Load()
 	if err != nil {
-		fmt.Println("Ошибка загрузки .env файла")
+		fmt.Println(".env файл отсутствует, переменные будут загружены из переменных окружения")
 	}
 	cfg.Redis.Password = os.Getenv("REDIS_PASSWORD")
 	return cfg
@@ -179,7 +179,7 @@ func ParseStaticServiceParams() StaticConfig {
 	// читаем переменные окружения
 	err = godotenv.Load()
 	if err != nil {
-		fmt.Println("Ошибка загрузки .env файла")
+		fmt.Println(".env файл отсутствует, переменные будут загружены из переменных окружения")
 	}
 	cfg.Postgres.User = os.Getenv("POSTGRES_USER")
 	cfg.Postgres.Pass = os.Getenv("POSTGRES_PASSWORD")

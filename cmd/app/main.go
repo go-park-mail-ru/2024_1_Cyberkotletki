@@ -48,6 +48,9 @@ func main() {
 	authParams := config.ParseAuthServiceParams()
 	staticParams := config.ParseStaticServiceParams()
 	logger.Printf("Параметры запуска сервера: %v \n", coreParams)
+	logger.Printf("Параметры сервиса авторизации: %v \n", authParams)
+	logger.Printf("Параметры сервиса статики: %v \n", staticParams)
+	logger.Printf(staticParams.S3.SecretAccessKey)
 
 	echoServer := Init(logger, coreParams, authParams, staticParams)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
