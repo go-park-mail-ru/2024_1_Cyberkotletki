@@ -1884,7 +1884,7 @@ func easyjson344736e9EncodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 		out.RawString(prefix)
 		out.Raw((*in.OngoingDate).MarshalJSON())
 	}
-	{
+	if in.StreamURL != "" {
 		const prefix string = ",\"streamURL\":"
 		out.RawString(prefix)
 		out.String(string(in.StreamURL))

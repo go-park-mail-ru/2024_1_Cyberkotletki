@@ -495,7 +495,9 @@ func easyjson2f096870DecodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 		case "text":
 			out.Text = string(in.String())
 		case "createdAt":
-			out.CreatedAt = string(in.String())
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.CreatedAt).UnmarshalJSON(data))
+			}
 		case "likes":
 			out.Likes = int(in.Int())
 		case "dislikes":
@@ -562,7 +564,7 @@ func easyjson2f096870EncodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 	{
 		const prefix string = ",\"createdAt\":"
 		out.RawString(prefix)
-		out.String(string(in.CreatedAt))
+		out.Raw((in.CreatedAt).MarshalJSON())
 	}
 	{
 		const prefix string = ",\"likes\":"
@@ -813,7 +815,9 @@ func easyjson2f096870DecodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 		case "text":
 			out.Text = string(in.String())
 		case "createdAt":
-			out.CreatedAt = string(in.String())
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.CreatedAt).UnmarshalJSON(data))
+			}
 		case "likes":
 			out.Likes = int(in.Int())
 		case "dislikes":
@@ -865,7 +869,7 @@ func easyjson2f096870EncodeGithubComGoParkMailRu20241CyberkotletkiInternalEntity
 	{
 		const prefix string = ",\"createdAt\":"
 		out.RawString(prefix)
-		out.String(string(in.CreatedAt))
+		out.Raw((in.CreatedAt).MarshalJSON())
 	}
 	{
 		const prefix string = ",\"likes\":"

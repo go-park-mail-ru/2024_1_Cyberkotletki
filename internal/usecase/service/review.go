@@ -72,7 +72,7 @@ func (r *ReviewService) reviewEntityToDTO(reviewEntity *entity.Review) (*dto.Rev
 			Rating:    reviewEntity.ContentRating,
 			Title:     reviewEntity.Title,
 			Text:      reviewEntity.Text,
-			CreatedAt: reviewEntity.CreatedAt.String(),
+			CreatedAt: reviewEntity.CreatedAt,
 			Likes:     reviewEntity.Likes,
 			Dislikes:  reviewEntity.Dislikes,
 		},
