@@ -14,6 +14,29 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Create environment file
+        run: |
+          rm -f .env
+          touch .env
+          echo POSTGRES_USER=${{ secrets.POSTGRES_USER }} >> .env
+          echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env
+          echo REDIS_PASS=${{ secrets.REDIS_PASS }} >> .env
+          echo S3_ACCESS_KEY_ID=${{ secrets.S3_ACCESS_KEY_ID }} >> .env
+          echo S3_SECRET_ACCESS_KEY=${{ secrets.S3_SECRET_ACCESS_KEY }} >> .env
+          echo CONTENT_SECRET_KEY=${{ secrets.CONTENT_SECRET_KEY }} >> .env
+
+      - name: Create config files
+        run: |
+          rm -f config.yaml
+          touch config.yaml
+          echo "${{ secrets.CONFIG_MAIN }}" > config.yaml
+          rm -f config_auth.yaml
+          touch config_auth.yaml
+          echo "${{ secrets.CONFIG_AUTH }}" > config_auth.yaml
+          rm -f config_static.yaml
+          touch config_static.yaml
+          echo "${{ secrets.CONFIG_STATIC }}" > config_static.yaml
+
       - name: Upload source code
         uses: actions/upload-artifact@v4
         with:
@@ -39,29 +62,6 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           source: "./*"
           target: "/home/ubuntu/backend/deploy/"
-
-      - name: Create environment file
-        run: |
-          rm -f .env
-          touch .env
-          echo POSTGRES_USER=${{ secrets.POSTGRES_USER }} >> .env
-          echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env
-          echo REDIS_PASS=${{ secrets.REDIS_PASS }} >> .env
-          echo S3_ACCESS_KEY_ID=${{ secrets.S3_ACCESS_KEY_ID }} >> .env
-          echo S3_SECRET_ACCESS_KEY=${{ secrets.S3_SECRET_ACCESS_KEY }} >> .env
-          echo CONTENT_SECRET_KEY=${{ secrets.CONTENT_SECRET_KEY }} >> .env
-
-      - name: Create config files
-        run: |
-          rm -f config.yaml
-          touch config.yaml
-          echo "${{ secrets.CONFIG_MAIN }}" > config.yaml
-          rm -f config_auth.yaml
-          touch config_auth.yaml
-          echo "${{ secrets.CONFIG_AUTH }}" > config_auth.yaml
-          rm -f config_static.yaml
-          touch config_static.yaml
-          echo "${{ secrets.CONFIG_STATIC }}" > config_static.yaml
 
       - name: Reload app
         uses: appleboy/ssh-action@master
